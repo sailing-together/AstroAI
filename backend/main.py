@@ -5,7 +5,6 @@ from backend.api import review_logic  # import routers
 from backend.api import with_celebrity_logic  # import routers
 from backend.api import cookies  # shared dependency
 
-
 app = FastAPI()
 
 ## Include the cookies router
