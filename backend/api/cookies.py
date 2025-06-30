@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, Response, HTTPException, Depends
+from fastapi import APIRouter, Request, Response, HTTPException
 import json
 from datetime import datetime
 
@@ -28,7 +28,7 @@ async def save_data(request: Request, response: Response):
     return {"status": "Data saved in cookie!"}
 
 # shared dependency to read cookie
-async def get_user_info_cookie(request: Request = Depends()):
+async def get_user_info_cookie(request: Request):
 
     cookie_info = request.cookies.get("user_data_cookie")
     if not cookie_info:
