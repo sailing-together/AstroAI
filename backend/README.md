@@ -1,34 +1,39 @@
-file structure:
-- api stores the feature logics and cookie router + cookie reader
-- core is empty, should store cross-app global configuration setting, 
-  e.g. API keys and cookie settings but since we currently only have 
-  one cookie, its not neccessary 
-- models store the userinput models, i.e. what structure of info needs
-  to be passed in to call a specific feature
-- services store the business logic, which includes the promptbuilder
-  and gemini setup for each feature
-- an overall main.py under /backend is the single fastapi root, run this
-  file using "fastapi dev main.py" to see all the features and cookie 
-  api endpoints. *must cd to current dir of /backend to run the dev
-- the init files in each folder are empty, tell python to treat the
-  folders as modules, for importing 
+## File Structure
 
-all about cookies
-- the cookie.py file contains the "post" api endpoint, this is for 
-  when a user first opens our website, and the api requires birthday
-  and location of the user with form data (you have to ask them), 
-  the endpoint will 
-  1. take form data from frontend
-  2. return the same data as a cookie to the frontend (as cookie is 
-     saved in frontend browser)
-  frontend example with JS for sending form data
-  <form method="POST" action="http://localhost:8000/save-data">
-    <input type="date" name="birthday" />
-    <input type="text" name="location" placeholder="Your location" />
-    <button type="submit">Save</button>
-  </form>
-  sample JS for getting cookie
-<script>
+- **api**: Stores feature logic, cookie router, and cookie reader.
+- **core**: Currently empty. Intended for cross-app global configuration (e.g., API keys, cookie settings). Not necessary now since there is only one cookie.
+- **models**: Contains user input models, defining the structure of data required to call specific features.
+- **services**: Contains business logic, including the prompt builder and Gemini setup for each feature.
+- **main.py**: Located under `/backend`, serves as the FastAPI root. Run with `fastapi dev main.py` to access all features and cookie API endpoints. Make sure to `cd` into `/backend` before running.
+- **\_\_init\_\_.py**: Empty files in each folder to mark them as Python modules for importing.
+
+---
+
+## Cookies
+
+### Cookie API Endpoint
+
+- `cookie.py` contains the `POST` API endpoint for when a user first visits the website.
+- The API requires the user's birthday and location as form data.
+- The endpoint:
+  1. Receives form data from the frontend.
+  2. Returns the same data as a cookie to the frontend (saved in the browser).
+
+#### Example HTML Form
+
+```html
+<form method="POST" action="http://localhost:8000/save-data">
+  <input type="date" name="birthday" />
+  <input type="text" name="location" placeholder="Your location" />
+  <button type="submit">Save</button>
+</form>
+```
+
+---
+
+### Sample JavaScript for Sending Form Data and Handling Cookies
+
+```javascript
 document.getElementById('eventForm').addEventListener('submit', async function(e) {
   e.preventDefault();
 
