@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 void main() {
   runApp(const AstroAiApp());
@@ -91,6 +93,52 @@ class _BirthdayInputPageState extends State<BirthdayInputPage> {
   final List<int> years = List.generate(126, (i) => 1900 + i);
 
   bool get isValid => selectedDay != null && selectedMonth != null && selectedYear != null;
+ 
+  
+  Map<String, String> result = {};
+  bool loading = false;
+  
+  Future<void> fetchHoroscope() async {
+    setState(() {
+      loading = true;
+      result = {};
+    });
+    final url = Uri.parse('http://localhost:8000/horoscope');
+    final body = jsonEncode({
+      "birthdate": "${selectedYear ?? 2000}-${(selectedMonth ?? 1).toString().padLeft(2, '0')}-${(selectedDay ?? 1).toString().padLeft(2, '0')}"
+    });
+    try {
+      final res = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: body,
+      );
+      if (res.statusCode == 200) {
+        final data = json.decode(res.body);
+        setState(() {
+          result = {
+            "NAME": data["overall_horoscope"] ?? "",
+            "LOVE": data["love_advice"] ?? "",
+            "CAREER": data["career_advice"] ?? "",
+            "WEALTH": data["wealth_advice"] ?? "",
+            "SUGGESTION": data["daily_suggestion"] ?? "",
+            "ENCOURAGEMENT": data["daily_encouragement_message"] ?? "",
+          };
+        });
+      } else {
+        setState(() {
+          result = {"NAME": "Error: ${res.statusCode}"};
+        });
+      }
+    } catch (e) {
+      setState(() {
+        result = {"NAME": "Network error"};
+      });
+    }
+    setState(() {
+      loading = false;
+    });
+  }
 
   void _scrollToNextSection() {
     _scrollController.animateTo(
@@ -195,7 +243,10 @@ class _BirthdayInputPageState extends State<BirthdayInputPage> {
                           const SizedBox(height: 32),
                           // 圆形按钮
                           ElevatedButton(
-                            onPressed: isValid ? _scrollToNextSection : null,
+                            onPressed: isValid && !loading ? () async {
+                              await fetchHoroscope();
+                              _scrollToNextSection();
+                            } : null,
                             style: ElevatedButton.styleFrom(
                               shape: const CircleBorder(),
                               backgroundColor: isValid
@@ -218,10 +269,25 @@ class _BirthdayInputPageState extends State<BirthdayInputPage> {
               height: screenHeight,
               width: double.infinity,
               color: Colors.black,
-              child: const Center(
-                child: Text(
-                  "这里将显示你的星座和性格分析",
-                  style: TextStyle(fontSize: 24, color: Colors.white),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+                child: ListView(
+                  // 用 ListView 替换 Column，防止溢出
+                  shrinkWrap: true,
+                  physics: const BouncingScrollPhysics(),
+                  children: [
+                    _ResultSection(title: 'NAME', content: result["NAME"] ?? ''),
+                    const SizedBox(height: 16),
+                    _ResultSection(title: 'LOVE', content: result["LOVE"] ?? ''),
+                    const SizedBox(height: 16),
+                    _ResultSection(title: 'CAREER', content: result["CAREER"] ?? ''),
+                    const SizedBox(height: 16),
+                    _ResultSection(title: 'WEALTH', content: result["WEALTH"] ?? ''),
+                    const SizedBox(height: 16),
+                    _ResultSection(title: 'SUGGESTION', content: result["SUGGESTION"] ?? ''),
+                    const SizedBox(height: 16),
+                    _ResultSection(title: 'ENCOURAGEMENT', content: result["ENCOURAGEMENT"] ?? ''),
+                  ],
                 ),
               ),
             ),
@@ -283,6 +349,48 @@ class NatalChartPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Text('Natal Chart Page', style: TextStyle(fontSize: 32, color: Color(0xFF5A5683))),
+    );
+  }
+}
+
+class _ResultSection extends StatelessWidget {
+  final String title;
+  final String content;
+  const _ResultSection({required this.title, required this.content});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF23213A),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      alignment: Alignment.centerLeft,
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              color: Color(0xFFFBF7BA),
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.2,
+            ),
+          ),
+          if (content.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              content,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+              ),
+            ),
+          ]
+        ],
+      ),
     );
   }
 }

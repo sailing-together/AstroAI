@@ -7,6 +7,16 @@ from backend.api import cookies  # shared dependency
 
 app = FastAPI()
 
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # 或指定你的前端地址如 "http://localhost:8080"
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 ## Include the cookies router
 app.include_router(cookies.router)  
 
