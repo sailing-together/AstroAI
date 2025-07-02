@@ -19,8 +19,13 @@ async def get_horoscope(input_data: InputClass):
         # Get the horoscope from the Gemini API
         horoscope = get_daily_horoscope(input_data.sign, prompt)
         
-        # Return the horoscope
-        return JSONResponse(content=horoscope)
+        # Return the horoscope along with the sign
+        return JSONResponse(content={
+            "sign": input_data.sign,
+            "horoscope": horoscope
+        })
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
