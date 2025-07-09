@@ -10,3 +10,4 @@ sqlalchemy==2.0.30
 numpy==1.26.4
 requests==2.32.3
 skyfield==1.46
+uvicorn==0.29.0
