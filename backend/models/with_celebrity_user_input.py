@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import date
+from backend.services.date_to_sign import date_to_zodiac
 
 class UserInput(BaseModel):
     birthdate: date = Field(..., description="Birthdate of the user.")

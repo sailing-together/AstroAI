@@ -4,104 +4,202 @@
 - **core**: Currently empty. Intended for cross-app global configuration (e.g., API keys, cookie settings). Not necessary now since there is only one cookie.
 - **models**: Contains user input models, defining the structure of data required to call specific features.
 - **services**: Contains business logic, including the prompt builder and Gemini setup for each feature.
-- **main.py**: Located under `/backend`, serves as the FastAPI root. Run with `fastapi dev main.py` to access all features and cookie API endpoints. Make sure to `cd` into `/backend` before running.
+- **main.py**: Serves as the FastAPI root.
 - **\_\_init\_\_.py**: Empty files in each folder to mark them as Python modules for importing.
 
 ---
 
-## Cookies
+## Running the Backend
 
-### Cookie API Endpoint
-
-- `cookie.py` contains the `POST` API endpoint for when a user first visits the website.
-- The API requires the user's birthday and location as form data.
-- The endpoint:
-  1. Receives form data from the frontend.
-  2. Returns the same data as a cookie to the frontend (saved in the browser).
-
-#### Example HTML Form
-
-```html
-<form method="POST" action="http://localhost:8000/save-data">
-  <input type="date" name="birthday" />
-  <input type="text" name="location" placeholder="Your location" />
-  <button type="submit">Save</button>
-</form>
-```
+1.  **Navigate to the `backend` directory:**
+    ```bash
+    cd backend
+    ```
+2.  **Install Python dependencies:**
+    ```bash
+    pip install -r requirements.txt
+    ```
+3.  **Run the FastAPI development server:**
+    ```bash
+    fastapi dev main.py
+    ```
+    The API will be accessible at `http://localhost:8000`.
 
 ---
 
-### Sample JavaScript for Sending Form Data and Handling Cookies
+## Scheduled Tasks
 
-```javascript
-document.getElementById('eventForm').addEventListener('submit', async function(e) {
-  e.preventDefault();
+This backend includes scheduled tasks for database maintenance:
 
-  const form = new FormData(e.target);
+-   **Database Update (`/update-database/`)**: Runs every 30 days to fetch and insert new astrological event data.
+-   **Clear Past Events (`/admin/clear-past-events/`)**: Runs every 30 days to remove outdated astrological event data.
+-   **Daily Events Fetch (`/events-today`)**: Runs daily to fetch and log today's astrological events.
 
-  const payload = {
-    event: form.get("event"),
-    event_date: form.get("event_date"),
-    outcome: form.get("outcome") || null
-  };
+These tasks are managed by `APScheduler` and run in the background as long as the FastAPI server is active.
 
-  const res = await fetch("http://localhost:8000/review_event", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    credentials: "include",  // IMPORTANT: this sends the cookie!
-    body: JSON.stringify(payload)
-  });
+---
 
-  const data = await res.json();
-  document.getElementById("result").textContent = JSON.stringify(data, null, 2);
-});
-</script>
+## Database
 
-- the file also contains a get_user_info_cookie function, used to 
-  read cookies that you sent together with a request to call a feature.
-  Sample JS code when you want to call a feature. 
-  <form id="eventForm">
-  <label>Event:
-    <input type="text" name="event" required>
-  </label>
-  <label>Event Date:
-    <input type="date" name="event_date" required>
-  </label>
-  <label>Outcome (optional):
-    <input type="text" name="outcome">
-  </label>
-  <button type="submit">Submit Event</button>
-</form>
+The backend uses an SQLite database named `planetary_notification_data.sqlite3` located in the `backend/database/` directory.
 
-<pre id="result"></pre>
+### Checking Database Contents
 
-<script>
-document.getElementById('eventForm').addEventListener('submit', async function(e) {
-  e.preventDefault();
+You can inspect the database directly using the `sqlite3` command-line tool.
 
-  const form = new FormData(e.target);
+1.  **Navigate to the `backend` directory:**
+    ```bash
+    cd backend
+    ```
+2.  **Connect to the database:**
+    ```bash
+    sqlite3 database/planetary_notification_data.sqlite3
+    ```
+3.  **Once connected, you can run SQL commands or SQLite-specific commands:**
+    *   **List tables:**
+        ```sqlite
+        .tables
+        ```
+    *   **Count rows in a table (e.g., `lunar_events`):**
+        ```sqlite
+        SELECT COUNT(*) FROM lunar_events;
+        ```
+    *   **Exit `sqlite3`:**
+        ```sqlite
+        .quit
+        ```
 
-  const payload = {
-    event: form.get("event"),
-    event_date: form.get("event_date"),
-    outcome: form.get("outcome") || null
-  };
+---
 
-  const res = await fetch("http://localhost:8000/review_event", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    credentials: "include",  // IMPORTANT: this sends the cookie!
-    body: JSON.stringify(payload)
-  });
+## API Endpoints
 
-  const data = await res.json();
-  document.getElementById("result").textContent = JSON.stringify(data, null, 2);
-});
-</script>
+Below are the API endpoints provided by the backend, along with their expected input requirements.
 
-  *note: currently the form data frontend send is similar to the cookie
-  in datatypes, though it is better for security, structure and consistency
+### `POST /compatibility`
+
+Analyzes astrological compatibility between two signs.
+
+**Request Body (JSON):**
+
+```json
+{
+  "sign_1": "<string>",  // The first zodiac sign (e.g., "Aries")
+  "sign_2": "<string>"   // The second zodiac sign (e.g., "Libra")
+}
+```
+
+### `POST /horoscope`
+
+Generates a horoscope based on the user's birthdate (and optionally sign).
+
+**Request Body (JSON):**
+
+```json
+{
+  "birthdate": "<string>", // User's birthdate in YYYY-MM-DD format (e.g., "1990-05-15")
+  "sign": "<string>"     // Optional: The zodiac sign (e.g., "Taurus"). If not provided, it will be derived from birthdate.
+}
+```
+
+### `POST /natal_chart`
+
+Calculates simplified natal chart data for a given birth date, time, and location.
+
+**Request Body (JSON):**
+
+```json
+{
+  "birth_date": "<string>",     // User's birth date in YYYY-MM-DD format (e.g., "1990-05-15")
+  "birth_time": "<string>",     // User's birth time in HH:MM format (e.g., "14:30"). Do not adjust for timezone.
+  "birth_location": "<string>"  // User's birth location (city, country) (e.g., "London, UK")
+}
+```
+*Note: `birth_timezone`, `birth_longitude`, and `birth_latitude` are automatically determined from `birth_location` if not provided.*
+
+### `POST /review_event`
+
+Provides astrological insights for a past event or predicts the outcome of a future event.
+
+**Request Body (JSON):**
+
+```json
+{
+  "event": "<string>",       // What event is being reviewed (e.g., "job interview")
+  "event_date": "<string>",  // What date the event occurred in YYYY-MM-DD format (e.g., "2024-07-01")
+  "outcome": "<string>"      // Optional: Required if event_date is in the past. What was the outcome? (e.g., "got the job")
+}
+```
+*Note: This endpoint also requires `user_data_cookie` (containing `birthday` and `location`) to be sent with the request.*
+
+### `POST /with_celebrity`
+
+Analyzes astrological compatibility with a celebrity.
+
+**Request Body (JSON):**
+
+```json
+{
+  "birthdate": "<string>",      // Birthdate of the user in YYYY-MM-DD format (e.g., "1990-05-15")
+  "sign": "<string>",          // Optional: The zodiac sign (e.g., "Taurus"). If not provided, it will be derived from birthdate.
+  "celebrity_name": "<string>" // Optional: Name of the celebrity. If not provided, top 3 compatible celebrities will be selected.
+}
+```
+
+### `POST /save-data`
+
+Saves user's birthday and location as a cookie in the browser.
+
+**Request Body (Form Data):**
+
+```
+Content-Type: application/x-www-form-urlencoded
+
+birthday=<string>&location=<string>
+```
+
+*   `birthday`: User's birthday in YYYY-MM-DD format (e.g., `1990-05-15`)
+*   `location`: User's location (city, country) (e.g., `London, UK`)
+
+### `POST /update-database/`
+
+Manually triggers an update of the astrological event database. No request body required.
+
+### `POST /admin/clear-past-events/`
+
+Manually triggers the cleanup of past astrological events from the database. No request body required.
+
+### `GET /events-today`
+
+Retrieves today's astrological events (lunar events, retrogrades, ingresses). No request parameters required.
+
+---
+
+## Database
+
+The backend uses an SQLite database named `planetary_notification_data.sqlite3` located in the `backend/database/` directory.
+
+### Checking Database Contents
+
+You can inspect the database directly using the `sqlite3` command-line tool.
+
+1.  **Navigate to the `backend` directory:**
+    ```bash
+    cd backend
+    ```
+2.  **Connect to the database:**
+    ```bash
+    sqlite3 database/planetary_notification_data.sqlite3
+    ```
+3.  **Once connected, you can run SQL commands or SQLite-specific commands:**
+    *   **List tables:**
+        ```sqlite
+        .tables
+        ```
+    *   **Count rows in a table (e.g., `lunar_events`):**
+        ```sqlite
+        SELECT COUNT(*) FROM lunar_events;
+        ```
+    *   **Exit `sqlite3`:**
+        ```sqlite
+        .quit
+        ```
