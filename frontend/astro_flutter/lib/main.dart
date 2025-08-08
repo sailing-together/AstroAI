@@ -2,6 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:AstroAI/models/natal_chart_data.dart'; // Import the new data model
+import 'package:AstroAI/widgets/natal_chart_painter.dart'; // Import the painter
 
 void main() {
   runApp(const AstroAiApp());
@@ -222,7 +224,7 @@ class _BirthdayInputPageState extends State<BirthdayInputPage> {
                                   ),
                                 ],
                               ),
-                              const SizedBox(width: 40),
+                              const SizedBox(height: 40),
                               // 右侧选择器
                               Column(
                                 children: [
@@ -342,13 +344,150 @@ class CompatibilityPage extends StatelessWidget {
   }
 }
 
-// Natal Chart page placeholder
-class NatalChartPage extends StatelessWidget {
+// Natal Chart page
+class NatalChartPage extends StatefulWidget {
   const NatalChartPage({super.key});
+
+  @override
+  State<NatalChartPage> createState() => _NatalChartPageState();
+}
+
+class _NatalChartPageState extends State<NatalChartPage> {
+  DateTime _selectedDate = DateTime.now();
+  TimeOfDay _selectedTime = TimeOfDay.now();
+  final TextEditingController _locationController = TextEditingController();
+
+  NatalChartData? _natalChartData;
+  bool _isLoading = false;
+  String? _errorMessage;
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+      });
+    }
+  }
+
+  Future<void> _selectTime(BuildContext context) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: _selectedTime,
+    );
+    if (picked != null && picked != _selectedTime) {
+      setState(() {
+        _selectedTime = picked;
+      });
+    }
+  }
+
+  Future<void> _fetchNatalChart() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+      _natalChartData = null;
+    });
+
+    final url = Uri.parse('http://localhost:8000/natal_chart');
+    final body = jsonEncode({
+      "birth_date": _selectedDate.toIso8601String().split('T')[0],
+      "birth_time": '${_selectedTime.hour.toString().padLeft(2, '0')}:${_selectedTime.minute.toString().padLeft(2, '0')}',
+      "birth_location": _locationController.text,
+    });
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: body,
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        
+        setState(() {
+          _natalChartData = NatalChartData.fromJson(data);
+        });
+      } else {
+        setState(() {
+          _errorMessage = 'Failed to load natal chart: ${response.statusCode} - ${response.body}';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Error connecting to backend: $e';
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _locationController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Text('Natal Chart Page', style: TextStyle(fontSize: 32, color: Color(0xFF5A5683))),
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ListTile(
+            title: const Text('Birth Date'),
+            subtitle: Text('${_selectedDate.toLocal()}'.split(' ')[0]),
+            trailing: const Icon(Icons.calendar_today),
+            onTap: () => _selectDate(context),
+          ),
+          ListTile(
+            title: const Text('Birth Time'),
+            subtitle: Text(_selectedTime.format(context)),
+            trailing: const Icon(Icons.access_time),
+            onTap: () => _selectTime(context),
+          ),
+          TextField(
+            controller: _locationController,
+            decoration: const InputDecoration(
+              labelText: 'Birth Location (City, Country)',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: _isLoading ? null : _fetchNatalChart,
+            child: _isLoading
+                ? const CircularProgressIndicator()
+                : const Text('Generate Natal Chart'),
+          ),
+          if (_errorMessage != null)
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                _errorMessage!,
+                style: const TextStyle(color: Colors.red),
+              ),
+            ),
+          if (_natalChartData != null)
+            Expanded(
+              child: Center(
+                child: CustomPaint(
+                  size: Size(MediaQuery.of(context).size.width * 0.8, MediaQuery.of(context).size.width * 0.8), // Make it square and responsive
+                  painter: NatalChartPainter(_natalChartData!),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

@@ -13,7 +13,7 @@ class UserInput(BaseModel):
     birth_latitude: Optional[str] = Field(default=None, description="User's birth latitude, calculated autometically")
 
     def model_post_init(self, __context=None):
-        info = get_timezone_from_location(self.birth_location)
+        info = get_timezone_from_location(self.birth_location, self.birth_date, self.birth_time)
 
         if self.birth_timezone is None:
             self.birth_timezone = info['utc_offset']
