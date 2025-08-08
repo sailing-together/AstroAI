@@ -1,9 +1,12 @@
 import json
+import os
 from flatlib.chart import Chart
 from flatlib.datetime import Datetime
 from flatlib.geopos import GeoPos
 from flatlib import const
 from flatlib.aspects import getAspect
+import flatlib
+import swisseph as swe
 from datetime import date, time
 from backend.models.natal_chart_user_input import UserInput
 
@@ -21,6 +24,11 @@ PLANET_SYMBOLS = {
     'Uranus': '♅', 'Neptune': '♆', 'Pluto': '♇',
 }
 
+# Set ephemeris path explicitly
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+EPHEM_PATH = os.path.join(BASE_DIR, '..', 'database', 'de421.bsp')
+swe.set_ephe_path(EPHEM_PATH)
+
 def get_natal_chart_data(input: UserInput):
     birthdate = input.birth_date
     birthtime =  input.birth_time
@@ -28,12 +36,14 @@ def get_natal_chart_data(input: UserInput):
     latitude = input.birth_latitude
     longitude = input.birth_longitude
 
-    date_str = birthdate.strftime("%d/%m/%Y")
+    date_str = birthdate.strftime("%Y/%m/%d")
     time_str = birthtime.strftime("%H:%M")
+    print(f"Date: {date_str}, Time: {time_str}, Timezone: {timezone}, Latitude: {latitude}, Longitude: {longitude}")
     dt = Datetime(date_str, time_str, timezone)
     pos = GeoPos(latitude, longitude)
 
-    chart = Chart(dt, pos, IDs=MAJOR_PLANETS)
+    # No need to pass ephem to Chart constructor after setting path globally
+    chart = Chart(dt, pos, IDs=MAJOR_PLANETS, hsys=const.HOUSES_PLACIDUS)
 
     asc_deg = round(chart.get(const.ASC).lon, 2)
 
@@ -64,6 +74,7 @@ def get_natal_chart_data(input: UserInput):
     aspects = []
     for i in range(len(MAJOR_PLANETS)):
         for j in range(i + 1, len(MAJOR_PLANETS)):
+            # No need to pass ephem to chart.get calls after setting path globally
             p1 = chart.get(MAJOR_PLANETS[i])
             p2 = chart.get(MAJOR_PLANETS[j])
             if not p1 or not p2:
@@ -83,4 +94,3 @@ def get_natal_chart_data(input: UserInput):
         "planets": planets,
         "aspects": aspects
     }
-
