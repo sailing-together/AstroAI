@@ -1,11 +1,11 @@
 from backend.models.review_event_user_input import UserInput
 
-def build_prompt(user_input: UserInput, cookie_info: dict):
+def build_prompt(user_input: UserInput):
     date = str(user_input.event_date)
     event = user_input.event
     outcome = user_input.outcome
-    birthdate = cookie_info['birthday'] #information from cookie
-    location = cookie_info['location']
+    birthdate = user_input.birthdate
+    location = user_input.location
 
     if outcome != None:
         return f""""You are a astrology expert, 
