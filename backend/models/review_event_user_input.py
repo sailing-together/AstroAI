@@ -2,11 +2,11 @@ from pydantic import BaseModel, Field, model_validator
 from datetime import datetime, date
 from typing import Optional
 
-#definitely need an user id and store information now, because we need birthdate and location
-#can also enhance input for other features with user id
 class UserInput(BaseModel):
     event: str = Field(..., description="What event is being reviewed")
     event_date: date = Field(..., description="What date the event occurred")
+    birthdate: date = Field(..., description="The user's birthdate.")
+    location: str = Field(..., description="The user's location.")
     outcome: Optional[str] = Field(
         None,
         description="Required if event date is in past. What was the outcome?"

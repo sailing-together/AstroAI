@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:AstroAI/models/natal_chart_data.dart'; // Import the new data model
 import 'package:AstroAI/widgets/natal_chart_painter.dart'; // Import the painter
+import 'dart:html' as html;
 
 void main() {
   runApp(const AstroAiApp());
@@ -16,6 +17,23 @@ class AstroAiApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'AstroAi',
+      theme: ThemeData.dark().copyWith(
+        primaryColor: const Color(0xFF5A5683),
+        scaffoldBackgroundColor: Colors.grey[900],
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF5A5683),
+          elevation: 0,
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFFFBF7BA),
+            foregroundColor: Colors.black,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        ),
+      ),
       debugShowCheckedModeBanner: false,
       home: const MainMenuPage(),
     );
@@ -49,28 +67,36 @@ class _MainMenuPageState extends State<MainMenuPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('AstroAI', style: TextStyle(color: Colors.white)),
-        backgroundColor: const Color(0xFF5A5683),
+        title: const Text('AstroAI', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         actions: [
-          TextButton(
-            onPressed: () => _onMenuTap(0),
-            child: Text('Home', style: TextStyle(color: _selectedIndex == 0 ? Color(0xFFFBF7BA) : Colors.white, fontWeight: FontWeight.bold)),
-          ),
-          TextButton(
-            onPressed: () => _onMenuTap(1),
-            child: Text('Horoscope', style: TextStyle(color: _selectedIndex == 1 ? Color(0xFFFBF7BA) : Colors.white, fontWeight: FontWeight.bold)),
-          ),
-          TextButton(
-            onPressed: () => _onMenuTap(2),
-            child: Text('Compatibility', style: TextStyle(color: _selectedIndex == 2 ? Color(0xFFFBF7BA) : Colors.white, fontWeight: FontWeight.bold)),
-          ),
-          TextButton(
-            onPressed: () => _onMenuTap(3),
-            child: Text('Natal Chart', style: TextStyle(color: _selectedIndex == 3 ? Color(0xFFFBF7BA) : Colors.white, fontWeight: FontWeight.bold)),
-          ),
+          _buildMenuButton(context, 'Home', 0),
+          _buildMenuButton(context, 'Horoscope', 1),
+          _buildMenuButton(context, 'Compatibility', 2),
+          _buildMenuButton(context, 'Natal Chart', 3),
         ],
       ),
-      body: _pages[_selectedIndex],
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: _pages,
+      ),
+    );
+  }
+
+  Widget _buildMenuButton(BuildContext context, String title, int index) {
+    final bool isSelected = _selectedIndex == index;
+    return TextButton(
+      onPressed: () => _onMenuTap(index),
+      style: TextButton.styleFrom(
+        backgroundColor: isSelected ? Colors.black.withOpacity(0.2) : Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+      ),
+      child: Text(
+        title,
+        style: TextStyle(
+          color: isSelected ? const Color(0xFFFBF7BA) : Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
     );
   }
 }
@@ -92,7 +118,7 @@ class _BirthdayInputPageState extends State<BirthdayInputPage> {
 
   final List<int> days = List.generate(31, (i) => i + 1);
   final List<int> months = List.generate(12, (i) => i + 1);
-  final List<int> years = List.generate(126, (i) => 1900 + i);
+  final List<int> years = List.generate(126, (i) => 1900 + i).reversed.toList();
 
   bool get isValid => selectedDay != null && selectedMonth != null && selectedYear != null;
  
@@ -327,7 +353,7 @@ class HoroscopePage extends StatelessWidget {
   const HoroscopePage({super.key});
   @override
   Widget build(BuildContext context) {
-    return Center(
+    return const Center(
       child: Text('Horoscope Page', style: TextStyle(fontSize: 32, color: Color(0xFF5A5683))),
     );
   }
@@ -338,7 +364,7 @@ class CompatibilityPage extends StatelessWidget {
   const CompatibilityPage({super.key});
   @override
   Widget build(BuildContext context) {
-    return Center(
+    return const Center(
       child: Text('Compatibility Page', style: TextStyle(fontSize: 32, color: Color(0xFF5A5683))),
     );
   }
@@ -360,6 +386,83 @@ class _NatalChartPageState extends State<NatalChartPage> {
   NatalChartData? _natalChartData;
   bool _isLoading = false;
   String? _errorMessage;
+
+  List<Map<String, dynamic>> _history = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHistory();
+  }
+
+  // --- Session Storage Helpers ---
+  
+  void _loadHistory() {
+    final historyJson = html.window.sessionStorage['astro_history'];
+    if (historyJson != null) {
+      final List<dynamic> decoded = json.decode(historyJson);
+      final history = List<Map<String, dynamic>>.from(decoded);
+      if (history.isNotEmpty) {
+        _applyHistoryEntry(history.first, isInitialLoad: true);
+      }
+      // Update state once with all loaded data
+      setState(() {
+        _history = history;
+      });
+    }
+  }
+
+  void _saveHistory() {
+    final newEntry = {
+      'date': _selectedDate.toIso8601String().split('T')[0],
+      'time': '${_selectedTime.hour}:${_selectedTime.minute}',
+      'location': _locationController.text,
+    };
+
+    // Create a new list for state update to ensure widget rebuilds
+    final newHistory = List<Map<String, dynamic>>.from(_history);
+
+    // Avoid duplicates
+    newHistory.removeWhere((entry) => 
+      entry['date'] == newEntry['date'] &&
+      entry['time'] == newEntry['time'] &&
+      entry['location'] == newEntry['location']
+    );
+
+    newHistory.insert(0, newEntry);
+
+    // Limit history to 5 entries
+    if (newHistory.length > 5) {
+      _history = newHistory.sublist(0, 5);
+    } else {
+      _history = newHistory;
+    }
+
+    html.window.sessionStorage['astro_history'] = json.encode(_history);
+    // Update state with the new list
+    setState(() {});
+  }
+
+  void _applyHistoryEntry(Map<String, dynamic> entry, {bool isInitialLoad = false}) {
+    final newDate = DateTime.parse(entry['date']);
+    final timeParts = (entry['time'] as String).split(':');
+    final newTime = TimeOfDay(hour: int.parse(timeParts[0]), minute: int.parse(timeParts[1]));
+    final newLocation = entry['location'] as String;
+
+    // To avoid lag, only call setState for what's necessary
+    if (isInitialLoad) {
+      _selectedDate = newDate;
+      _selectedTime = newTime;
+      _locationController.text = newLocation;
+    } else {
+      setState(() {
+        _selectedDate = newDate;
+        _selectedTime = newTime;
+        _locationController.text = newLocation;
+      });
+    }
+  }
+
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -388,6 +491,13 @@ class _NatalChartPageState extends State<NatalChartPage> {
   }
 
   Future<void> _fetchNatalChart() async {
+    if (_locationController.text.isEmpty) {
+      setState(() {
+        _errorMessage = "Please enter a birth location.";
+      });
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -410,7 +520,7 @@ class _NatalChartPageState extends State<NatalChartPage> {
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
-        
+        _saveHistory();
         setState(() {
           _natalChartData = NatalChartData.fromJson(data);
         });
@@ -443,16 +553,50 @@ class _NatalChartPageState extends State<NatalChartPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // History Dropdown
+          if (_history.isNotEmpty)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+              decoration: BoxDecoration(
+                color: Colors.grey[800],
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<Map<String, dynamic>>(
+                  value: null, // Always show hint text
+                  isExpanded: true,
+                  hint: const Text("Select from History", style: TextStyle(color: Colors.white70)),
+                  icon: const Icon(Icons.history, color: Color(0xFFFBF7BA)),
+                  dropdownColor: Colors.grey[850],
+                  onChanged: (Map<String, dynamic>? newValue) {
+                    if (newValue != null) {
+                      _applyHistoryEntry(newValue);
+                    }
+                  },
+                  items: _history.map<DropdownMenuItem<Map<String, dynamic>>>((entry) {
+                    return DropdownMenuItem<Map<String, dynamic>>(
+                      value: entry,
+                      child: Text(
+                        '${entry["location"]} - ${entry["date"]} @ ${entry["time"]}',
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
+          const SizedBox(height: 20),
+
           ListTile(
             title: const Text('Birth Date'),
             subtitle: Text('${_selectedDate.toLocal()}'.split(' ')[0]),
-            trailing: const Icon(Icons.calendar_today),
+            trailing: const Icon(Icons.calendar_today, color: Color(0xFFFBF7BA)),
             onTap: () => _selectDate(context),
           ),
           ListTile(
             title: const Text('Birth Time'),
             subtitle: Text(_selectedTime.format(context)),
-            trailing: const Icon(Icons.access_time),
+            trailing: const Icon(Icons.access_time, color: Color(0xFFFBF7BA)),
             onTap: () => _selectTime(context),
           ),
           TextField(
@@ -465,8 +609,9 @@ class _NatalChartPageState extends State<NatalChartPage> {
           const SizedBox(height: 20),
           ElevatedButton(
             onPressed: _isLoading ? null : _fetchNatalChart,
+            style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
             child: _isLoading
-                ? const CircularProgressIndicator()
+                ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 3, color: Colors.black))
                 : const Text('Generate Natal Chart'),
           ),
           if (_errorMessage != null)
@@ -474,15 +619,18 @@ class _NatalChartPageState extends State<NatalChartPage> {
               padding: const EdgeInsets.all(8.0),
               child: Text(
                 _errorMessage!,
-                style: const TextStyle(color: Colors.red),
+                style: const TextStyle(color: Colors.redAccent),
               ),
             ),
           if (_natalChartData != null)
             Expanded(
               child: Center(
-                child: CustomPaint(
-                  size: Size(MediaQuery.of(context).size.width * 0.8, MediaQuery.of(context).size.width * 0.8), // Make it square and responsive
-                  painter: NatalChartPainter(_natalChartData!),
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 20.0),
+                  child: CustomPaint(
+                    size: Size(MediaQuery.of(context).size.width * 0.8, MediaQuery.of(context).size.width * 0.8),
+                    painter: NatalChartPainter(_natalChartData!),
+                  ),
                 ),
               ),
             ),

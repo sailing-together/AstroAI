@@ -68,7 +68,7 @@ class NatalChartPainter extends CustomPainter {
       // Draw zodiac sign symbol
       textPainter.text = TextSpan(
         text: zodiacSigns[i],
-        style: const TextStyle(fontSize: 20, color: Colors.black),
+        style: const TextStyle(fontSize: 20, color: Color(0xFFFBF7BA)),
       );
       textPainter.layout();
       canvas.save();

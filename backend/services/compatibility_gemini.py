@@ -2,7 +2,7 @@ import google.generativeai as genai
 from .compatibility_prompt_builder import build_prompt
 
 #can be set as an environment variable for security later on
-APIkey="AIzaSyANQjxw015Kn4gHES4TrSSrWBH75b11pr0"
+APIkey="AIzaSyDjy5BEaq3hpJjaxc5HrD4Nufikr6Nvjfo"
 
 # Setup Gemini API
 genai.configure(api_key=APIkey)

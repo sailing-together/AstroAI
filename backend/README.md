@@ -126,10 +126,11 @@ Provides astrological insights for a past event or predicts the outcome of a fut
 {
   "event": "<string>",       // What event is being reviewed (e.g., "job interview")
   "event_date": "<string>",  // What date the event occurred in YYYY-MM-DD format (e.g., "2024-07-01")
+  "birthdate": "<string>",   // The user's birthdate in YYYY-MM-DD format (e.g., "1990-05-15")
+  "location": "<string>",    // The user's location (city, country) (e.g., "London, UK")
   "outcome": "<string>"      // Optional: Required if event_date is in the past. What was the outcome? (e.g., "got the job")
 }
 ```
-*Note: This endpoint also requires `user_data_cookie` (containing `birthday` and `location`) to be sent with the request.*
 
 ### `POST /with_celebrity`
 

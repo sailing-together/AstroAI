@@ -5,7 +5,6 @@ from backend.api import review_logic
 from backend.api import with_celebrity_logic
 from backend.api import natal_chart_logic
 from backend.api import notification_logic
-from backend.api import cookies
 
 from contextlib import asynccontextmanager
 from backend.services.scheduler_service import start_scheduler, shutdown_scheduler
@@ -31,9 +30,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-## Include the cookies router
-app.include_router(cookies.router)  
 
 # Mount feature routers
 app.include_router(compatibility_logic.router)
