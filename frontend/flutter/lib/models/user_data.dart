@@ -68,6 +68,25 @@ class HoroscopeData {
   });
 
   factory HoroscopeData.fromJson(Map<String, dynamic> json) {
+    // Support both the original flat shape and the backend's nested shape { sign, horoscope: {...} }
+    final nested = json['horoscope'] as Map<String, dynamic>?;
+    if (nested != null) {
+      // Map backend keys to UI fields
+      return HoroscopeData(
+        sign: (json['sign'] ?? '') as String,
+        date: json['date'] is String ? json['date'] as String : DateTime.now().toIso8601String().split('T').first,
+        love: (nested['love_advice'] ?? '') as String,
+        career: (nested['career_advice'] ?? '') as String,
+        finance: (nested['wealth_advice'] ?? '') as String,
+        // No explicit health in backend response; use daily suggestion as a proxy in UI
+        health: (nested['daily_suggestion'] ?? '') as String,
+        general: (nested['overall_horoscope'] ?? '') as String,
+        luckyNumbers: const <String>[],
+        luckyColors: const <String>[],
+      );
+    }
+
+    // Fallback to original flat structure if present
     return HoroscopeData(
       sign: json['sign'] ?? '',
       date: json['date'] ?? '',

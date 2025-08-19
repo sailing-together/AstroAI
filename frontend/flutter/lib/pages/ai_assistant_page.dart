@@ -535,54 +535,8 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
       );
     });
 
-    // Simulate AI response (replace with actual API call)
-    _simulateAiResponse(message, appState);
-  }
-
-  void _simulateAiResponse(String userMessage, AppState appState) {
-    appState.setAiTyping(true);
-
-    // Simulate thinking time
-    Future.delayed(const Duration(seconds: 2), () {
-      final response = _generateAiResponse(userMessage, appState.userData);
-      
-      appState.addChatMessage(ChatMessage(
-        content: response,
-        isUser: false,
-        timestamp: DateTime.now(),
-      ));
-      
-      appState.setAiTyping(false);
-
-      // Scroll to bottom
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      });
-    });
-  }
-
-  String _generateAiResponse(String userMessage, UserData? userData) {
-    // This is a simplified response generator
-    // In a real implementation, this would call your backend AI service
-    
-    final lowerMessage = userMessage.toLowerCase();
-    final sign = userData?.zodiacSign ?? "your sign";
-    
-    if (lowerMessage.contains('love') || lowerMessage.contains('relationship')) {
-      return "Based on $sign's astrological profile, you tend to approach love with unique characteristics. Your sign influences how you express affection and what you seek in partnerships. Would you like me to analyze your compatibility with a specific sign or provide more detailed relationship guidance?";
-    } else if (lowerMessage.contains('career') || lowerMessage.contains('job')) {
-      return "Your astrological profile suggests certain career paths that align with $sign's natural talents and inclinations. The current planetary transits may also be influencing your professional opportunities. What specific career question can I help you with?";
-    } else if (lowerMessage.contains('money') || lowerMessage.contains('financial')) {
-      return "From an astrological perspective, $sign has particular approaches to money and financial decisions. The current planetary positions may be affecting your financial energy. Would you like specific guidance on investments, spending, or financial planning?";
-    } else if (lowerMessage.contains('health')) {
-      return "Astrologically, $sign is associated with certain areas of physical and emotional health. The current cosmic energies may be influencing your well-being. Remember, astrology complements but doesn't replace medical advice. What health aspect would you like to explore?";
-    } else {
-      return "That's an interesting question! As your AI Astrologer Assistant, I can provide insights based on your astrological profile and current planetary influences. Could you tell me more specifically what aspect of astrology or your cosmic journey you'd like to explore?";
-    }
+    // Call backend for AI-like response using horoscope endpoint
+    appState.askAi(message);
   }
 
   String _formatTime(DateTime timestamp) {

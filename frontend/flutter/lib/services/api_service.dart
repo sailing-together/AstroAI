@@ -42,8 +42,7 @@ class ApiService {
   // Horoscope Generation
   Future<Map<String, dynamic>?> getHoroscope(String birthdate, {String? sign}) async {
     try {
-      final body = {'birthdate': birthdate};
-      if (sign != null) body['sign'] = sign;
+      final body = {'birthdate': birthdate, 'sign': sign ?? ''};
 
       final response = await http.post(
         Uri.parse('$baseUrl/horoscope'),

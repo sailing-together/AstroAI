@@ -81,11 +81,44 @@ class AppState extends ChangeNotifier {
 
     try {
       final response = await _apiService.getTodaysEvents();
-      
-      if (response != null && response['events'] != null) {
-        _todaysEvents = (response['events'] as List)
-            .map((event) => PlanetaryEvent.fromJson(event))
-            .toList();
+      // Backend shape: { date, lunar_events: [...], retrogrades: [...], ingresses: [...] }
+      if (response != null) {
+        final List<PlanetaryEvent> aggregated = [];
+
+        void addEvents(List<dynamic>? raw, String type, Map<String, String> mapping) {
+          if (raw == null) return;
+          for (final item in raw) {
+            final map = item as Map<String, dynamic>;
+            final title = mapping['title'] != null ? (map[mapping['title']]?.toString() ?? '') : '';
+            final desc = mapping['description'] != null ? (map[mapping['description']]?.toString() ?? '') : '';
+            final dateStr = mapping['date'] != null ? (map[mapping['date']]?.toString() ?? DateTime.now().toIso8601String()) : DateTime.now().toIso8601String();
+            aggregated.add(PlanetaryEvent(
+              type: type,
+              title: title.isNotEmpty ? title : '$type event',
+              description: desc,
+              date: DateTime.tryParse(dateStr) ?? DateTime.now(),
+              impact: '',
+            ));
+          }
+        }
+
+        addEvents(response['lunar_events'] as List<dynamic>?, 'lunar', {
+          'title': 'event',
+          'description': 'event',
+          'date': 'start',
+        });
+        addEvents(response['retrogrades'] as List<dynamic>?, 'retrograde', {
+          'title': 'planet',
+          'description': 'planet',
+          'date': 'start',
+        });
+        addEvents(response['ingresses'] as List<dynamic>?, 'ingress', {
+          'title': 'planet',
+          'description': 'sign',
+          'date': 'time',
+        });
+
+        _todaysEvents = aggregated;
       }
     } catch (e) {
       print('Error loading events: $e');
@@ -106,9 +139,18 @@ class AppState extends ChangeNotifier {
   Future<CompatibilityData?> getCompatibility(String sign1, String sign2) async {
     try {
       final response = await _apiService.getCompatibility(sign1, sign2);
-      
       if (response != null) {
-        return CompatibilityData.fromJson(response);
+        // Backend returns { compatibility: "..." }. Wrap to expected model fields.
+        final String text = (response['compatibility'] ?? '').toString();
+        return CompatibilityData(
+          sign1: sign1,
+          sign2: sign2,
+          compatibilityScore: 0,
+          analysis: text,
+          strengths: '',
+          challenges: '',
+          advice: '',
+        );
       }
     } catch (e) {
       print('Error getting compatibility: $e');
@@ -139,6 +181,70 @@ class AppState extends ChangeNotifier {
   void setAiTyping(bool typing) {
     _isAiTyping = typing;
     notifyListeners();
+  }
+
+  // Ask AI using backend horoscope endpoint as a demo
+  Future<void> askAi(String userMessage) async {
+    setAiTyping(true);
+    try {
+      if (_userData?.birthdate == null) {
+        addChatMessage(ChatMessage(
+          content: 'Please enter your birth date and location to get personalized guidance.',
+          isUser: false,
+          timestamp: DateTime.now(),
+        ));
+        return;
+      }
+
+      final response = await _apiService.getHoroscope(
+        _userData!.birthdate!,
+        sign: _userData!.zodiacSign,
+      );
+
+      if (response != null) {
+        final data = HoroscopeData.fromJson(response);
+        final buffer = StringBuffer();
+        if (data.general.isNotEmpty) {
+          buffer.writeln('General Guidance:\n${data.general}\n');
+        }
+        if (data.love.isNotEmpty) {
+          buffer.writeln('Love & Relationships:\n${data.love}\n');
+        }
+        if (data.career.isNotEmpty) {
+          buffer.writeln('Career:\n${data.career}\n');
+        }
+        if (data.finance.isNotEmpty) {
+          buffer.writeln('Finance:\n${data.finance}\n');
+        }
+        if (data.health.isNotEmpty) {
+          buffer.writeln('Health & Wellness:\n${data.health}\n');
+        }
+
+        final content = buffer.isEmpty
+            ? 'I could not generate guidance right now. Please try again.'
+            : buffer.toString().trim();
+
+        addChatMessage(ChatMessage(
+          content: content,
+          isUser: false,
+          timestamp: DateTime.now(),
+        ));
+      } else {
+        addChatMessage(ChatMessage(
+          content: 'Request failed. Please try again later.',
+          isUser: false,
+          timestamp: DateTime.now(),
+        ));
+      }
+    } catch (e) {
+      addChatMessage(ChatMessage(
+        content: 'Error: $e',
+        isUser: false,
+        timestamp: DateTime.now(),
+      ));
+    } finally {
+      setAiTyping(false);
+    }
   }
 
   // Premium features
