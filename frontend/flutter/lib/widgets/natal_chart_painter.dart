@@ -1,6 +1,8 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:AstroAI/models/natal_chart_data.dart';
+import '../models/natal_chart_data.dart';
+
+
 
 class NatalChartPainter extends CustomPainter {
   final NatalChartData chartData;
@@ -68,7 +70,7 @@ class NatalChartPainter extends CustomPainter {
       // Draw zodiac sign symbol
       textPainter.text = TextSpan(
         text: zodiacSigns[i],
-        style: const TextStyle(fontSize: 20, color: Color(0xFFFBF7BA)),
+        style: const TextStyle(fontSize: 20, color: Colors.black),
       );
       textPainter.layout();
       canvas.save();
