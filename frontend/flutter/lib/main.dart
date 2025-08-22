@@ -6,6 +6,7 @@ import 'providers/app_state.dart';
 import 'pages/daily_insights_page.dart';
 import 'pages/ai_assistant_page.dart';
 import 'models/user_data.dart';
+import 'dart:math' as math;
 
 void main() {
   runApp(const AstroAiApp());
@@ -22,7 +23,7 @@ class AstroAiApp extends StatelessWidget {
         title: 'AstroAI',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
-          primarySwatch: Colors.grey,
+          primarySwatch: Colors.purple,
           visualDensity: VisualDensity.adaptivePlatformDensity,
           fontFamily: GoogleFonts.raleway().fontFamily,
         ),
@@ -36,15 +37,29 @@ class AstroAiApp extends StatelessWidget {
   }
 }
 
+// Zodiac-themed color palette
+class ZodiacColors {
+  static const Color primaryPurple = Color(0xFF8B5CF6); // Mystical purple
+  static const Color deepPurple = Color(0xFF6D28D9); // Deep mystical
+  static const Color cosmicPink = Color(0xFFEC4899); // Cosmic pink
+  static const Color starGold = Color(0xFFFBBF24); // Star gold
+  static const Color cosmicBlue = Color(0xFF3B82F6); // Cosmic blue
+  static const Color darkSpace = Color(0xFF1E1B4B); // Dark space
+  static const Color lightSpace = Color(0xFFF8FAFC); // Light space
+}
+
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFDADADA),
+      backgroundColor: ZodiacColors.darkSpace,
       body: Stack(
         children: [
+          // Twinkling stars background
+          const TwinklingStarsBackground(),
+          
           // Main content with top padding to account for fixed header
           Padding(
             padding: const EdgeInsets.only(top: 89), // Header height
@@ -72,6 +87,122 @@ class HomePage extends StatelessWidget {
   }
 }
 
+// Twinkling stars background effect
+class TwinklingStarsBackground extends StatefulWidget {
+  const TwinklingStarsBackground({super.key});
+
+  @override
+  State<TwinklingStarsBackground> createState() => _TwinklingStarsBackgroundState();
+}
+
+class _TwinklingStarsBackgroundState extends State<TwinklingStarsBackground>
+    with TickerProviderStateMixin {
+  late List<AnimationController> _starControllers;
+  late List<Animation<double>> _starAnimations;
+  final List<Star> _stars = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _generateStars();
+    _initializeAnimations();
+  }
+
+  void _generateStars() {
+    final random = math.Random();
+    for (int i = 0; i < 50; i++) {
+      _stars.add(Star(
+        x: random.nextDouble(),
+        y: random.nextDouble(),
+        size: random.nextDouble() * 3 + 1,
+        delay: random.nextDouble() * 2,
+      ));
+    }
+  }
+
+  void _initializeAnimations() {
+    _starControllers = List.generate(
+      _stars.length,
+      (index) => AnimationController(
+        duration: Duration(milliseconds: (1000 + _stars[index].delay * 1000).round()),
+        vsync: this,
+      ),
+    );
+
+    _starAnimations = _starControllers.map((controller) {
+      return Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(parent: controller, curve: Curves.easeInOut),
+      );
+    }).toList();
+
+    for (var controller in _starControllers) {
+      controller.repeat(reverse: true);
+    }
+  }
+
+  @override
+  void dispose() {
+    for (var controller in _starControllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox.expand(
+      child: CustomPaint(
+        painter: StarsPainter(_stars, _starAnimations),
+      ),
+    );
+  }
+}
+
+class Star {
+  final double x;
+  final double y;
+  final double size;
+  final double delay;
+
+  Star({
+    required this.x,
+    required this.y,
+    required this.size,
+    required this.delay,
+  });
+}
+
+class StarsPainter extends CustomPainter {
+  final List<Star> stars;
+  final List<Animation<double>> animations;
+
+  StarsPainter(this.stars, this.animations);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = ZodiacColors.starGold
+      ..style = PaintingStyle.fill;
+
+    for (int i = 0; i < stars.length; i++) {
+      final star = stars[i];
+      final animation = animations[i];
+      
+      final opacity = (0.3 + animation.value * 0.7);
+      paint.color = ZodiacColors.starGold.withOpacity(opacity);
+      
+      final x = star.x * size.width;
+      final y = star.y * size.height;
+      final radius = star.size * (0.5 + animation.value * 0.5);
+      
+      canvas.drawCircle(Offset(x, y), radius, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+
 class NavigationHeader extends StatefulWidget {
   const NavigationHeader({super.key});
 
@@ -80,20 +211,20 @@ class NavigationHeader extends StatefulWidget {
 }
 
 class _NavigationHeaderState extends State<NavigationHeader> {
-  String _currentMenuItem = 'Home';  // Default selected menu item
+  String _currentMenuItem = 'Home';
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
       height: 89,
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: ZodiacColors.darkSpace.withOpacity(0.95),
         boxShadow: [
           BoxShadow(
-            color: Color(0x40000000),
-            offset: Offset(0, 4),
-            blurRadius: 4,
+            color: ZodiacColors.primaryPurple.withOpacity(0.3),
+            offset: const Offset(0, 4),
+            blurRadius: 20,
           ),
         ],
       ),
@@ -109,18 +240,25 @@ class _NavigationHeaderState extends State<NavigationHeader> {
                   Container(
                     width: 17,
                     height: 17,
-                    decoration: const BoxDecoration(
-                      color: Colors.black,
+                    decoration: BoxDecoration(
+                      color: ZodiacColors.cosmicPink,
                       shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: ZodiacColors.cosmicPink.withOpacity(0.5),
+                          blurRadius: 10,
+                          spreadRadius: 2,
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'Logo',
-                    style: GoogleFonts.inter(
+                    'AstroAI',
+                    style: GoogleFonts.cinzel(
                       fontSize: 20,
                       fontWeight: FontWeight.w700,
-                      color: Colors.black,
+                      color: ZodiacColors.starGold,
                     ),
                   ),
                 ],
@@ -129,7 +267,7 @@ class _NavigationHeaderState extends State<NavigationHeader> {
                 builder: (context, constraints) {
                   if (MediaQuery.of(context).size.width < 800) {
                     return IconButton(
-                      icon: const Icon(Icons.menu),
+                      icon: Icon(Icons.menu, color: ZodiacColors.starGold),
                       onPressed: () {},
                     );
                   }
@@ -161,29 +299,58 @@ class _NavigationHeaderState extends State<NavigationHeader> {
         });
         _navigateToPage(text, context);
       },
-      child: Padding(
+      child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          color: isSelected ? ZodiacColors.primaryPurple.withOpacity(0.2) : Colors.transparent,
+        ),
         child: Text(
           text,
-          style: GoogleFonts.inter(
+          style: GoogleFonts.raleway(
             fontSize: 14,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
-            color: isSelected ? Colors.black : Colors.black.withOpacity(0.5),
+            color: isSelected ? ZodiacColors.starGold : ZodiacColors.starGold.withOpacity(0.7),
           ),
         ),
       ),
     );
   }
 
+  Widget _buildHighlightedMenuItem(String text, BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [ZodiacColors.cosmicPink, ZodiacColors.primaryPurple],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: ZodiacColors.cosmicPink.withOpacity(0.3),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Text(
+        text,
+        style: GoogleFonts.raleway(
+          fontSize: 14,
+          fontWeight: FontWeight.w700,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+
   void _navigateToPage(String pageName, BuildContext context) {
-    // Update current menu item in state
     setState(() {
       _currentMenuItem = pageName;
     });
 
     switch (pageName) {
       case 'Home':
-        // Always navigate to home by popping to first route and pushing new HomePage
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(
             builder: (context) => const HomePage(),
@@ -193,7 +360,6 @@ class _NavigationHeaderState extends State<NavigationHeader> {
         );
         break;
       case 'Horoscope':
-        // Check if we're already on the daily insights page
         if (ModalRoute.of(context)?.settings.name == '/daily-insights') return;
         
         Navigator.pushReplacement(
@@ -205,7 +371,6 @@ class _NavigationHeaderState extends State<NavigationHeader> {
         );
         break;
       case 'About Us':
-        // Check if we're already on the about page
         if (ModalRoute.of(context)?.settings.name == '/about') return;
         
         Navigator.pushReplacement(
@@ -225,25 +390,26 @@ class _NavigationHeaderState extends State<NavigationHeader> {
     return PopupMenuButton<String>(
       offset: const Offset(0, 45),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
       ),
+      color: ZodiacColors.darkSpace,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         child: Row(
           children: [
             Text(
               text,
-              style: GoogleFonts.inter(
+              style: GoogleFonts.raleway(
                 fontSize: 14,
                 fontWeight: text == _currentMenuItem ? FontWeight.w700 : FontWeight.w400,
-                color: text == _currentMenuItem ? Colors.black : Colors.black.withOpacity(0.5),
+                color: text == _currentMenuItem ? ZodiacColors.starGold : ZodiacColors.starGold.withOpacity(0.7),
               ),
             ),
             const SizedBox(width: 8),
             Icon(
               Icons.keyboard_arrow_down,
               size: 16,
-              color: Colors.black.withOpacity(0.5),
+              color: ZodiacColors.starGold.withOpacity(0.7),
             ),
           ],
         ),
@@ -253,28 +419,28 @@ class _NavigationHeaderState extends State<NavigationHeader> {
           value: 'Matching',
           child: Text(
             'Matching',
-            style: GoogleFonts.inter(fontSize: 14),
+            style: GoogleFonts.raleway(fontSize: 14, color: ZodiacColors.starGold),
           ),
         ),
         PopupMenuItem<String>(
           value: 'Natal chart',
           child: Text(
             'Natal chart',
-            style: GoogleFonts.inter(fontSize: 14),
+            style: GoogleFonts.raleway(fontSize: 14, color: ZodiacColors.starGold),
           ),
         ),
         PopupMenuItem<String>(
           value: 'ASMR',
           child: Text(
             'ASMR',
-            style: GoogleFonts.inter(fontSize: 14),
+            style: GoogleFonts.raleway(fontSize: 14, color: ZodiacColors.starGold),
           ),
         ),
         PopupMenuItem<String>(
           value: 'Tarot',
           child: Text(
             'Tarot',
-            style: GoogleFonts.inter(fontSize: 14),
+            style: GoogleFonts.raleway(fontSize: 14, color: ZodiacColors.starGold),
           ),
         ),
       ],
@@ -285,7 +451,6 @@ class _NavigationHeaderState extends State<NavigationHeader> {
           _currentMenuItem = 'More Features';
         });
         
-        // Handle feature selection
         switch (value) {
           case 'Matching':
             Navigator.pushReplacement(
@@ -309,7 +474,7 @@ class _NavigationHeaderState extends State<NavigationHeader> {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (context) => const ASMRPage(),
+                builder: (context) => const AsmrPage(),
                 settings: const RouteSettings(name: '/asmr'),
               ),
             );
@@ -327,32 +492,6 @@ class _NavigationHeaderState extends State<NavigationHeader> {
       },
     );
   }
-
-  Widget _buildHighlightedMenuItem(String text, BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const ContactPage()),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        decoration: BoxDecoration(
-          color: Colors.black,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          text,
-          style: GoogleFonts.inter(
-            fontSize: 14,
-            fontWeight: FontWeight.w400,
-            color: Colors.white,
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 class HeroSection extends StatelessWidget {
@@ -362,31 +501,47 @@ class HeroSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: Colors.white,
-      padding: const EdgeInsets.fromLTRB(24, 60, 24, 60),
-      child: Center(
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 1152),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              if (constraints.maxWidth < 800) {
-                return Column(
+      height: 600,
+      decoration: const BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage('assets/MainSpace.png'),
+          fit: BoxFit.cover,
+        ),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              ZodiacColors.darkSpace.withOpacity(0.3),
+              ZodiacColors.darkSpace.withOpacity(0.7),
+            ],
+          ),
+        ),
+        child: Center(
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 1152),
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                if (constraints.maxWidth < 800) {
+                  return Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _buildHeroContent(context),
+                      const SizedBox(height: 40),
+                    ],
+                  );
+                }
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    _buildHeroContent(context),
-                    const SizedBox(height: 40),
-                    _buildHeroImage(),
+                    Expanded(flex: 1, child: _buildHeroContent(context)),
                   ],
                 );
-              }
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(flex: 5, child: _buildHeroContent(context)),
-                  const SizedBox(width: 168),
-                  Expanded(flex: 7, child: _buildHeroImage()),
-                ],
-              );
-            },
+              },
+            ),
           ),
         ),
       ),
@@ -398,121 +553,135 @@ class HeroSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'EXPLORE YOUR\nJOURNEY',
+          'EXPLORE YOUR\nCOSMIC JOURNEY',
           style: GoogleFonts.cinzel(
-            fontSize: 50,
+            fontSize: 60,
             fontWeight: FontWeight.w700,
-            color: Colors.black,
+            color: ZodiacColors.starGold,
             letterSpacing: -1,
-            height: 1.3,
+            height: 1.2,
+            shadows: [
+              Shadow(
+                color: ZodiacColors.primaryPurple.withOpacity(0.5),
+                blurRadius: 20,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 20),
         Text(
           'Discover your zodiac, daily horoscope, and cosmic insights with just your birthday. Simple, beautiful, and powered by AI.',
           style: GoogleFonts.raleway(
-            fontSize: 16,
+            fontSize: 18,
             fontWeight: FontWeight.w400,
-            color: Colors.black,
+            color: Colors.white,
             letterSpacing: -0.32,
-            height: 1.3,
+            height: 1.5,
           ),
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: 40),
         ElevatedButton(
           onPressed: () {
-            _showUserDataDialog(context);
+            _scrollToZodiacSection(context);
           },
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.black,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            backgroundColor: ZodiacColors.cosmicPink,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(30),
             ),
             elevation: 0,
+            shadowColor: ZodiacColors.cosmicPink.withOpacity(0.5),
           ),
-          child: Text(
-            'Get Started',
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Get Started',
+                style: GoogleFonts.raleway(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Icon(Icons.arrow_downward, size: 20),
+            ],
           ),
         ),
       ],
     );
   }
 
-  Widget _buildHeroImage() {
-    return Container(
-      width: 623,
-      height: 401,
-      decoration: ShapeDecoration(
-        image: const DecorationImage(
-          image: AssetImage('assets/MainSpace.png'),
-          fit: BoxFit.cover,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30),
-        ),
-        shadows: const [
-          BoxShadow(
-            color: Color(0x3F000000),
-            blurRadius: 30,
-            offset: Offset(30, 60),
-            spreadRadius: -30,
-          )
-        ],
-      ),
+  void _scrollToZodiacSection(BuildContext context) {
+    Scrollable.ensureVisible(
+      context.findAncestorStateOfType<_ZodiacSectionState>()?.context ?? context,
+      duration: const Duration(milliseconds: 1000),
+      curve: Curves.easeInOut,
     );
   }
 }
 
-class ZodiacSection extends StatelessWidget {
+class ZodiacSection extends StatefulWidget {
   const ZodiacSection({super.key});
 
+  @override
+  State<ZodiacSection> createState() => _ZodiacSectionState();
+}
+
+class _ZodiacSectionState extends State<ZodiacSection> {
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: const Color(0xFFF3F3F3),
-      padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 24),
+      padding: const EdgeInsets.symmetric(vertical: 80, horizontal: 24),
       child: Center(
         child: Container(
           constraints: const BoxConstraints(maxWidth: 1152),
           child: Column(
-          children: [
-            Text(
-              'Choose your zodiac',
-              style: GoogleFonts.cinzel(
-                fontSize: 50,
-                fontWeight: FontWeight.w700,
-                color: Colors.black,
-                letterSpacing: -1,
-                height: 1.3,
+            children: [
+              Text(
+                'Choose your zodiac',
+                style: GoogleFonts.cinzel(
+                  fontSize: 50,
+                  fontWeight: FontWeight.w700,
+                  color: ZodiacColors.starGold,
+                  letterSpacing: -1,
+                  height: 1.3,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 30),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: MediaQuery.of(context).size.width < 600 ? 2 :
-                               MediaQuery.of(context).size.width < 900 ? 4 : 6,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 0.75,
+              const SizedBox(height: 20),
+              Text(
+                'Tap to reveal your cosmic destiny',
+                style: GoogleFonts.raleway(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w400,
+                  color: Colors.white.withOpacity(0.8),
+                ),
+                textAlign: TextAlign.center,
               ),
-              itemCount: 12,
-              itemBuilder: (context, index) {
-                return ZodiacCard(index: index);
-              },
-            ),
-          ],
+              const SizedBox(height: 50),
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: MediaQuery.of(context).size.width < 600 ? 2 :
+                                 MediaQuery.of(context).size.width < 900 ? 3 : 4,
+                  crossAxisSpacing: 20,
+                  mainAxisSpacing: 20,
+                  childAspectRatio: 0.75,
+                ),
+                itemCount: 12,
+                itemBuilder: (context, index) {
+                  return ZodiacCard(index: index);
+                },
+              ),
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
@@ -527,30 +696,30 @@ class ZodiacCard extends StatefulWidget {
 }
 
 class _ZodiacCardState extends State<ZodiacCard> with SingleTickerProviderStateMixin {
-  bool isHovered = false;
+  bool isFlipped = false;
   late AnimationController _animationController;
   late Animation<double> _animation;
 
-  static const List<Map<String, String>> zodiacSigns = [
-    {'name': 'ARIES', 'symbol': '♈', 'dates': 'MAR 21 - APR 19'},
-    {'name': 'TAURUS', 'symbol': '♉', 'dates': 'APR 20 - MAY 20'},
-    {'name': 'GEMINI', 'symbol': '♊', 'dates': 'MAY 21 - JUN 20'},
-    {'name': 'CANCER', 'symbol': '♋', 'dates': 'JUN 21 - JUL 22'},
-    {'name': 'LEO', 'symbol': '♌', 'dates': 'JUL 23 - AUG 22'},
-    {'name': 'VIRGO', 'symbol': '♍', 'dates': 'AUG 23 - SEP 22'},
-    {'name': 'LIBRA', 'symbol': '♎', 'dates': 'SEP 23 - OCT 22'},
-    {'name': 'SCORPIO', 'symbol': '♏', 'dates': 'OCT 23 - NOV 21'},
-    {'name': 'SAGITTARIUS', 'symbol': '♐', 'dates': 'NOV 22 - DEC 21'},
-    {'name': 'CAPRICORN', 'symbol': '♑', 'dates': 'DEC 22 - JAN 19'},
-    {'name': 'AQUARIUS', 'symbol': '♒', 'dates': 'JAN 20 - FEB 18'},
-    {'name': 'PISCES', 'symbol': '♓', 'dates': 'FEB 19 - MAR 20'},
+  static const List<Map<String, dynamic>> zodiacSigns = [
+    {'name': 'ARIES', 'symbol': '♈', 'dates': 'MAR 21 - APR 19', 'element': 'Fire', 'planet': 'Mars'},
+    {'name': 'TAURUS', 'symbol': '♉', 'dates': 'APR 20 - MAY 20', 'element': 'Earth', 'planet': 'Venus'},
+    {'name': 'GEMINI', 'symbol': '♊', 'dates': 'MAY 21 - JUN 20', 'element': 'Air', 'planet': 'Mercury'},
+    {'name': 'CANCER', 'symbol': '♋', 'dates': 'JUN 21 - JUL 22', 'element': 'Water', 'planet': 'Moon'},
+    {'name': 'LEO', 'symbol': '♌', 'dates': 'JUL 23 - AUG 22', 'element': 'Fire', 'planet': 'Sun'},
+    {'name': 'VIRGO', 'symbol': '♍', 'dates': 'AUG 23 - SEP 22', 'element': 'Earth', 'planet': 'Mercury'},
+    {'name': 'LIBRA', 'symbol': '♎', 'dates': 'SEP 23 - OCT 22', 'element': 'Air', 'planet': 'Venus'},
+    {'name': 'SCORPIO', 'symbol': '♏', 'dates': 'OCT 23 - NOV 21', 'element': 'Water', 'planet': 'Pluto'},
+    {'name': 'SAGITTARIUS', 'symbol': '♐', 'dates': 'NOV 22 - DEC 21', 'element': 'Fire', 'planet': 'Jupiter'},
+    {'name': 'CAPRICORN', 'symbol': '♑', 'dates': 'DEC 22 - JAN 19', 'element': 'Earth', 'planet': 'Saturn'},
+    {'name': 'AQUARIUS', 'symbol': '♒', 'dates': 'JAN 20 - FEB 18', 'element': 'Air', 'planet': 'Uranus'},
+    {'name': 'PISCES', 'symbol': '♓', 'dates': 'FEB 19 - MAR 20', 'element': 'Water', 'planet': 'Neptune'},
   ];
 
   @override
   void initState() {
     super.initState();
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 600),
       vsync: this,
     );
     _animation = Tween<double>(
@@ -574,134 +743,54 @@ class _ZodiacCardState extends State<ZodiacCard> with SingleTickerProviderStateM
 
     return GestureDetector(
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ZodiacDetailPage(
-              zodiacName: zodiac['name']!,
-              zodiacSymbol: zodiac['symbol']!,
-              dateRange: zodiac['dates']!,
-              zodiacIndex: widget.index,
-            ),
-            settings: RouteSettings(name: '/zodiac/${zodiac['name']!.toLowerCase()}'),
-          ),
-        );
-      },
-      child: MouseRegion(
-        onEnter: (_) {
-          setState(() {
-            isHovered = true;
-          });
+        setState(() {
+          isFlipped = !isFlipped;
+        });
+        if (isFlipped) {
           _animationController.forward();
-        },
-        onExit: (_) {
-          setState(() {
-            isHovered = false;
-          });
+        } else {
           _animationController.reverse();
+        }
+      },
+      child: AnimatedBuilder(
+        animation: _animation,
+        builder: (context, child) {
+          final flipValue = isFlipped ? _animation.value : (1.0 - _animation.value);
+          return Transform(
+            alignment: Alignment.center,
+            transform: Matrix4.identity()
+              ..setEntry(3, 2, 0.001)
+              ..rotateY(flipValue * 3.14159),
+            child: flipValue < 0.5
+                ? _buildFrontCard(zodiac)
+                : Transform(
+                    alignment: Alignment.center,
+                    transform: Matrix4.identity()..rotateY(3.14159),
+                    child: _buildBackCard(zodiac),
+                  ),
+          );
         },
-        child: AnimatedBuilder(
-          animation: _animation,
-          builder: (context, child) {
-            return Transform(
-              alignment: Alignment.center,
-              transform: Matrix4.identity()
-                ..setEntry(3, 2, 0.001)
-                ..rotateY(_animation.value * 3.14159),
-              child: _animation.value < 0.5
-                  ? _buildFrontCard(zodiac)
-                  : Transform(
-                      alignment: Alignment.center,
-                      transform: Matrix4.identity()..rotateY(3.14159),
-                      child: _buildBackCard(zodiac),
-                    ),
-            );
-          },
-        ),
       ),
     );
   }
 
-  Widget _buildFrontCard(Map<String, String> zodiac) {
+  Widget _buildFrontCard(Map<String, dynamic> zodiac) {
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(40),
-        gradient: const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
+        borderRadius: BorderRadius.circular(20),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
           colors: [
-            Color(0xFF605688),
-            Color(0xFF4A4070),
+            ZodiacColors.primaryPurple,
+            ZodiacColors.deepPurple,
           ],
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            offset: const Offset(0, 8),
-            blurRadius: 16,
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Zodiac Symbol
-            Text(
-              zodiac['symbol']!,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 40,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            // Zodiac Name
-            Text(
-              zodiac['name']!,
-              style: GoogleFonts.cinzel(
-                color: const Color(0xFFFBF7BA),
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 1,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 6),
-            // Date Range
-            Text(
-              zodiac['dates']!,
-              style: GoogleFonts.raleway(
-                color: Colors.white.withOpacity(0.8),
-                fontSize: 9,
-                fontWeight: FontWeight.w400,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBackCard(Map<String, String> zodiac) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(40),
-        gradient: const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFF605688),
-            Color(0xFF4A4070),
-          ],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            offset: const Offset(0, 8),
-            blurRadius: 16,
+            color: ZodiacColors.primaryPurple.withOpacity(0.3),
+            offset: const Offset(0, 10),
+            blurRadius: 20,
           ),
         ],
       ),
@@ -710,7 +799,97 @@ class _ZodiacCardState extends State<ZodiacCard> with SingleTickerProviderStateM
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Decorative border at top
+            // Zodiac Symbol
+            Text(
+              zodiac['symbol']!,
+              style: TextStyle(
+                color: ZodiacColors.starGold,
+                fontSize: 48,
+                fontWeight: FontWeight.bold,
+                shadows: [
+                  Shadow(
+                    color: ZodiacColors.starGold.withOpacity(0.5),
+                    blurRadius: 10,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            // Zodiac Name
+            Text(
+              zodiac['name']!,
+              style: GoogleFonts.cinzel(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            // Date Range
+            Text(
+              zodiac['dates']!,
+              style: GoogleFonts.raleway(
+                color: Colors.white.withOpacity(0.8),
+                fontSize: 10,
+                fontWeight: FontWeight.w400,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            // Element
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: ZodiacColors.cosmicPink.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: ZodiacColors.cosmicPink.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: Text(
+                zodiac['element']!,
+                style: GoogleFonts.raleway(
+                  color: ZodiacColors.cosmicPink,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBackCard(Map<String, dynamic> zodiac) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            ZodiacColors.deepPurple,
+            ZodiacColors.darkSpace,
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: ZodiacColors.primaryPurple.withOpacity(0.3),
+            offset: const Offset(0, 10),
+            blurRadius: 20,
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Mystical border
             Container(
               width: double.infinity,
               height: 2,
@@ -718,14 +897,15 @@ class _ZodiacCardState extends State<ZodiacCard> with SingleTickerProviderStateM
                 gradient: LinearGradient(
                   colors: [
                     Colors.transparent,
-                    Colors.white.withOpacity(0.5),
+                    ZodiacColors.starGold.withOpacity(0.6),
                     Colors.transparent,
                   ],
                 ),
               ),
             ),
             const SizedBox(height: 16),
-            // Detailed artistic content
+            
+            // Central mystical design
             Expanded(
               child: Stack(
                 children: [
@@ -737,15 +917,21 @@ class _ZodiacCardState extends State<ZodiacCard> with SingleTickerProviderStateM
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.3),
+                          color: ZodiacColors.starGold.withOpacity(0.4),
                           width: 2,
+                        ),
+                        gradient: RadialGradient(
+                          colors: [
+                            ZodiacColors.starGold.withOpacity(0.1),
+                            Colors.transparent,
+                          ],
                         ),
                       ),
                       child: Center(
                         child: Text(
                           zodiac['symbol']!,
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: ZodiacColors.starGold,
                             fontSize: 32,
                             fontWeight: FontWeight.bold,
                           ),
@@ -753,42 +939,60 @@ class _ZodiacCardState extends State<ZodiacCard> with SingleTickerProviderStateM
                       ),
                     ),
                   ),
-                  // Decorative waves and patterns
+                  
+                  // Decorative cosmic patterns
                   Positioned(
-                    top: 20,
+                    top: 10,
                     left: 10,
                     right: 10,
                     child: CustomPaint(
-                      size: const Size(double.infinity, 30),
-                      painter: WavePatternPainter(),
+                      size: const Size(double.infinity, 20),
+                      painter: CosmicPatternPainter(),
                     ),
                   ),
                   Positioned(
-                    bottom: 40,
+                    bottom: 30,
                     left: 10,
                     right: 10,
                     child: CustomPaint(
-                      size: const Size(double.infinity, 30),
-                      painter: WavePatternPainter(),
+                      size: const Size(double.infinity, 20),
+                      painter: CosmicPatternPainter(),
                     ),
                   ),
                 ],
               ),
             ),
+            
+            const SizedBox(height: 12),
+            
+            // Planet information
+            Text(
+              'Ruled by ${zodiac['planet']!}',
+              style: GoogleFonts.raleway(
+                color: ZodiacColors.cosmicPink,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            
             const SizedBox(height: 8),
-            // Name at bottom with decorative styling
+            
+            // Name at bottom
             Text(
               zodiac['name']!,
               style: GoogleFonts.cinzel(
-                color: const Color(0xFFFBF7BA),
+                color: ZodiacColors.starGold,
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.5,
               ),
               textAlign: TextAlign.center,
             ),
+            
             const SizedBox(height: 8),
-            // Decorative border at bottom
+            
+            // Bottom mystical border
             Container(
               width: double.infinity,
               height: 2,
@@ -796,7 +1000,7 @@ class _ZodiacCardState extends State<ZodiacCard> with SingleTickerProviderStateM
                 gradient: LinearGradient(
                   colors: [
                     Colors.transparent,
-                    Colors.white.withOpacity(0.5),
+                    ZodiacColors.starGold.withOpacity(0.6),
                     Colors.transparent,
                   ],
                 ),
@@ -809,6 +1013,33 @@ class _ZodiacCardState extends State<ZodiacCard> with SingleTickerProviderStateM
   }
 }
 
+class CosmicPatternPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = ZodiacColors.starGold.withOpacity(0.3)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+
+    final path = Path();
+    
+    // Create mystical wave pattern
+    for (double x = 0; x < size.width; x += 20) {
+      final y = size.height / 2 + math.sin(x * 0.1) * 5;
+      if (x == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
 class CosmicDestinySection extends StatelessWidget {
   const CosmicDestinySection({super.key});
 
@@ -816,32 +1047,41 @@ class CosmicDestinySection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: Colors.white,
-      padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            ZodiacColors.darkSpace,
+            ZodiacColors.deepPurple.withOpacity(0.8),
+          ],
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 80, horizontal: 24),
       child: Center(
         child: Container(
           constraints: const BoxConstraints(maxWidth: 1152),
           child: LayoutBuilder(
-          builder: (context, constraints) {
-            if (constraints.maxWidth < 800) {
-              return Column(
+            builder: (context, constraints) {
+              if (constraints.maxWidth < 800) {
+                return Column(
+                  children: [
+                    _buildIconGrid(),
+                    const SizedBox(height: 44),
+                    _buildCosmicContent(),
+                  ],
+                );
+              }
+              return Row(
                 children: [
-                  _buildIconGrid(),
-                  const SizedBox(height: 44),
-                  _buildCosmicContent(),
+                  Expanded(flex: 1, child: _buildIconGrid()),
+                  const SizedBox(width: 100),
+                  Expanded(flex: 1, child: _buildCosmicContent()),
                 ],
               );
-            }
-            return Row(
-              children: [
-                Expanded(flex: 1, child: _buildIconGrid()),
-                const SizedBox(width: 100),
-                Expanded(flex: 1, child: _buildCosmicContent()),
-              ],
-            );
-          },
+            },
+          ),
         ),
-      ),
       ),
     );
   }
@@ -851,14 +1091,14 @@ class CosmicDestinySection extends StatelessWidget {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       crossAxisCount: 2,
-      crossAxisSpacing: 12,
-      mainAxisSpacing: 12,
+      crossAxisSpacing: 20,
+      mainAxisSpacing: 20,
       childAspectRatio: 1.2,
       children: [
-        _buildIconCard(const Color(0xFFF9C3C3), 'heart'),
-        _buildIconCard(const Color(0xFFBAE9AB), 'toolbox'),
-        _buildIconCard(const Color(0xFFEAF1B2), 'flask'),
-        _buildIconCard(const Color(0xFF3E5F8D), 'dollar'),
+        _buildIconCard(ZodiacColors.cosmicPink, 'heart'),
+        _buildIconCard(ZodiacColors.cosmicBlue, 'toolbox'),
+        _buildIconCard(ZodiacColors.starGold, 'flask'),
+        _buildIconCard(ZodiacColors.primaryPurple, 'dollar'),
       ],
     );
   }
@@ -866,66 +1106,81 @@ class CosmicDestinySection extends StatelessWidget {
   Widget _buildIconCard(Color color, String iconType) {
     return Container(
       decoration: BoxDecoration(
-        color: color,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            color.withOpacity(0.2),
+            color.withOpacity(0.1),
+          ],
+        ),
         borderRadius: BorderRadius.circular(24),
-        boxShadow: const [
+        border: Border.all(
+          color: color.withOpacity(0.3),
+          width: 1,
+        ),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x40000000),
-            offset: Offset(0, 4),
+            color: color.withOpacity(0.2),
+            offset: const Offset(0, 8),
             blurRadius: 20,
           ),
         ],
       ),
       child: Center(
         child: SizedBox(
-          width: 109,
-          height: 110,
-          child: _buildSvgIcon(iconType),
+          width: 80,
+          height: 80,
+          child: _buildSvgIcon(iconType, color),
         ),
       ),
     );
   }
 
-  Widget _buildSvgIcon(String iconType) {
+  Widget _buildSvgIcon(String iconType, Color color) {
     switch (iconType) {
       case 'heart':
-        return _buildHeartIcon();
+        return _buildHeartIcon(color);
       case 'toolbox':
-        return _buildToolboxIcon();
+        return _buildToolboxIcon(color);
       case 'flask':
-        return _buildFlaskIcon();
+        return _buildFlaskIcon(color);
       case 'dollar':
-        return _buildDollarIcon();
+        return _buildDollarIcon(color);
       default:
         return Container();
     }
   }
 
-  Widget _buildHeartIcon() {
-    return CustomPaint(
-      size: const Size(109, 110),
-      painter: HeartIconPainter(),
+  Widget _buildHeartIcon(Color color) {
+    return Icon(
+      Icons.favorite,
+      size: 40,
+      color: color,
     );
   }
 
-  Widget _buildToolboxIcon() {
-    return CustomPaint(
-      size: const Size(92, 92),
-      painter: ToolboxIconPainter(),
+  Widget _buildToolboxIcon(Color color) {
+    return Icon(
+      Icons.psychology,
+      size: 40,
+      color: color,
     );
   }
 
-  Widget _buildFlaskIcon() {
-    return CustomPaint(
-      size: const Size(116, 110),
-      painter: FlaskIconPainter(),
+  Widget _buildFlaskIcon(Color color) {
+    return Icon(
+      Icons.auto_awesome,
+      size: 40,
+      color: color,
     );
   }
 
-  Widget _buildDollarIcon() {
-    return CustomPaint(
-      size: const Size(91, 110),
-      painter: DollarIconPainter(),
+  Widget _buildDollarIcon(Color color) {
+    return Icon(
+      Icons.star,
+      size: 40,
+      color: color,
     );
   }
 
@@ -938,36 +1193,48 @@ class CosmicDestinySection extends StatelessWidget {
           style: GoogleFonts.cinzel(
             fontSize: 50,
             fontWeight: FontWeight.w700,
-            color: Colors.black,
+            color: ZodiacColors.starGold,
             letterSpacing: -1,
             height: 1.3,
+            shadows: [
+              Shadow(
+                color: ZodiacColors.primaryPurple.withOpacity(0.5),
+                blurRadius: 20,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 24),
         Text(
           'Our AI analyses your zodiac sign to deliver tailored predictions about romance, success, and fortune. Discover what the universe has in store!',
           style: GoogleFonts.raleway(
-            fontSize: 16,
+            fontSize: 18,
             fontWeight: FontWeight.w400,
-            color: Colors.black,
+            color: Colors.white,
             letterSpacing: -0.32,
-            height: 1.3,
+            height: 1.5,
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 32),
         ElevatedButton(
-          onPressed: () {},
+          onPressed: () {
+            _showUserDataDialog(context);
+          },
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.black,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            backgroundColor: ZodiacColors.cosmicPink,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(25),
             ),
+            elevation: 0,
+            shadowColor: ZodiacColors.cosmicPink.withOpacity(0.5),
           ),
           child: Text(
             'Enter your birthday',
-            style: GoogleFonts.inter(
-              fontSize: 12,
+            style: GoogleFonts.raleway(
+              fontSize: 14,
               fontWeight: FontWeight.w700,
               color: Colors.white,
             ),
@@ -985,86 +1252,127 @@ class FeaturesSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: const Color(0xFFEFEEED),
-      padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            ZodiacColors.deepPurple.withOpacity(0.8),
+            ZodiacColors.darkSpace,
+          ],
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 80, horizontal: 24),
       child: Center(
         child: Container(
           constraints: const BoxConstraints(maxWidth: 1152),
           child: Column(
-          children: [
-            Text(
-              'features',
-              style: GoogleFonts.cinzel(
-                fontSize: 50,
-                fontWeight: FontWeight.w700,
-                color: Colors.black,
-                letterSpacing: -1,
-                height: 1.3,
+            children: [
+              Text(
+                'Cosmic Features',
+                style: GoogleFonts.cinzel(
+                  fontSize: 50,
+                  fontWeight: FontWeight.w700,
+                  color: ZodiacColors.starGold,
+                  letterSpacing: -1,
+                  height: 1.3,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 30),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                if (constraints.maxWidth < 600) {
-                  return Column(
+              const SizedBox(height: 20),
+              Text(
+                'Discover the mystical tools that await you',
+                style: GoogleFonts.raleway(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w400,
+                  color: Colors.white.withOpacity(0.8),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 50),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  if (constraints.maxWidth < 600) {
+                    return Column(
+                      children: [
+                        _buildFeatureCard(context, 'Matching', ZodiacColors.cosmicPink),
+                        const SizedBox(height: 24),
+                        _buildFeatureCard(context, 'Natal chart', ZodiacColors.cosmicBlue),
+                        const SizedBox(height: 24),
+                        _buildFeatureCard(context, 'ASMR', ZodiacColors.starGold),
+                        const SizedBox(height: 24),
+                        _buildFeatureCard(context, 'Tarot', ZodiacColors.primaryPurple),
+                      ],
+                    );
+                  }
+                  return Row(
                     children: [
-                      _buildFeatureCard(context, 'Matching', const Color(0xFF4A4A4A)),
-                      const SizedBox(height: 24),
-                      _buildFeatureCard(context, 'Natal chart', const Color(0xFF9398DF)),
-                      const SizedBox(height: 24),
-                      _buildFeatureCard(context, 'ASMR', const Color(0xFFBB8075)),
-                      const SizedBox(height: 24),
-                      _buildFeatureCard(context, 'Tarot', const Color(0xFF6953B9)),
+                      Expanded(child: _buildFeatureCard(context, 'Matching', ZodiacColors.cosmicPink)),
+                      const SizedBox(width: 24),
+                      Expanded(child: _buildFeatureCard(context, 'Natal chart', ZodiacColors.cosmicBlue)),
+                      const SizedBox(width: 24),
+                      Expanded(child: _buildFeatureCard(context, 'ASMR', ZodiacColors.starGold)),
+                      const SizedBox(width: 24),
+                      Expanded(child: _buildFeatureCard(context, 'Tarot', ZodiacColors.primaryPurple)),
                     ],
                   );
-                }
-                return Row(
-                  children: [
-                    Expanded(child: _buildFeatureCard(context, 'Matching', const Color(0xFF4A4A4A))),
-                    const SizedBox(width: 24),
-                    Expanded(child: _buildFeatureCard(context, 'Natal chart', const Color(0xFF9398DF))),
-                    const SizedBox(width: 24),
-                    Expanded(child: _buildFeatureCard(context, 'ASMR', const Color(0xFFBB8075))),
-                    const SizedBox(width: 24),
-                    Expanded(child: _buildFeatureCard(context, 'Tarot', const Color(0xFF6953B9))),
-                  ],
-                );
-              },
-            ),
-            const SizedBox(height: 40),
-            ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                },
+              ),
+              const SizedBox(height: 50),
+              ElevatedButton(
+                onPressed: () {
+                  _showUserDataDialog(context);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: ZodiacColors.cosmicPink,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  elevation: 0,
+                  shadowColor: ZodiacColors.cosmicPink.withOpacity(0.5),
+                ),
+                child: Text(
+                  'Start Your Journey',
+                  style: GoogleFonts.raleway(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
                 ),
               ),
-              child: Text(
-                'Button Text',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
 
-  Widget _buildFeatureCard(BuildContext context, String title, Color iconColor) {
+  Widget _buildFeatureCard(BuildContext context, String title, Color accentColor) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
+      padding: const EdgeInsets.fromLTRB(24, 40, 24, 24),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.black, width: 1),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            accentColor.withOpacity(0.1),
+            accentColor.withOpacity(0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: accentColor.withOpacity(0.3),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: accentColor.withOpacity(0.2),
+            offset: const Offset(0, 8),
+            blurRadius: 20,
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1077,8 +1385,22 @@ class FeaturesSection extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: iconColor,
+                  gradient: LinearGradient(
+                    colors: [accentColor, accentColor.withOpacity(0.8)],
+                  ),
                   borderRadius: BorderRadius.circular(32),
+                  boxShadow: [
+                    BoxShadow(
+                      color: accentColor.withOpacity(0.3),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  _getFeatureIcon(title),
+                  color: Colors.white,
+                  size: 24,
                 ),
               ),
             ),
@@ -1088,18 +1410,18 @@ class FeaturesSection extends StatelessWidget {
             style: GoogleFonts.cinzel(
               fontSize: 24,
               fontWeight: FontWeight.w700,
-              color: Colors.black,
+              color: Colors.white,
               letterSpacing: -0.48,
               height: 1.3,
             ),
           ),
           const SizedBox(height: 16),
           Text(
-            'This is the description of the first feature of our app. We are going yo briefly outline what this feature does',
+            _getFeatureDescription(title),
             style: GoogleFonts.raleway(
               fontSize: 16,
               fontWeight: FontWeight.w400,
-              color: Colors.black.withOpacity(0.4),
+              color: Colors.white.withOpacity(0.8),
               letterSpacing: -0.32,
               height: 1.3,
             ),
@@ -1116,11 +1438,11 @@ class FeaturesSection extends StatelessWidget {
               );
             },
             child: Text(
-              'learn more',
-              style: GoogleFonts.inter(
+              'Learn more',
+              style: GoogleFonts.raleway(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
-                color: Colors.black,
+                color: accentColor,
                 decoration: TextDecoration.underline,
               ),
             ),
@@ -1128,6 +1450,36 @@ class FeaturesSection extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  IconData _getFeatureIcon(String title) {
+    switch (title) {
+      case 'Matching':
+        return Icons.favorite;
+      case 'Natal chart':
+        return Icons.psychology;
+      case 'ASMR':
+        return Icons.headphones;
+      case 'Tarot':
+        return Icons.auto_awesome;
+      default:
+        return Icons.star;
+    }
+  }
+
+  String _getFeatureDescription(String title) {
+    switch (title) {
+      case 'Matching':
+        return 'Find your perfect cosmic match based on zodiac compatibility and astrological insights.';
+      case 'Natal chart':
+        return 'Discover your unique birth chart and understand your cosmic blueprint with detailed planetary analysis.';
+      case 'ASMR':
+        return 'Immerse yourself in soothing cosmic sounds and guided meditation for spiritual relaxation.';
+      case 'Tarot':
+        return 'Explore mystical tarot readings and divine guidance for your life\'s journey.';
+      default:
+        return 'Discover the mystical tools that await you on your cosmic journey.';
+    }
   }
 }
 
@@ -1325,17 +1677,18 @@ void _showUserDataDialog(BuildContext context) {
       return StatefulBuilder(
         builder: (context, setState) {
           return AlertDialog(
-            backgroundColor: const Color(0xFF1A1A2E),
+            backgroundColor: ZodiacColors.darkSpace,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(20),
             ),
             title: Text(
               'Welcome to AstroAI! ✨',
               style: GoogleFonts.cinzel(
                 fontSize: 24,
                 fontWeight: FontWeight.w700,
-                color: Colors.white,
+                color: ZodiacColors.starGold,
               ),
+              textAlign: TextAlign.center,
             ),
             content: SizedBox(
               width: 400,
@@ -1458,19 +1811,22 @@ void _showUserDataDialog(BuildContext context) {
                       }
                     : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF9398DF),
+                  backgroundColor: ZodiacColors.cosmicPink,
+                  foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(25),
                   ),
+                  elevation: 0,
+                  shadowColor: ZodiacColors.cosmicPink.withOpacity(0.5),
                 ),
-                child: Text(
-                  'Start My Journey',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                                  child: Text(
+                    'Start My Journey',
+                    style: GoogleFonts.raleway(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
                   ),
-                ),
               ),
             ],
           );
