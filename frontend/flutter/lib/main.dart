@@ -474,7 +474,7 @@ class _NavigationHeaderState extends State<NavigationHeader> {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (context) => const ASMRPage(),
+                builder: (context) => const AsmrPage(),
                 settings: const RouteSettings(name: '/asmr'),
               ),
             );
@@ -1068,7 +1068,7 @@ class CosmicDestinySection extends StatelessWidget {
                   children: [
                     _buildIconGrid(),
                     const SizedBox(height: 44),
-                    _buildCosmicContent(context),
+                    _buildCosmicContent(),
                   ],
                 );
               }
@@ -1076,7 +1076,7 @@ class CosmicDestinySection extends StatelessWidget {
                 children: [
                   Expanded(flex: 1, child: _buildIconGrid()),
                   const SizedBox(width: 100),
-                  Expanded(flex: 1, child: _buildCosmicContent(context)),
+                  Expanded(flex: 1, child: _buildCosmicContent()),
                 ],
               );
             },
@@ -1184,7 +1184,7 @@ class CosmicDestinySection extends StatelessWidget {
     );
   }
 
-  Widget _buildCosmicContent(BuildContext context) {
+  Widget _buildCosmicContent() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
