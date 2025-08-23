@@ -1,4 +1,4 @@
-# AstroAI - Your Personal Cosmic Guide 🌌
+# AstroAI - Your Personal Cosmic Guide and thoughtful companion 🌌
 
 ## Vision
 AstroAI combines traditional astrology with modern AI technology and immersive sound experiences to create a comprehensive personal cosmic guidance platform.
