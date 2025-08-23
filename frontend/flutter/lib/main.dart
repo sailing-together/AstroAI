@@ -1,6 +1,9 @@
+import 'dart:math' as math;
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
 import 'pages.dart';
 import 'providers/app_state.dart';
 import 'pages/daily_insights_page.dart';
@@ -30,6 +33,8 @@ class AstroAiApp extends StatelessWidget {
         routes: {
           '/daily-insights': (context) => const DailyInsightsPage(),
           '/ai-assistant': (context) => const AiAssistantPage(),
+          '/natal-chart': (context) => const NatalChartPage(),
+          '/matching': (context) => const MatchingPage(),
         },
       ),
     );
@@ -42,7 +47,7 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFDADADA),
+      backgroundColor: const Color(0xFFFFF3F8),
       body: Stack(
         children: [
           // Main content with top padding to account for fixed header
@@ -52,9 +57,11 @@ class HomePage extends StatelessWidget {
               child: const Column(
                 children: [
                   HeroSection(),
+                  TodaysEventsSection(),
                   ZodiacSection(),
-                  CosmicDestinySection(),
+                  PersonalisedSection(),
                   FeaturesSection(),
+                  FooterSection(),
                 ],
               ),
             ),
@@ -107,20 +114,52 @@ class _NavigationHeaderState extends State<NavigationHeader> {
               Row(
                 children: [
                   Container(
-                    width: 17,
-                    height: 17,
-                    decoration: const BoxDecoration(
-                      color: Colors.black,
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Color(0xFF4097FF),
+                          Color(0xFFFF92A2),
+                        ],
+                      ),
                       shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF4097FF).withOpacity(0.3),
+                          offset: const Offset(0, 2),
+                          blurRadius: 8,
+                        ),
+                      ],
+                    ),
+                    child: const Center(
+                      child: Text(
+                        '✨',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Logo',
-                    style: GoogleFonts.inter(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.black,
+                  const SizedBox(width: 12),
+                  ShaderMask(
+                    shaderCallback: (bounds) => const LinearGradient(
+                      colors: [
+                        Color(0xFF4097FF),
+                        Color(0xFFFF92A2),
+                      ],
+                    ).createShader(bounds),
+                    child: Text(
+                      'AstroAI',
+                      style: GoogleFonts.cinzel(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                        letterSpacing: -0.5,
+                      ),
                     ),
                   ),
                 ],
@@ -139,7 +178,7 @@ class _NavigationHeaderState extends State<NavigationHeader> {
                       _buildMenuItem('Horoscope', context),
                       _buildMenuItemWithDropdown('More Features', context),
                       _buildMenuItem('About Us', context),
-                      _buildHighlightedMenuItem('Reach out to us', context),
+                      _buildHighlightedMenuItem('Sign Up', context),
                     ],
                   );
                 },
@@ -333,7 +372,7 @@ class _NavigationHeaderState extends State<NavigationHeader> {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const ContactPage()),
+          MaterialPageRoute(builder: (context) => const SignUpPage()),
         );
       },
       child: Container(
@@ -362,32 +401,26 @@ class HeroSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: Colors.white,
-      padding: const EdgeInsets.fromLTRB(24, 60, 24, 60),
+      constraints: BoxConstraints(
+        minHeight: MediaQuery.of(context).size.height - 89, // Mac screen height minus header
+      ),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF4097FF),
+            Color(0xFFFF92A2),
+            Color(0xFFA5E5F9),
+          ],
+          stops: [0.0, 0.5, 1.0],
+        ),
+      ),
+      padding: const EdgeInsets.fromLTRB(24, 80, 24, 80),
       child: Center(
         child: Container(
-          constraints: const BoxConstraints(maxWidth: 1152),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              if (constraints.maxWidth < 800) {
-                return Column(
-                  children: [
-                    _buildHeroContent(context),
-                    const SizedBox(height: 40),
-                    _buildHeroImage(),
-                  ],
-                );
-              }
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(flex: 5, child: _buildHeroContent(context)),
-                  const SizedBox(width: 168),
-                  Expanded(flex: 7, child: _buildHeroImage()),
-                ],
-              );
-            },
-          ),
+          constraints: const BoxConstraints(maxWidth: 1440),
+          child: _buildHeroContent(context),
         ),
       ),
     );
@@ -395,124 +428,451 @@ class HeroSection extends StatelessWidget {
 
   Widget _buildHeroContent(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text(
-          'EXPLORE YOUR\nJOURNEY',
-          style: GoogleFonts.cinzel(
-            fontSize: 50,
-            fontWeight: FontWeight.w700,
-            color: Colors.black,
-            letterSpacing: -1,
-            height: 1.3,
-          ),
+        TweenAnimationBuilder<double>(
+          duration: const Duration(milliseconds: 1200),
+          tween: Tween(begin: 0.0, end: 1.0),
+          builder: (context, value, child) {
+            return Transform.translate(
+              offset: Offset(0, 50 * (1 - value)),
+              child: Opacity(
+                opacity: value,
+                child: ShaderMask(
+                  shaderCallback: (bounds) => LinearGradient(
+                    colors: [
+                      Colors.white,
+                      Colors.white.withOpacity(0.8),
+                    ],
+                  ).createShader(bounds),
+                  child: Text(
+                    'EXPLORE YOUR\nJOURNEY',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.cinzel(
+                      fontSize: 50,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                      letterSpacing: -1,
+                      height: 1.3,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
         ),
         const SizedBox(height: 20),
-        Text(
-          'Discover your zodiac, daily horoscope, and cosmic insights with just your birthday. Simple, beautiful, and powered by AI.',
-          style: GoogleFonts.raleway(
-            fontSize: 16,
-            fontWeight: FontWeight.w400,
-            color: Colors.black,
-            letterSpacing: -0.32,
-            height: 1.3,
-          ),
-        ),
-        const SizedBox(height: 32),
-        ElevatedButton(
-          onPressed: () {
-            _showUserDataDialog(context);
+        TweenAnimationBuilder<double>(
+          duration: const Duration(milliseconds: 1500),
+          tween: Tween(begin: 0.0, end: 1.0),
+          builder: (context, value, child) {
+            return Transform.translate(
+              offset: Offset(0, 30 * (1 - value)),
+              child: Opacity(
+                opacity: value,
+                child: Text(
+                  'Discover your zodiac, daily horoscope, and cosmic insights with just your birthday. Simple, beautiful, and powered by AI.',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.raleway(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w400,
+                    color: Colors.white,
+                    letterSpacing: -0.32,
+                    height: 1.5,
+                  ),
+                ),
+              ),
+            );
           },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.black,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            elevation: 0,
-          ),
-          child: Text(
-            'Get Started',
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-            ),
-          ),
+        ),
+        const SizedBox(height: 40),
+        TweenAnimationBuilder<double>(
+          duration: const Duration(milliseconds: 1800),
+          tween: Tween(begin: 0.0, end: 1.0),
+          builder: (context, value, child) {
+            return Transform.scale(
+              scale: 0.8 + (0.2 * value),
+              child: Opacity(
+                opacity: value,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const AboutUsPage()),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: const Color(0xFF4097FF),
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    elevation: 8,
+                    shadowColor: Colors.black.withOpacity(0.3),
+                  ),
+                  child: Text(
+                    'About Us',
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF4097FF),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
         ),
       ],
     );
   }
 
-  Widget _buildHeroImage() {
-    return Container(
-      width: 623,
-      height: 401,
-      decoration: ShapeDecoration(
-        image: const DecorationImage(
-          image: AssetImage('assets/MainSpace.png'),
-          fit: BoxFit.cover,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30),
-        ),
-        shadows: const [
-          BoxShadow(
-            color: Color(0x3F000000),
-            blurRadius: 30,
-            offset: Offset(30, 60),
-            spreadRadius: -30,
-          )
-        ],
-      ),
-    );
-  }
 }
 
 class ZodiacSection extends StatelessWidget {
   const ZodiacSection({super.key});
 
+  // Zodiac signs organized by elements
+  static const List<List<Map<String, String>>> zodiacElements = [
+    // Water signs
+    [
+      {'name': 'CANCER', 'symbol': '♋', 'dates': 'JUN 21 - JUL 22'},
+      {'name': 'SCORPIO', 'symbol': '♏', 'dates': 'OCT 23 - NOV 21'},
+      {'name': 'PISCES', 'symbol': '♓', 'dates': 'FEB 19 - MAR 20'},
+    ],
+    // Fire signs  
+    [
+      {'name': 'ARIES', 'symbol': '♈', 'dates': 'MAR 21 - APR 19'},
+      {'name': 'LEO', 'symbol': '♌', 'dates': 'JUL 23 - AUG 22'},
+      {'name': 'SAGITTARIUS', 'symbol': '♐', 'dates': 'NOV 22 - DEC 21'},
+    ],
+    // Air signs
+    [
+      {'name': 'GEMINI', 'symbol': '♊', 'dates': 'MAY 21 - JUN 20'},
+      {'name': 'LIBRA', 'symbol': '♎', 'dates': 'SEP 23 - OCT 22'},
+      {'name': 'AQUARIUS', 'symbol': '♒', 'dates': 'JAN 20 - FEB 18'},
+    ],
+    // Earth signs
+    [
+      {'name': 'TAURUS', 'symbol': '♉', 'dates': 'APR 20 - MAY 20'},
+      {'name': 'VIRGO', 'symbol': '♍', 'dates': 'AUG 23 - SEP 22'},
+      {'name': 'CAPRICORN', 'symbol': '♑', 'dates': 'DEC 22 - JAN 19'},
+    ],
+  ];
+
+  static const List<Color> elementColors = [
+    Color(0xFF4097FF), // Water - Blue
+    Color(0xFFFF92A2), // Fire - Pink  
+    Color(0xFFA5E5F9), // Air - Light Blue
+    Color(0xFF8985CF), // Earth - Updated color as requested
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: const Color(0xFFF3F3F3),
-      padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 24),
+      color: const Color(0xFFFFF3F8),
+      padding: const EdgeInsets.symmetric(vertical: 80, horizontal: 24),
       child: Center(
         child: Container(
-          constraints: const BoxConstraints(maxWidth: 1152),
+          constraints: const BoxConstraints(maxWidth: 1440),
           child: Column(
+            children: [
+              TweenAnimationBuilder<double>(
+                duration: const Duration(milliseconds: 800),
+                tween: Tween(begin: 0.0, end: 1.0),
+                builder: (context, value, child) {
+                  return Transform.translate(
+                    offset: Offset(0, 30 * (1 - value)),
+                    child: Opacity(
+                      opacity: value,
+                      child: ShaderMask(
+                        shaderCallback: (bounds) => const LinearGradient(
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                          colors: [
+                            Color(0xFF4097FF),
+                            Color(0x80FF92A2),
+                            Color(0x40A5E5F9),
+                          ],
+                        ).createShader(bounds),
+                        child: Text(
+                          'Choose your zodiac sign',
+                          style: GoogleFonts.cinzel(
+                            fontSize: 50,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                            letterSpacing: -1,
+                            height: 1.3,
+                          ),
+                          textAlign: TextAlign.left,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 60),
+              ...zodiacElements.asMap().entries.map((entry) {
+                final rowIndex = entry.key;
+                final signs = entry.value;
+                final isOddRow = rowIndex % 2 == 0;
+                
+                return Container(
+                  margin: EdgeInsets.only(
+                    bottom: 40,
+                    left: isOddRow ? 0 : 100,
+                    right: isOddRow ? 100 : 0,
+                  ),
+                  child: TweenAnimationBuilder<double>(
+                    duration: Duration(milliseconds: 1000 + (rowIndex * 200)),
+                    tween: Tween(begin: 0.0, end: 1.0),
+                    builder: (context, value, child) {
+                      return Transform.translate(
+                        offset: Offset(50 * (1 - value), 0),
+                        child: Opacity(
+                          opacity: value,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: signs.asMap().entries.map((signEntry) {
+                              final cardIndex = signEntry.key;
+                              final sign = signEntry.value;
+                              final opacity = isOddRow 
+                                  ? 1.0 - (cardIndex * 0.25) // Left to right: decrease opacity
+                                  : 0.5 + (cardIndex * 0.25); // Left to right: increase opacity
+                              
+                              return Expanded(
+                                child: Container(
+                                  margin: const EdgeInsets.symmetric(horizontal: 8),
+                                  constraints: const BoxConstraints(maxWidth: 160), // Reduced card width
+                                  child: ZodiacElementCard(
+                                    zodiacData: sign,
+                                    baseColor: elementColors[rowIndex],
+                                    opacity: opacity,
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                );
+              }),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class ZodiacElementCard extends StatefulWidget {
+  final Map<String, String> zodiacData;
+  final Color baseColor;
+  final double opacity;
+
+  const ZodiacElementCard({
+    super.key,
+    required this.zodiacData,
+    required this.baseColor,
+    required this.opacity,
+  });
+
+  @override
+  State<ZodiacElementCard> createState() => _ZodiacElementCardState();
+}
+
+class _ZodiacElementCardState extends State<ZodiacElementCard> with SingleTickerProviderStateMixin {
+  bool isHovered = false;
+  late AnimationController _animationController;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+    _animation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    ));
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ZodiacDetailPage(
+              zodiacName: widget.zodiacData['name']!,
+              zodiacSymbol: widget.zodiacData['symbol']!,
+              dateRange: widget.zodiacData['dates']!,
+              zodiacIndex: 0,
+            ),
+            settings: RouteSettings(name: '/zodiac/${widget.zodiacData['name']!.toLowerCase()}'),
+          ),
+        );
+      },
+      child: MouseRegion(
+        onEnter: (_) {
+          setState(() {
+            isHovered = true;
+          });
+          _animationController.forward();
+        },
+        onExit: (_) {
+          setState(() {
+            isHovered = false;
+          });
+          _animationController.reverse();
+        },
+        child: AnimatedBuilder(
+          animation: _animation,
+          builder: (context, child) {
+            return Transform(
+              alignment: Alignment.center,
+              transform: Matrix4.identity()
+                ..setEntry(3, 2, 0.001)
+                ..rotateY(_animation.value * 3.14159),
+              child: _animation.value < 0.5
+                  ? _buildFrontCard()
+                  : Transform(
+                      alignment: Alignment.center,
+                      transform: Matrix4.identity()..rotateY(3.14159),
+                      child: _buildBackCard(),
+                    ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFrontCard() {
+    return Container(
+      height: 160, // Reduced height for narrower cards
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        color: widget.baseColor.withOpacity(widget.opacity),
+        boxShadow: [
+          BoxShadow(
+            color: widget.baseColor.withOpacity(0.3),
+            offset: const Offset(0, 8),
+            blurRadius: 20,
+            spreadRadius: 2,
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'Choose your zodiac',
+              widget.zodiacData['symbol']!,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 40,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              widget.zodiacData['name']!,
               style: GoogleFonts.cinzel(
-                fontSize: 50,
+                color: Colors.white,
+                fontSize: 14,
                 fontWeight: FontWeight.w700,
-                color: Colors.black,
-                letterSpacing: -1,
-                height: 1.3,
+                letterSpacing: 1.0,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 30),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: MediaQuery.of(context).size.width < 600 ? 2 :
-                               MediaQuery.of(context).size.width < 900 ? 4 : 6,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 0.75,
+            const SizedBox(height: 6),
+            Text(
+              widget.zodiacData['dates']!,
+              style: GoogleFonts.raleway(
+                color: Colors.white.withOpacity(0.9),
+                fontSize: 10,
+                fontWeight: FontWeight.w400,
               ),
-              itemCount: 12,
-              itemBuilder: (context, index) {
-                return ZodiacCard(index: index);
-              },
+              textAlign: TextAlign.center,
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildBackCard() {
+    return Container(
+      height: 160, // Reduced height for narrower cards
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        color: widget.baseColor.withOpacity(widget.opacity),
+        boxShadow: [
+          BoxShadow(
+            color: widget.baseColor.withOpacity(0.3),
+            offset: const Offset(0, 8),
+            blurRadius: 20,
+            spreadRadius: 2,
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.6),
+                  width: 2,
+                ),
+              ),
+              child: Center(
+                child: Text(
+                  widget.zodiacData['symbol']!,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              widget.zodiacData['name']!,
+              style: GoogleFonts.cinzel(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -630,8 +990,8 @@ class _ZodiacCardState extends State<ZodiacCard> with SingleTickerProviderStateM
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Color(0xFF605688),
-            Color(0xFF4A4070),
+            Color(0xFF4097FF),
+            Color(0xFFA5E5F9),
           ],
         ),
         boxShadow: [
@@ -661,7 +1021,7 @@ class _ZodiacCardState extends State<ZodiacCard> with SingleTickerProviderStateM
             Text(
               zodiac['name']!,
               style: GoogleFonts.cinzel(
-                color: const Color(0xFFFBF7BA),
+                color: const Color(0xFFFF92A2),
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1,
@@ -693,8 +1053,8 @@ class _ZodiacCardState extends State<ZodiacCard> with SingleTickerProviderStateM
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Color(0xFF605688),
-            Color(0xFF4A4070),
+            Color(0xFF4097FF),
+            Color(0xFFA5E5F9),
           ],
         ),
         boxShadow: [
@@ -780,7 +1140,7 @@ class _ZodiacCardState extends State<ZodiacCard> with SingleTickerProviderStateM
             Text(
               zodiac['name']!,
               style: GoogleFonts.cinzel(
-                color: const Color(0xFFFBF7BA),
+                color: const Color(0xFFFF92A2),
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.5,
@@ -809,172 +1169,615 @@ class _ZodiacCardState extends State<ZodiacCard> with SingleTickerProviderStateM
   }
 }
 
-class CosmicDestinySection extends StatelessWidget {
-  const CosmicDestinySection({super.key});
+class PersonalisedSection extends StatefulWidget {
+  const PersonalisedSection({super.key});
+
+  @override
+  State<PersonalisedSection> createState() => _PersonalisedSectionState();
+}
+
+class _PersonalisedSectionState extends State<PersonalisedSection> {
+  final TextEditingController _birthdateController = TextEditingController();
+  DateTime? _selectedDate;
+  String? _zodiacSign;
+  bool _isLoading = false;
+  Map<String, String> _responses = {};
+  Map<String, bool> _expandedStates = {
+    'Love': false,
+    'Career': false, 
+    'Wealth': false,
+    'Abilities': false,
+  };
+  String? _fullHoroscope;
+
+  final List<Map<String, dynamic>> _categories = [
+    {
+      'title': 'Love',
+      'icon': '💖',
+      'color': Color(0xFFFF92A2),
+      'description': 'Romantic relationships and connections',
+    },
+    {
+      'title': 'Career',
+      'icon': '🚀',
+      'color': Color(0xFF4097FF),
+      'description': 'Professional growth and opportunities',
+    },
+    {
+      'title': 'Wealth',
+      'icon': '💰',
+      'color': Color(0xFFA5E5F9),
+      'description': 'Financial prosperity and abundance',
+    },
+    {
+      'title': 'Abilities',
+      'icon': '⭐',
+      'color': Color(0xFF6B46C1),
+      'description': 'Personal strengths and talents',
+    },
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: Colors.white,
-      padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 24),
+      color: const Color(0xFF4097FF),
+      padding: const EdgeInsets.symmetric(vertical: 80, horizontal: 24),
       child: Center(
         child: Container(
-          constraints: const BoxConstraints(maxWidth: 1152),
-          child: LayoutBuilder(
-          builder: (context, constraints) {
-            if (constraints.maxWidth < 800) {
-              return Column(
-                children: [
-                  _buildIconGrid(),
-                  const SizedBox(height: 44),
-                  _buildCosmicContent(),
-                ],
-              );
-            }
-            return Row(
-              children: [
-                Expanded(flex: 1, child: _buildIconGrid()),
-                const SizedBox(width: 100),
-                Expanded(flex: 1, child: _buildCosmicContent()),
+          constraints: const BoxConstraints(maxWidth: 1440),
+          child: Column(
+            children: [
+              TweenAnimationBuilder<double>(
+                duration: const Duration(milliseconds: 800),
+                tween: Tween(begin: 0.0, end: 1.0),
+                builder: (context, value, child) {
+                  return Transform.translate(
+                    offset: Offset(0, 30 * (1 - value)),
+                    child: Opacity(
+                      opacity: value,
+                      child: Text(
+                        'personalised',
+                        style: GoogleFonts.cinzel(
+                          fontSize: 50,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFFFFF3F8),
+                          letterSpacing: -1,
+                          height: 1.3,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 20),
+              TweenAnimationBuilder<double>(
+                duration: const Duration(milliseconds: 1000),
+                tween: Tween(begin: 0.0, end: 1.0),
+                builder: (context, value, child) {
+                  return Transform.translate(
+                    offset: Offset(0, 20 * (1 - value)),
+                    child: Opacity(
+                      opacity: value,
+                      child: Text(
+                        'Get detailed cosmic insights based on your birth date',
+                        style: GoogleFonts.raleway(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w400,
+                          color: const Color(0xFFFFF3F8).withOpacity(0.9),
+                          letterSpacing: -0.32,
+                          height: 1.5,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 40),
+              _buildBirthdateInput(),
+              const SizedBox(height: 40),
+              _buildCategoriesGrid(),
+              if (_responses.isNotEmpty) ...[
+                const SizedBox(height: 40),
+                _buildHoroscopeContent(),
+                const SizedBox(height: 40),
+                _buildSignUpPrompt(),
               ],
-            );
-          },
+            ],
+          ),
         ),
       ),
-      ),
     );
   }
 
-  Widget _buildIconGrid() {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      crossAxisSpacing: 12,
-      mainAxisSpacing: 12,
-      childAspectRatio: 1.2,
-      children: [
-        _buildIconCard(const Color(0xFFF9C3C3), 'heart'),
-        _buildIconCard(const Color(0xFFBAE9AB), 'toolbox'),
-        _buildIconCard(const Color(0xFFEAF1B2), 'flask'),
-        _buildIconCard(const Color(0xFF3E5F8D), 'dollar'),
-      ],
-    );
-  }
-
-  Widget _buildIconCard(Color color, String iconType) {
+  Widget _buildBirthdateInput() {
     return Container(
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x40000000),
-            offset: Offset(0, 4),
-            blurRadius: 20,
+      constraints: const BoxConstraints(maxWidth: 400),
+      child: Column(
+        children: [
+          GestureDetector(
+            onTap: () async {
+              final date = await showDatePicker(
+                context: context,
+                initialDate: DateTime(1995, 1, 1),
+                firstDate: DateTime(1900),
+                lastDate: DateTime.now(),
+                builder: (context, child) {
+                  return Theme(
+                    data: Theme.of(context).copyWith(
+                      colorScheme: const ColorScheme.light(
+                        primary: Color(0xFF4097FF),
+                        onPrimary: Colors.white,
+                        surface: Colors.white,
+                        onSurface: Colors.black,
+                      ),
+                    ),
+                    child: child!,
+                  );
+                },
+              );
+              if (date != null) {
+                setState(() {
+                  _selectedDate = date;
+                  _birthdateController.text = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+                  _zodiacSign = _getZodiacSign(date);
+                });
+              }
+            },
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFFFF3F8).withOpacity(0.5)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.calendar_today, color: const Color(0xFF4097FF), size: 24),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      _selectedDate != null 
+                          ? 'Birth Date: ${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}'
+                          : 'Select your birth date',
+                      style: GoogleFonts.raleway(
+                        fontSize: 16,
+                        color: _selectedDate != null 
+                            ? Colors.black 
+                            : Colors.black.withOpacity(0.6),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: _selectedDate != null && !_isLoading ? _generateInsights : null,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFFFF3F8),
+              foregroundColor: const Color(0xFF4097FF),
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+              elevation: 8,
+            ),
+            child: _isLoading
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  )
+                : Text(
+                    'Generate Insights',
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
           ),
         ],
       ),
-      child: Center(
-        child: SizedBox(
-          width: 109,
-          height: 110,
-          child: _buildSvgIcon(iconType),
-        ),
+    );
+  }
+
+  Widget _buildCategoriesGrid() {
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: _categories.asMap().entries.map((entry) {
+          final index = entry.key;
+          final category = entry.value;
+          final hasResponse = _responses.containsKey(category['title']);
+          final isExpanded = _expandedStates[category['title']] ?? false;
+
+          return Expanded(
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 8),
+              child: TweenAnimationBuilder<double>(
+                duration: Duration(milliseconds: 600 + (index * 150)),
+                tween: Tween(begin: 0.0, end: 1.0),
+                builder: (context, value, child) {
+                  return Transform.translate(
+                    offset: Offset(0, 30 * (1 - value)),
+                    child: Opacity(
+                      opacity: value,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: category['color'].withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: category['color'].withOpacity(0.3),
+                            width: 1,
+                          ),
+                        ),
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                category['icon'],
+                                style: const TextStyle(fontSize: 40),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                category['title'],
+                                style: GoogleFonts.cinzel(
+                                  fontSize: 18, // Smaller font size for inline layout
+                                  fontWeight: FontWeight.w700,
+                                  color: category['color'],
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                category['description'],
+                                style: GoogleFonts.raleway(
+                                  fontSize: 12,
+                                  color: const Color(0xFFFFF3F8).withOpacity(0.8),
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      if (hasResponse) ...[
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _expandedStates[category['title']] = !isExpanded;
+                            });
+                          },
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: category['color'].withOpacity(0.2),
+                              borderRadius: const BorderRadius.only(
+                                bottomLeft: Radius.circular(20),
+                                bottomRight: Radius.circular(20),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  isExpanded ? 'Hide' : 'Show Insight',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: category['color'],
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Icon(
+                                  isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                                  color: category['color'],
+                                  size: 20,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        if (isExpanded) ...[
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: category['color'].withOpacity(0.1),
+                                  offset: const Offset(0, 4),
+                                  blurRadius: 8,
+                                ),
+                              ],
+                            ),
+                            margin: const EdgeInsets.all(8),
+                            child: Text(
+                              _responses[category['title']] ?? '',
+                              style: GoogleFonts.raleway(
+                                fontSize: 14,
+                                color: Colors.black,
+                                height: 1.5,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ],
+                  ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          );
+        }).toList(),
       ),
     );
   }
 
-  Widget _buildSvgIcon(String iconType) {
-    switch (iconType) {
-      case 'heart':
-        return _buildHeartIcon();
-      case 'toolbox':
-        return _buildToolboxIcon();
-      case 'flask':
-        return _buildFlaskIcon();
-      case 'dollar':
-        return _buildDollarIcon();
-      default:
-        return Container();
+  Widget _buildSignUpPrompt() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF4097FF), Color(0xFFFF92A2)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          Text(
+            'Want to keep your history and get more detailed analysis?',
+            style: GoogleFonts.raleway(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const SignUpPage()),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: const Color(0xFF4097FF),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+                child: Text(
+                  'Sign Up',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              TextButton(
+                onPressed: () {
+                  // Navigate to sign in
+                },
+                child: Text(
+                  'Sign In',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHoroscopeContent() {
+    if (_fullHoroscope == null) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFF8F4FF), Color(0xFFE8F7FF)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF4097FF).withOpacity(0.1),
+            offset: const Offset(0, 8),
+            blurRadius: 24,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF4097FF), Color(0xFF8E2DE2)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.auto_awesome,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Complete Horoscope Reading',
+                      style: GoogleFonts.cinzel(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF4097FF),
+                      ),
+                    ),
+                    Text(
+                      'Powered by AI • Generated for ${_zodiacSign ?? 'your sign'}',
+                      style: GoogleFonts.raleway(
+                        fontSize: 14,
+                        color: Colors.black.withOpacity(0.6),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  offset: const Offset(0, 2),
+                  blurRadius: 8,
+                ),
+              ],
+            ),
+            child: Text(
+              _fullHoroscope!,
+              style: GoogleFonts.raleway(
+                fontSize: 15,
+                height: 1.7,
+                color: Colors.black.withOpacity(0.8),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _generateInsights() async {
+    if (_selectedDate == null) return;
+    
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Call the real horoscope API
+      final response = await http.post(
+        Uri.parse('http://localhost:8000/horoscope'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'birthdate': _birthdateController.text,
+          'sign': _zodiacSign,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        
+        setState(() {
+          _fullHoroscope = data['horoscope'];
+          _responses = {
+            'Love': _extractSection(data['horoscope'], 'Love') ?? 'Love insights will appear here.',
+            'Career': _extractSection(data['horoscope'], 'Career') ?? 'Career insights will appear here.',
+            'Wealth': _extractSection(data['horoscope'], 'Wealth') ?? 'Wealth insights will appear here.',
+            'Abilities': _extractSection(data['horoscope'], 'Abilities') ?? 'Abilities insights will appear here.',
+          };
+          _isLoading = false;
+        });
+      } else {
+        throw Exception('Failed to generate horoscope');
+      }
+    } catch (e) {
+      print('Error generating insights: $e');
+      setState(() {
+        _fullHoroscope = null;
+        _responses = {
+          'Love': 'Unable to connect to the server. Please check your connection and try again.',
+          'Career': 'Unable to connect to the server. Please check your connection and try again.',
+          'Wealth': 'Unable to connect to the server. Please check your connection and try again.',
+          'Abilities': 'Unable to connect to the server. Please check your connection and try again.',
+        };
+        _isLoading = false;
+      });
     }
   }
 
-  Widget _buildHeartIcon() {
-    return CustomPaint(
-      size: const Size(109, 110),
-      painter: HeartIconPainter(),
-    );
+  String? _extractSection(String horoscope, String sectionName) {
+    try {
+      final sections = horoscope.split('\n\n');
+      for (final section in sections) {
+        if (section.toLowerCase().contains(sectionName.toLowerCase())) {
+          return section.replaceAll(RegExp(r'^[*#\s]*${sectionName}[*#\s]*:?\s*', caseSensitive: false), '').trim();
+        }
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
   }
 
-  Widget _buildToolboxIcon() {
-    return CustomPaint(
-      size: const Size(92, 92),
-      painter: ToolboxIconPainter(),
-    );
-  }
-
-  Widget _buildFlaskIcon() {
-    return CustomPaint(
-      size: const Size(116, 110),
-      painter: FlaskIconPainter(),
-    );
-  }
-
-  Widget _buildDollarIcon() {
-    return CustomPaint(
-      size: const Size(91, 110),
-      painter: DollarIconPainter(),
-    );
-  }
-
-  Widget _buildCosmicContent() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Unlock your cosmic destiny!',
-          style: GoogleFonts.cinzel(
-            fontSize: 50,
-            fontWeight: FontWeight.w700,
-            color: Colors.black,
-            letterSpacing: -1,
-            height: 1.3,
-          ),
-        ),
-        const SizedBox(height: 24),
-        Text(
-          'Our AI analyses your zodiac sign to deliver tailored predictions about romance, success, and fortune. Discover what the universe has in store!',
-          style: GoogleFonts.raleway(
-            fontSize: 16,
-            fontWeight: FontWeight.w400,
-            color: Colors.black,
-            letterSpacing: -0.32,
-            height: 1.3,
-          ),
-        ),
-        const SizedBox(height: 24),
-        ElevatedButton(
-          onPressed: () {},
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.black,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-          child: Text(
-            'Enter your birthday',
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-            ),
-          ),
-        ),
-      ],
-    );
+  String _getZodiacSign(DateTime birthDate) {
+    final month = birthDate.month;
+    final day = birthDate.day;
+    
+    if ((month == 3 && day >= 21) || (month == 4 && day <= 19)) return 'Aries';
+    if ((month == 4 && day >= 20) || (month == 5 && day <= 20)) return 'Taurus';
+    if ((month == 5 && day >= 21) || (month == 6 && day <= 20)) return 'Gemini';
+    if ((month == 6 && day >= 21) || (month == 7 && day <= 22)) return 'Cancer';
+    if ((month == 7 && day >= 23) || (month == 8 && day <= 22)) return 'Leo';
+    if ((month == 8 && day >= 23) || (month == 9 && day <= 22)) return 'Virgo';
+    if ((month == 9 && day >= 23) || (month == 10 && day <= 22)) return 'Libra';
+    if ((month == 10 && day >= 23) || (month == 11 && day <= 21)) return 'Scorpio';
+    if ((month == 11 && day >= 22) || (month == 12 && day <= 21)) return 'Sagittarius';
+    if ((month == 12 && day >= 22) || (month == 1 && day <= 19)) return 'Capricorn';
+    if ((month == 1 && day >= 20) || (month == 2 && day <= 18)) return 'Aquarius';
+    return 'Pisces';
   }
 }
 
@@ -985,15 +1788,15 @@ class FeaturesSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: const Color(0xFFEFEEED),
+      color: const Color(0xFFFFF3F8),
       padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 24),
       child: Center(
         child: Container(
-          constraints: const BoxConstraints(maxWidth: 1152),
+          constraints: const BoxConstraints(maxWidth: 1440),
           child: Column(
           children: [
             Text(
-              'features',
+              'more features',
               style: GoogleFonts.cinzel(
                 fontSize: 50,
                 fontWeight: FontWeight.w700,
@@ -1004,53 +1807,7 @@ class FeaturesSection extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 30),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                if (constraints.maxWidth < 600) {
-                  return Column(
-                    children: [
-                      _buildFeatureCard(context, 'Matching', const Color(0xFF4A4A4A)),
-                      const SizedBox(height: 24),
-                      _buildFeatureCard(context, 'Natal chart', const Color(0xFF9398DF)),
-                      const SizedBox(height: 24),
-                      _buildFeatureCard(context, 'ASMR', const Color(0xFFBB8075)),
-                      const SizedBox(height: 24),
-                      _buildFeatureCard(context, 'Tarot', const Color(0xFF6953B9)),
-                    ],
-                  );
-                }
-                return Row(
-                  children: [
-                    Expanded(child: _buildFeatureCard(context, 'Matching', const Color(0xFF4A4A4A))),
-                    const SizedBox(width: 24),
-                    Expanded(child: _buildFeatureCard(context, 'Natal chart', const Color(0xFF9398DF))),
-                    const SizedBox(width: 24),
-                    Expanded(child: _buildFeatureCard(context, 'ASMR', const Color(0xFFBB8075))),
-                    const SizedBox(width: 24),
-                    Expanded(child: _buildFeatureCard(context, 'Tarot', const Color(0xFF6953B9))),
-                  ],
-                );
-              },
-            ),
-            const SizedBox(height: 40),
-            ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: Text(
-                'Button Text',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                ),
-              ),
-            ),
+            _buildStaggeredFeatureLayout(context),
           ],
         ),
       ),
@@ -1058,13 +1815,237 @@ class FeaturesSection extends StatelessWidget {
     );
   }
 
+  Widget _buildStaggeredFeatureLayout(BuildContext context) {
+    final List<Map<String, dynamic>> features = [
+      {'title': 'Matching', 'color': const Color(0xFF4097FF), 'delay': 0},
+      {'title': 'Natal chart', 'color': const Color(0xFFFF92A2), 'delay': 200},
+      {'title': 'ASMR', 'color': const Color(0xFFA5E5F9), 'delay': 400},
+      {'title': 'Tarot', 'color': const Color(0xFF8985CF), 'delay': 600},
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 800) {
+          // Mobile: Stack vertically with alternating alignment
+          return Column(
+            children: features.asMap().entries.map((entry) {
+              final index = entry.key;
+              final feature = entry.value;
+              final isEven = index % 2 == 0;
+              
+              return Container(
+                margin: EdgeInsets.only(
+                  bottom: 30,
+                  left: isEven ? 0 : 40,
+                  right: isEven ? 40 : 0,
+                ),
+                child: TweenAnimationBuilder<double>(
+                  duration: Duration(milliseconds: 800 + (feature['delay'] as int)),
+                  tween: Tween(begin: 0.0, end: 1.0),
+                  builder: (context, value, child) {
+                    return Transform.translate(
+                      offset: Offset(
+                        isEven ? -50 * (1 - value) : 50 * (1 - value),
+                        20 * (1 - value),
+                      ),
+                      child: Opacity(
+                        opacity: value,
+                        child: _buildFloatingFeatureCard(
+                          context, 
+                          feature['title'], 
+                          feature['color'],
+                          index,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              );
+            }).toList(),
+          );
+        }
+        
+        // Desktop: 2x2 staggered grid
+        return Column(
+          children: [
+            // First row
+            Row(
+              children: [
+                Expanded(
+                  flex: 1,
+                  child: Container(
+                    margin: const EdgeInsets.only(right: 20, bottom: 30),
+                    child: TweenAnimationBuilder<double>(
+                      duration: const Duration(milliseconds: 800),
+                      tween: Tween(begin: 0.0, end: 1.0),
+                      builder: (context, value, child) {
+                        return Transform.translate(
+                          offset: Offset(-30 * (1 - value), 20 * (1 - value)),
+                          child: Opacity(
+                            opacity: value,
+                            child: _buildFloatingFeatureCard(
+                              context, 
+                              'Matching', 
+                              const Color(0xFF4097FF),
+                              0,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 1,
+                  child: Container(
+                    margin: const EdgeInsets.only(left: 20, top: 40, bottom: 30),
+                    child: TweenAnimationBuilder<double>(
+                      duration: const Duration(milliseconds: 1000),
+                      tween: Tween(begin: 0.0, end: 1.0),
+                      builder: (context, value, child) {
+                        return Transform.translate(
+                          offset: Offset(30 * (1 - value), 15 * (1 - value)),
+                          child: Opacity(
+                            opacity: value,
+                            child: _buildFloatingFeatureCard(
+                              context, 
+                              'Natal chart', 
+                              const Color(0xFFFF92A2),
+                              1,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            // Second row
+            Row(
+              children: [
+                Expanded(
+                  flex: 1,
+                  child: Container(
+                    margin: const EdgeInsets.only(right: 20, top: 20),
+                    child: TweenAnimationBuilder<double>(
+                      duration: const Duration(milliseconds: 1200),
+                      tween: Tween(begin: 0.0, end: 1.0),
+                      builder: (context, value, child) {
+                        return Transform.translate(
+                          offset: Offset(-25 * (1 - value), 25 * (1 - value)),
+                          child: Opacity(
+                            opacity: value,
+                            child: _buildFloatingFeatureCard(
+                              context, 
+                              'ASMR', 
+                              const Color(0xFFA5E5F9),
+                              2,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 1,
+                  child: Container(
+                    margin: const EdgeInsets.only(left: 20, bottom: 20),
+                    child: TweenAnimationBuilder<double>(
+                      duration: const Duration(milliseconds: 1400),
+                      tween: Tween(begin: 0.0, end: 1.0),
+                      builder: (context, value, child) {
+                        return Transform.translate(
+                          offset: Offset(35 * (1 - value), 30 * (1 - value)),
+                          child: Opacity(
+                            opacity: value,
+                            child: _buildFloatingFeatureCard(
+                              context, 
+                              'Tarot', 
+                              const Color(0xFF8985CF),
+                              3,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildFloatingFeatureCard(BuildContext context, String title, Color iconColor, int index) {
+    return MouseRegion(
+      onEnter: (_) {},
+      onExit: (_) {},
+      child: TweenAnimationBuilder<double>(
+        duration: const Duration(seconds: 3),
+        tween: Tween(begin: -5.0, end: 5.0),
+        builder: (context, value, child) {
+          return AnimatedBuilder(
+            animation: AlwaysStoppedAnimation<double>(DateTime.now().millisecondsSinceEpoch / 2000),
+            builder: (context, child) {
+              final floatOffset = 3 * math.sin((DateTime.now().millisecondsSinceEpoch / 1500) + (index * 0.5));
+              return Transform.translate(
+                offset: Offset(0, floatOffset),
+                child: _buildFeatureCard(context, title, iconColor),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
   Widget _buildFeatureCard(BuildContext context, String title, Color iconColor) {
+    // Get description based on feature title
+    String getFeatureDescription(String title) {
+      switch (title) {
+        case 'Matching':
+          return 'Discover your cosmic compatibility with others. Find your perfect match based on zodiac signs, birth charts, and astrological harmony.';
+        case 'Natal chart':
+          return 'Get your complete birth chart analysis. Explore planetary positions, houses, and aspects that shape your personality and life path.';
+        case 'ASMR':
+          return 'Relax with cosmic soundscapes and guided meditations. Soothing audio experiences designed for deep relaxation and spiritual connection.';
+        case 'Tarot':
+          return 'Unveil insights through mystical tarot readings. Get guidance on love, career, and life decisions with AI-powered card interpretations.';
+        default:
+          return 'Explore the mysteries of the cosmos with our advanced astrological features and personalized insights.';
+      }
+    }
+
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.black, width: 1),
+        border: Border.all(color: iconColor.withOpacity(0.3), width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: iconColor.withOpacity(0.2),
+            offset: const Offset(0, 8),
+            blurRadius: 20,
+            spreadRadius: 0,
+          ),
+          BoxShadow(
+            color: iconColor.withOpacity(0.1),
+            offset: const Offset(0, 16),
+            blurRadius: 40,
+            spreadRadius: 0,
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            offset: const Offset(0, 4),
+            blurRadius: 8,
+            spreadRadius: 0,
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1077,8 +2058,23 @@ class FeaturesSection extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: iconColor,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      iconColor,
+                      iconColor.withOpacity(0.7),
+                    ],
+                  ),
                   borderRadius: BorderRadius.circular(32),
+                  boxShadow: [
+                    BoxShadow(
+                      color: iconColor.withOpacity(0.4),
+                      offset: const Offset(0, 4),
+                      blurRadius: 12,
+                      spreadRadius: 0,
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -1095,7 +2091,7 @@ class FeaturesSection extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'This is the description of the first feature of our app. We are going yo briefly outline what this feature does',
+            getFeatureDescription(title),
             style: GoogleFonts.raleway(
               fontSize: 16,
               fontWeight: FontWeight.w400,
@@ -1325,7 +2321,7 @@ void _showUserDataDialog(BuildContext context) {
       return StatefulBuilder(
         builder: (context, setState) {
           return AlertDialog(
-            backgroundColor: const Color(0xFF1A1A2E),
+            backgroundColor: const Color(0xFF4097FF),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
@@ -1369,9 +2365,9 @@ void _showUserDataDialog(BuildContext context) {
                           return Theme(
                             data: Theme.of(context).copyWith(
                               colorScheme: const ColorScheme.dark(
-                                primary: Color(0xFF9398DF),
+                                primary: Color(0xFFFF92A2),
                                 onPrimary: Colors.white,
-                                surface: Color(0xFF1A1A2E),
+                                surface: Color(0xFF4097FF),
                                 onSurface: Colors.white,
                               ),
                             ),
@@ -1458,7 +2454,7 @@ void _showUserDataDialog(BuildContext context) {
                       }
                     : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF9398DF),
+                  backgroundColor: const Color(0xFFFF92A2),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -1533,4 +2529,1678 @@ String _getZodiacSign(DateTime birthDate) {
   if ((month == 12 && day >= 22) || (month == 1 && day <= 19)) return 'Capricorn';
   if ((month == 1 && day >= 20) || (month == 2 && day <= 18)) return 'Aquarius';
   return 'Pisces';
+}
+
+class FooterSection extends StatelessWidget {
+  const FooterSection({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFF4097FF),
+            Color(0xFF1A1A2E),
+          ],
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 24),
+      child: Center(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 1440),
+          child: Column(
+            children: [
+              // Main Footer Content
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  if (constraints.maxWidth < 800) {
+                    return Column(
+                      children: [
+                        _buildBrandSection(),
+                        const SizedBox(height: 40),
+                        _buildLinksSection(),
+                        const SizedBox(height: 40),
+                        _buildSocialSection(),
+                      ],
+                    );
+                  }
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(flex: 2, child: _buildBrandSection()),
+                      const SizedBox(width: 60),
+                      Expanded(flex: 1, child: _buildLinksSection()),
+                      const SizedBox(width: 40),
+                      Expanded(flex: 1, child: _buildSocialSection()),
+                    ],
+                  );
+                },
+              ),
+              
+              const SizedBox(height: 50),
+              
+              // Divider
+              Container(
+                height: 1,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.transparent,
+                      Colors.white.withOpacity(0.3),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+              
+              const SizedBox(height: 30),
+              
+              // Copyright
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '© 2024 AstroAI. All rights reserved.',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      color: Colors.white.withOpacity(0.6),
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      TextButton(
+                        onPressed: () {},
+                        child: Text(
+                          'Privacy Policy',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            color: Colors.white.withOpacity(0.8),
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 20),
+                      TextButton(
+                        onPressed: () {},
+                        child: Text(
+                          'Terms of Service',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            color: Colors.white.withOpacity(0.8),
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBrandSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFFFF92A2),
+                    Color(0xFFA5E5F9),
+                  ],
+                ),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.white.withOpacity(0.3),
+                    offset: const Offset(0, 2),
+                    blurRadius: 8,
+                  ),
+                ],
+              ),
+              child: const Center(
+                child: Text(
+                  '✨',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              'AstroAI',
+              style: GoogleFonts.cinzel(
+                fontSize: 28,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        Text(
+          'Your personal cosmic guide powered by AI. Discover your zodiac, get daily horoscopes, and unlock the mysteries of the universe.',
+          style: GoogleFonts.raleway(
+            fontSize: 16,
+            color: Colors.white.withOpacity(0.8),
+            height: 1.6,
+          ),
+        ),
+        const SizedBox(height: 24),
+        ElevatedButton(
+          onPressed: () {},
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFFFF92A2),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(25),
+            ),
+          ),
+          child: Text(
+            'Get Started Free',
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLinksSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Features',
+          style: GoogleFonts.cinzel(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 20),
+        _buildFooterLink('Daily Horoscope'),
+        _buildFooterLink('Zodiac Matching'),
+        _buildFooterLink('Natal Charts'),
+        _buildFooterLink('ASMR & Meditation'),
+        _buildFooterLink('Tarot Reading'),
+        const SizedBox(height: 30),
+        Text(
+          'Company',
+          style: GoogleFonts.cinzel(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 20),
+        _buildFooterLink('About Us'),
+        _buildFooterLink('Contact'),
+        _buildFooterLink('Blog'),
+        _buildFooterLink('Careers'),
+      ],
+    );
+  }
+
+  Widget _buildSocialSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Connect With Us',
+          style: GoogleFonts.cinzel(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 20),
+        Text(
+          'Join our community for daily cosmic insights and updates.',
+          style: GoogleFonts.raleway(
+            fontSize: 14,
+            color: Colors.white.withOpacity(0.8),
+            height: 1.5,
+          ),
+        ),
+        const SizedBox(height: 20),
+        Row(
+          children: [
+            _buildSocialIcon('🌟'),
+            const SizedBox(width: 15),
+            _buildSocialIcon('📱'),
+            const SizedBox(width: 15),
+            _buildSocialIcon('💫'),
+            const SizedBox(width: 15),
+            _buildSocialIcon('🔮'),
+          ],
+        ),
+        const SizedBox(height: 30),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Stay Updated',
+                style: GoogleFonts.inter(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      style: const TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        hintText: 'Enter your email',
+                        hintStyle: TextStyle(color: Colors.white.withOpacity(0.6)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(color: Colors.white),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () {},
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFF92A2),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Icon(Icons.arrow_forward, color: Colors.white),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFooterLink(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: TextButton(
+        onPressed: () {},
+        style: TextButton.styleFrom(
+          padding: EdgeInsets.zero,
+          alignment: Alignment.centerLeft,
+        ),
+        child: Text(
+          text,
+          style: GoogleFonts.raleway(
+            fontSize: 14,
+            color: Colors.white.withOpacity(0.8),
+            height: 1.5,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSocialIcon(String emoji) {
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white.withOpacity(0.2)),
+      ),
+      child: Center(
+        child: Text(
+          emoji,
+          style: const TextStyle(fontSize: 18),
+        ),
+      ),
+    );
+  }
+}
+
+// Placeholder pages
+class SignUpPage extends StatelessWidget {
+  const SignUpPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Sign Up'),
+        backgroundColor: const Color(0xFF4097FF),
+        foregroundColor: Colors.white,
+      ),
+      body: const Center(
+        child: Text('Sign Up Page - Coming Soon!'),
+      ),
+    );
+  }
+}
+
+class TodaysEventsSection extends StatefulWidget {
+  const TodaysEventsSection({super.key});
+
+  @override
+  State<TodaysEventsSection> createState() => _TodaysEventsSectionState();
+}
+
+class _TodaysEventsSectionState extends State<TodaysEventsSection> {
+  List<dynamic> _todaysEvents = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchTodaysEvents();
+  }
+
+  Future<void> _fetchTodaysEvents() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://localhost:8000/events-today'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          _todaysEvents = data is List ? data : [];
+          _isLoading = false;
+        });
+      } else {
+        throw Exception('Failed to load events');
+      }
+    } catch (e) {
+      print('Error fetching today\'s events: $e');
+      setState(() {
+        _todaysEvents = [];
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      color: Colors.white,
+      padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 24),
+      child: Center(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 1440),
+          child: Column(
+            children: [
+              TweenAnimationBuilder<double>(
+                duration: const Duration(milliseconds: 800),
+                tween: Tween(begin: 0.0, end: 1.0),
+                builder: (context, value, child) {
+                  return Transform.translate(
+                    offset: Offset(0, 30 * (1 - value)),
+                    child: Opacity(
+                      opacity: value,
+                      child: Text(
+                        'Today\'s Cosmic Events',
+                        style: GoogleFonts.cinzel(
+                          fontSize: 50,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF4097FF),
+                          letterSpacing: -1,
+                          height: 1.3,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 20),
+              TweenAnimationBuilder<double>(
+                duration: const Duration(milliseconds: 1000),
+                tween: Tween(begin: 0.0, end: 1.0),
+                builder: (context, value, child) {
+                  return Transform.translate(
+                    offset: Offset(0, 20 * (1 - value)),
+                    child: Opacity(
+                      opacity: value,
+                      child: Text(
+                        'Discover what the cosmos has in store for you today',
+                        style: GoogleFonts.raleway(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w400,
+                          color: Colors.black.withOpacity(0.7),
+                          letterSpacing: -0.32,
+                          height: 1.5,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 40),
+              _isLoading 
+                ? const CircularProgressIndicator(color: Color(0xFF4097FF))
+                : _buildEventsDisplay(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEventsDisplay() {
+    if (_todaysEvents.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(40),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFF3F8),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFF4097FF).withOpacity(0.2)),
+        ),
+        child: Column(
+          children: [
+            const Icon(
+              Icons.star_outline,
+              size: 48,
+              color: Color(0xFF4097FF),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No special cosmic events today',
+              style: GoogleFonts.cinzel(
+                fontSize: 24,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF4097FF),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'The cosmos is in a peaceful state today',
+              style: GoogleFonts.raleway(
+                fontSize: 16,
+                color: Colors.black.withOpacity(0.6),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        crossAxisSpacing: 20,
+        mainAxisSpacing: 20,
+        childAspectRatio: 1.2,
+      ),
+      itemCount: _todaysEvents.length,
+      itemBuilder: (context, index) {
+        final event = _todaysEvents[index];
+        return TweenAnimationBuilder<double>(
+          duration: Duration(milliseconds: 600 + (index * 150)),
+          tween: Tween(begin: 0.0, end: 1.0),
+          builder: (context, value, child) {
+            return Transform.translate(
+              offset: Offset(0, 30 * (1 - value)),
+              child: Opacity(
+                opacity: value,
+                child: Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Color(0xFF4097FF),
+                        Color(0xFFFF92A2),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF4097FF).withOpacity(0.3),
+                        offset: const Offset(0, 8),
+                        blurRadius: 20,
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _getEventIcon(event['type'] ?? 'unknown'),
+                        style: const TextStyle(fontSize: 32),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        event['type'] ?? 'Cosmic Event',
+                        style: GoogleFonts.cinzel(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Expanded(
+                        child: Text(
+                          event['description'] ?? 'A special cosmic event is occurring today',
+                          style: GoogleFonts.raleway(
+                            fontSize: 14,
+                            color: Colors.white.withOpacity(0.9),
+                            height: 1.4,
+                          ),
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  String _getEventIcon(String eventType) {
+    switch (eventType.toLowerCase()) {
+      case 'lunar':
+        return '🌙';
+      case 'retrograde':
+        return '↩️';
+      case 'ingress':
+        return '✨';
+      case 'eclipse':
+        return '🌑';
+      case 'conjunction':
+        return '💫';
+      default:
+        return '🔮';
+    }
+  }
+}
+
+class NatalChartPage extends StatefulWidget {
+  const NatalChartPage({super.key});
+
+  @override
+  State<NatalChartPage> createState() => _NatalChartPageState();
+}
+
+class _NatalChartPageState extends State<NatalChartPage> {
+  final _formKey = GlobalKey<FormState>();
+  final _birthdateController = TextEditingController();
+  final _birthtimeController = TextEditingController();
+  final _locationController = TextEditingController();
+  DateTime? _selectedDate;
+  TimeOfDay? _selectedTime;
+  bool _isLoading = false;
+  Map<String, dynamic>? _natalChartData;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFFFF3F8),
+      appBar: AppBar(
+        title: Text(
+          'Natal Chart',
+          style: GoogleFonts.cinzel(
+            fontSize: 24,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        backgroundColor: const Color(0xFF4097FF),
+        foregroundColor: Colors.white,
+        elevation: 0,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Center(
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 800),
+            child: _natalChartData == null ? _buildForm() : _buildResults(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildForm() {
+    return Container(
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF4097FF).withOpacity(0.1),
+            offset: const Offset(0, 8),
+            blurRadius: 24,
+          ),
+        ],
+      ),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Birth Details',
+              style: GoogleFonts.cinzel(
+                fontSize: 32,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF4097FF),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Please provide your exact birth information for accurate natal chart calculation',
+              style: GoogleFonts.raleway(
+                fontSize: 16,
+                color: Colors.black.withOpacity(0.6),
+              ),
+            ),
+            const SizedBox(height: 32),
+            
+            // Birth Date
+            _buildDateField(),
+            const SizedBox(height: 20),
+            
+            // Birth Time
+            _buildTimeField(),
+            const SizedBox(height: 20),
+            
+            // Birth Location
+            TextFormField(
+              controller: _locationController,
+              decoration: InputDecoration(
+                labelText: 'Birth Location *',
+                hintText: 'e.g., London, UK',
+                prefixIcon: const Icon(Icons.location_on, color: Color(0xFF4097FF)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: const Color(0xFF4097FF).withOpacity(0.3)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFF4097FF), width: 2),
+                ),
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your birth location';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 32),
+            
+            // Generate Button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _isLoading ? null : _generateNatalChart,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF4097FF),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 8,
+                ),
+                child: _isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : Text(
+                        'Generate Natal Chart',
+                        style: GoogleFonts.inter(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDateField() {
+    return GestureDetector(
+      onTap: _selectDate,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          border: Border.all(color: const Color(0xFF4097FF).withOpacity(0.3)),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.calendar_today, color: Color(0xFF4097FF)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                _selectedDate != null
+                    ? 'Birth Date: ${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}'
+                    : 'Select Birth Date *',
+                style: GoogleFonts.raleway(
+                  fontSize: 16,
+                  color: _selectedDate != null
+                      ? Colors.black
+                      : Colors.black.withOpacity(0.6),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTimeField() {
+    return GestureDetector(
+      onTap: _selectTime,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          border: Border.all(color: const Color(0xFF4097FF).withOpacity(0.3)),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.access_time, color: Color(0xFF4097FF)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                _selectedTime != null
+                    ? 'Birth Time: ${_selectedTime!.format(context)}'
+                    : 'Select Birth Time *',
+                style: GoogleFonts.raleway(
+                  fontSize: 16,
+                  color: _selectedTime != null
+                      ? Colors.black
+                      : Colors.black.withOpacity(0.6),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildResults() {
+    return Container(
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF4097FF).withOpacity(0.1),
+            offset: const Offset(0, 8),
+            blurRadius: 24,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Your Natal Chart',
+                style: GoogleFonts.cinzel(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF4097FF),
+                ),
+              ),
+              IconButton(
+                onPressed: () {
+                  setState(() {
+                    _natalChartData = null;
+                  });
+                },
+                icon: const Icon(Icons.refresh, color: Color(0xFF4097FF)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          
+          // Display natal chart data
+          if (_natalChartData != null) ...[
+            // Ascendant Info
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: const Color(0xFF4097FF).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Ascendant: ${(_natalChartData!['ascendant_degree'] as double).toStringAsFixed(2)}°',
+                    style: GoogleFonts.raleway(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF4097FF),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Your rising sign represents how others perceive you and your approach to life.',
+                    style: GoogleFonts.raleway(
+                      fontSize: 14,
+                      color: Colors.black.withOpacity(0.7),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Planets Section
+            Text(
+              'Planetary Positions',
+              style: GoogleFonts.cinzel(
+                fontSize: 22,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF4097FF),
+              ),
+            ),
+            const SizedBox(height: 12),
+            ...((_natalChartData!['planets'] as List).map<Widget>((planet) => 
+              Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      '${planet['symbol']}',
+                      style: const TextStyle(fontSize: 20),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${planet['name']} in ${planet['zodiac_sign']}',
+                            style: GoogleFonts.raleway(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            '${(planet['degree'] as double).toStringAsFixed(2)}° - House ${planet['house_number']}',
+                            style: GoogleFonts.raleway(
+                              fontSize: 14,
+                              color: Colors.black.withOpacity(0.6),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            ).toList()),
+            
+            const SizedBox(height: 20),
+
+            // Houses Section
+            Text(
+              'House System',
+              style: GoogleFonts.cinzel(
+                fontSize: 22,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF4097FF),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: (_natalChartData!['houses'] as List).map<Widget>((house) =>
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4097FF).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    'House ${house['house_number']}: ${(house['start_degree'] as double).toStringAsFixed(1)}°',
+                    style: GoogleFonts.raleway(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ).toList(),
+            ),
+            
+            const SizedBox(height: 20),
+
+            // Aspects Summary
+            Text(
+              'Major Aspects',
+              style: GoogleFonts.cinzel(
+                fontSize: 22,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF4097FF),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Found ${(_natalChartData!['aspects'] as List).where((aspect) => aspect['aspect_type'] != -1).length} significant planetary aspects in your chart.',
+                    style: GoogleFonts.raleway(
+                      fontSize: 16,
+                      color: Colors.black.withOpacity(0.8),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Aspects show how planets interact and influence each other in your personality and life experiences.',
+                    style: GoogleFonts.raleway(
+                      fontSize: 14,
+                      color: Colors.black.withOpacity(0.6),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ] else ...[
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.grey.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.auto_awesome,
+                    size: 48,
+                    color: const Color(0xFF4097FF).withOpacity(0.5),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Generate your natal chart to see detailed planetary positions, houses, and aspects.',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.raleway(
+                      fontSize: 16,
+                      color: Colors.black.withOpacity(0.6),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Future<void> _selectDate() async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: DateTime(1990, 1, 1),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF4097FF),
+              onPrimary: Colors.white,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (date != null) {
+      setState(() {
+        _selectedDate = date;
+        _birthdateController.text = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+      });
+    }
+  }
+
+  Future<void> _selectTime() async {
+    final time = await showTimePicker(
+      context: context,
+      initialTime: const TimeOfDay(hour: 12, minute: 0),
+    );
+    if (time != null) {
+      setState(() {
+        _selectedTime = time;
+        _birthtimeController.text = '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+      });
+    }
+  }
+
+  Future<void> _generateNatalChart() async {
+    if (!_formKey.currentState!.validate() || _selectedDate == null || _selectedTime == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill in all required fields')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://localhost:8000/natal_chart'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'birth_date': _birthdateController.text,
+          'birth_time': _birthtimeController.text,
+          'birth_location': _locationController.text,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          _natalChartData = data;
+          _isLoading = false;
+        });
+      } else {
+        throw Exception('Failed to generate natal chart');
+      }
+    } catch (e) {
+      print('Error generating natal chart: $e');
+      setState(() {
+        _natalChartData = {
+          'analysis': 'Unable to connect to the server. Please check your connection and try again.'
+        };
+        _isLoading = false;
+      });
+    }
+  }
+}
+
+class MatchingPage extends StatefulWidget {
+  const MatchingPage({super.key});
+
+  @override
+  State<MatchingPage> createState() => _MatchingPageState();
+}
+
+class _MatchingPageState extends State<MatchingPage> with TickerProviderStateMixin {
+  TabController? _tabController;
+  final _birthdateController = TextEditingController();
+  final _celebrityController = TextEditingController();
+  final _sign2Controller = TextEditingController();
+  DateTime? _selectedDate;
+  String? _userSign;
+  bool _isLoadingCompatibility = false;
+  bool _isLoadingCelebrity = false;
+  Map<String, dynamic>? _compatibilityResult;
+  Map<String, dynamic>? _celebrityResult;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFFFF3F8),
+      appBar: AppBar(
+        title: Text(
+          'Zodiac Matching',
+          style: GoogleFonts.cinzel(
+            fontSize: 24,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        backgroundColor: const Color(0xFF4097FF),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: Colors.white,
+          tabs: [
+            Tab(
+              child: Text(
+                'Sign Compatibility',
+                style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
+              ),
+            ),
+            Tab(
+              child: Text(
+                'Celebrity Match',
+                style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          _buildCompatibilityTab(),
+          _buildCelebrityTab(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompatibilityTab() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Center(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: Container(
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF4097FF).withOpacity(0.1),
+                  offset: const Offset(0, 8),
+                  blurRadius: 24,
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                Text(
+                  'Zodiac Compatibility',
+                  style: GoogleFonts.cinzel(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF4097FF),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                
+                // Your sign input
+                DropdownButtonFormField<String>(
+                  decoration: InputDecoration(
+                    labelText: 'Your Zodiac Sign',
+                    prefixIcon: const Icon(Icons.star, color: Color(0xFF4097FF)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  items: _zodiacSigns.map((sign) {
+                    return DropdownMenuItem(value: sign, child: Text(sign));
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _userSign = value;
+                    });
+                  },
+                ),
+                const SizedBox(height: 20),
+                
+                // Partner's sign input
+                DropdownButtonFormField<String>(
+                  decoration: InputDecoration(
+                    labelText: 'Partner\'s Zodiac Sign',
+                    prefixIcon: const Icon(Icons.favorite, color: Color(0xFFFF92A2)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  items: _zodiacSigns.map((sign) {
+                    return DropdownMenuItem(value: sign, child: Text(sign));
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _sign2Controller.text = value ?? '';
+                    });
+                  },
+                ),
+                const SizedBox(height: 24),
+                
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _isLoadingCompatibility ? null : _checkCompatibility,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4097FF),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: _isLoadingCompatibility
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : Text(
+                            'Check Compatibility',
+                            style: GoogleFonts.inter(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                  ),
+                ),
+                
+                if (_compatibilityResult != null) ...[
+                  const SizedBox(height: 24),
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF3F8),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          'Compatibility Result',
+                          style: GoogleFonts.cinzel(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF4097FF),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          _compatibilityResult!['compatibility'] ?? 'Analysis unavailable',
+                          style: GoogleFonts.raleway(
+                            fontSize: 16,
+                            height: 1.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCelebrityTab() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Center(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: Container(
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF4097FF).withOpacity(0.1),
+                  offset: const Offset(0, 8),
+                  blurRadius: 24,
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                Text(
+                  'Celebrity Match',
+                  style: GoogleFonts.cinzel(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF4097FF),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                
+                // Birth date input
+                GestureDetector(
+                  onTap: _selectDateForCelebrity,
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: const Color(0xFF4097FF).withOpacity(0.3)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.calendar_today, color: Color(0xFF4097FF)),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            _selectedDate != null
+                                ? 'Birth Date: ${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}'
+                                : 'Select Your Birth Date',
+                            style: GoogleFonts.raleway(
+                              fontSize: 16,
+                              color: _selectedDate != null
+                                  ? Colors.black
+                                  : Colors.black.withOpacity(0.6),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                
+                // Your zodiac sign (optional)
+                DropdownButtonFormField<String>(
+                  decoration: InputDecoration(
+                    labelText: 'Your Zodiac Sign (Optional)',
+                    hintText: 'Auto-determined from birth date if empty',
+                    prefixIcon: const Icon(Icons.star, color: Color(0xFF4097FF)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  items: [null, ..._zodiacSigns].map((sign) {
+                    return DropdownMenuItem(
+                      value: sign, 
+                      child: Text(sign ?? 'Auto-determine from birth date'),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _userSign = value;
+                    });
+                  },
+                ),
+                const SizedBox(height: 20),
+                
+                // Celebrity name (optional)
+                TextField(
+                  controller: _celebrityController,
+                  decoration: InputDecoration(
+                    labelText: 'Celebrity Name (Optional)',
+                    hintText: 'Leave empty for top 3 compatible matches',
+                    prefixIcon: const Icon(Icons.person, color: Color(0xFF4097FF)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _isLoadingCelebrity ? null : _findCelebrityMatch,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFF92A2),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: _isLoadingCelebrity
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : Text(
+                            'Find Celebrity Match',
+                            style: GoogleFonts.inter(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                  ),
+                ),
+                
+                if (_celebrityResult != null) ...[
+                  const SizedBox(height: 24),
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF3F8),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          'Celebrity Match Result',
+                          style: GoogleFonts.cinzel(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF4097FF),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          _celebrityResult!['compatibility'] ?? 'Analysis unavailable',
+                          style: GoogleFonts.raleway(
+                            fontSize: 16,
+                            height: 1.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _selectDateForCelebrity() async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: DateTime(1990, 1, 1),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF4097FF),
+              onPrimary: Colors.white,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (date != null) {
+      setState(() {
+        _selectedDate = date;
+        _birthdateController.text = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+      });
+    }
+  }
+
+  Future<void> _checkCompatibility() async {
+    if (_userSign == null || _sign2Controller.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select both zodiac signs')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoadingCompatibility = true;
+    });
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://localhost:8000/compatibility'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'sign_1': _userSign,
+          'sign_2': _sign2Controller.text,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          _compatibilityResult = data;
+          _isLoadingCompatibility = false;
+        });
+      } else {
+        throw Exception('Failed to check compatibility');
+      }
+    } catch (e) {
+      print('Error checking compatibility: $e');
+      setState(() {
+        _compatibilityResult = {
+          'compatibility': 'Unable to connect to the server. Please check your connection and try again.'
+        };
+        _isLoadingCompatibility = false;
+      });
+    }
+  }
+
+  Future<void> _findCelebrityMatch() async {
+    if (_selectedDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select your birth date')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoadingCelebrity = true;
+    });
+
+    try {
+      final body = {
+        'birthdate': _birthdateController.text,
+      };
+      
+      // Add optional sign parameter if selected
+      if (_userSign != null && _userSign!.isNotEmpty) {
+        body['sign'] = _userSign!;
+      }
+      
+      // Add optional celebrity name if provided
+      if (_celebrityController.text.isNotEmpty) {
+        body['celebrity_name'] = _celebrityController.text;
+      }
+
+      final response = await http.post(
+        Uri.parse('http://localhost:8000/with_celebrity'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(body),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          _celebrityResult = data;
+          _isLoadingCelebrity = false;
+        });
+      } else {
+        throw Exception('Failed to find celebrity match');
+      }
+    } catch (e) {
+      print('Error finding celebrity match: $e');
+      setState(() {
+        _celebrityResult = {
+          'compatibility': 'Unable to connect to the server. Please check your connection and try again.'
+        };
+        _isLoadingCelebrity = false;
+      });
+    }
+  }
+
+  static const List<String> _zodiacSigns = [
+    'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
+    'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'
+  ];
+}
+
+class AboutUsPage extends StatelessWidget {
+  const AboutUsPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('About Us'),
+        backgroundColor: const Color(0xFF4097FF),
+        foregroundColor: Colors.white,
+      ),
+      body: const Center(
+        child: Text('About Us Page - Coming Soon!'),
+      ),
+    );
+  }
 }

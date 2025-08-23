@@ -61,9 +61,13 @@ class HoroscopePage extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 24),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        gradient: const LinearGradient(
+          colors: [Color(0xFF4097FF), Color(0xFFFF92A2)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: const Color(0xFFA5E5F9).withOpacity(0.5)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -73,7 +77,7 @@ class HoroscopePage extends StatelessWidget {
             style: GoogleFonts.cinzel(
               fontSize: 24,
               fontWeight: FontWeight.w700,
-              color: Colors.black,
+              color: Colors.white,
             ),
           ),
           const SizedBox(height: 8),
@@ -82,7 +86,7 @@ class HoroscopePage extends StatelessWidget {
             style: GoogleFonts.raleway(
               fontSize: 16,
               fontWeight: FontWeight.w400,
-              color: Colors.black.withOpacity(0.7),
+              color: Colors.white.withOpacity(0.9),
             ),
           ),
         ],
@@ -200,10 +204,10 @@ class AboutUsPage extends StatelessWidget {
             mainAxisSpacing: 24,
             childAspectRatio: 1.5,
             children: [
-              _buildFeatureCard('Compatibility Analysis', 'Relationship matching, friendship compatibility, and business partnership synergy.', const Color(0xFF9398DF)),
-              _buildFeatureCard('Natal Chart Analysis', 'Personalized birth chart generation with detailed planet positions interpretation.', const Color(0xFFBB8075)),
-              _buildFeatureCard('Smart Notifications', 'Astrological event reminders and personalized cosmic advice.', const Color(0xFF6953B9)),
-              _buildFeatureCard('ASMR & Meditation', '12 unique zodiac-themed sound experiences with AI-powered personalization.', const Color(0xFF4A4A4A)),
+              _buildFeatureCard('Compatibility Analysis', 'Relationship matching, friendship compatibility, and business partnership synergy.', const Color(0xFF4097FF)),
+              _buildFeatureCard('Natal Chart Analysis', 'Personalized birth chart generation with detailed planet positions interpretation.', const Color(0xFFFF92A2)),
+              _buildFeatureCard('Smart Notifications', 'Astrological event reminders and personalized cosmic advice.', const Color(0xFFA5E5F9)),
+              _buildFeatureCard('ASMR & Meditation', '12 unique zodiac-themed sound experiences with AI-powered personalization.', const Color(0xFF8985CF)),
             ],
           ),
         ],
@@ -336,9 +340,13 @@ class ContactPage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        gradient: const LinearGradient(
+          colors: [Color(0xFF4097FF), Color(0xFFFF92A2)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: const Color(0xFFA5E5F9).withOpacity(0.5)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -348,7 +356,7 @@ class ContactPage extends StatelessWidget {
             style: GoogleFonts.cinzel(
               fontSize: 24,
               fontWeight: FontWeight.w700,
-              color: Colors.black,
+              color: Colors.white,
             ),
           ),
           const SizedBox(height: 8),
@@ -357,7 +365,7 @@ class ContactPage extends StatelessWidget {
             style: GoogleFonts.inter(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF6953B9),
+              color: Colors.white,
             ),
           ),
           const SizedBox(height: 12),
@@ -366,7 +374,7 @@ class ContactPage extends StatelessWidget {
             style: GoogleFonts.raleway(
               fontSize: 14,
               fontWeight: FontWeight.w400,
-              color: Colors.black.withOpacity(0.7),
+              color: Colors.white.withOpacity(0.9),
             ),
           ),
         ],
