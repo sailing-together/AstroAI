@@ -1183,37 +1183,57 @@ class _PersonalisedSectionState extends State<PersonalisedSection> {
   bool _isLoading = false;
   Map<String, String> _responses = {};
   Map<String, bool> _expandedStates = {
+    'Daily Horoscope': false,
     'Love': false,
     'Career': false, 
     'Wealth': false,
-    'Abilities': false,
+    'Guidance': false,
+    'Motivation': false,
   };
   String? _fullHoroscope;
 
   final List<Map<String, dynamic>> _categories = [
     {
+      'title': 'Daily Horoscope',
+      'icon': '🔮',
+      'color': Color(0xFF9C27B0),
+      'description': 'Your complete daily astrological forecast',
+      'api_key': 'overall_horoscope',
+    },
+    {
       'title': 'Love',
       'icon': '💖',
       'color': Color(0xFFFF92A2),
       'description': 'Romantic relationships and connections',
+      'api_key': 'love_advice',
     },
     {
       'title': 'Career',
       'icon': '🚀',
-      'color': Color(0xFF4097FF),
+      'color': Color(0xFF000000),
       'description': 'Professional growth and opportunities',
+      'api_key': 'career_advice',
     },
     {
       'title': 'Wealth',
       'icon': '💰',
       'color': Color(0xFFA5E5F9),
       'description': 'Financial prosperity and abundance',
+      'api_key': 'wealth_advice',
     },
     {
-      'title': 'Abilities',
+      'title': 'Guidance',
+      'icon': '💡',
+      'color': Color(0xFF4CAF50),
+      'description': 'Your personalized daily guidance',
+      'api_key': 'daily_suggestion',
+    },
+    {
+      'title': 'Motivation',
       'icon': '⭐',
       'color': Color(0xFF6B46C1),
-      'description': 'Personal strengths and talents',
+      'description': 'Inspirational message for your day',
+      'api_key': 'daily_encouragement_message',
     },
   ];
 
@@ -1237,7 +1257,7 @@ class _PersonalisedSectionState extends State<PersonalisedSection> {
                     child: Opacity(
                       opacity: value,
                       child: Text(
-                        'personalised',
+                        'PERSONAL COSMIC INSIGHTS',
                         style: GoogleFonts.cinzel(
                           fontSize: 50,
                           fontWeight: FontWeight.w700,
@@ -1431,19 +1451,21 @@ class _PersonalisedSectionState extends State<PersonalisedSection> {
                             children: [
                               Text(
                                 category['icon'],
-                                style: const TextStyle(fontSize: 40),
+                                style: const TextStyle(fontSize: 36),
                               ),
-                              const SizedBox(height: 12),
+                              const SizedBox(height: 8),
                               Text(
                                 category['title'],
                                 style: GoogleFonts.cinzel(
-                                  fontSize: 18, // Smaller font size for inline layout
+                                  fontSize: 12,
                                   fontWeight: FontWeight.w700,
                                   color: category['color'],
                                 ),
                                 textAlign: TextAlign.center,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              const SizedBox(height: 8),
+                              const SizedBox(height: 6),
                               Text(
                                 category['description'],
                                 style: GoogleFonts.raleway(
@@ -1607,6 +1629,12 @@ class _PersonalisedSectionState extends State<PersonalisedSection> {
 
   Widget _buildHoroscopeContent() {
     if (_fullHoroscope == null) return const SizedBox.shrink();
+    
+    // Check if any response contains error messages
+    bool hasErrors = _responses.values.any((response) => 
+      response.contains('Unable to connect to the server'));
+    
+    if (hasErrors) return const SizedBox.shrink();
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -1723,10 +1751,12 @@ class _PersonalisedSectionState extends State<PersonalisedSection> {
         setState(() {
           _fullHoroscope = data['horoscope'];
           _responses = {
-            'Love': _extractSection(data['horoscope'], 'Love') ?? 'Love insights will appear here.',
-            'Career': _extractSection(data['horoscope'], 'Career') ?? 'Career insights will appear here.',
-            'Wealth': _extractSection(data['horoscope'], 'Wealth') ?? 'Wealth insights will appear here.',
-            'Abilities': _extractSection(data['horoscope'], 'Abilities') ?? 'Abilities insights will appear here.',
+            'Daily Horoscope': data['overall_horoscope'] ?? 'Today holds unique cosmic energies that guide your path toward growth and fulfillment.',
+            'Love': data['love_advice'] ?? 'Open your heart to the possibilities that love brings into your life today.',
+            'Career': data['career_advice'] ?? 'Professional opportunities await those who remain focused and determined.',
+            'Wealth': data['wealth_advice'] ?? 'Financial wisdom comes from mindful decisions and patient planning.',
+            'Guidance': data['daily_suggestion'] ?? 'Embrace the day with confidence and stay true to your inner wisdom.',
+            'Motivation': data['daily_encouragement_message'] ?? 'You have the strength and wisdom to make today extraordinary.',
           };
           _isLoading = false;
         });
@@ -1737,12 +1767,30 @@ class _PersonalisedSectionState extends State<PersonalisedSection> {
       print('Error generating insights: $e');
       setState(() {
         _fullHoroscope = null;
-        _responses = {
-          'Love': 'Unable to connect to the server. Please check your connection and try again.',
-          'Career': 'Unable to connect to the server. Please check your connection and try again.',
-          'Wealth': 'Unable to connect to the server. Please check your connection and try again.',
-          'Abilities': 'Unable to connect to the server. Please check your connection and try again.',
-        };
+        // Check if it's a quota exceeded error
+        bool isQuotaError = e.toString().contains('429') || 
+                           e.toString().contains('quota') || 
+                           e.toString().contains('exceeded');
+        
+        if (isQuotaError) {
+          _responses = {
+            'Daily Horoscope': 'The stars align to bring you wisdom and clarity today. Trust in your intuition and embrace the opportunities that come your way.',
+            'Love': 'Love surrounds you in many forms today. Open your heart to deeper connections and meaningful conversations with those who matter.',
+            'Career': 'Your professional journey is guided by cosmic forces. Stay focused on your goals and trust that your hard work will be rewarded.',
+            'Wealth': 'Financial opportunities may present themselves in unexpected ways. Practice mindful spending and consider long-term investments.',
+            'Guidance': 'Take a moment to appreciate the beauty around you and reflect on your personal growth.',
+            'Motivation': 'You are exactly where you need to be. Trust the process and believe in your incredible potential.',
+          };
+        } else {
+          _responses = {
+            'Daily Horoscope': 'Unable to connect to the server. Please check your connection and try again.',
+            'Love': 'Unable to connect to the server. Please check your connection and try again.',
+            'Career': 'Unable to connect to the server. Please check your connection and try again.',
+            'Wealth': 'Unable to connect to the server. Please check your connection and try again.',
+            'Guidance': 'Unable to connect to the server. Please check your connection and try again.',
+            'Motivation': 'Unable to connect to the server. Please check your connection and try again.',
+          };
+        }
         _isLoading = false;
       });
     }
@@ -4041,12 +4089,34 @@ class _MatchingPageState extends State<MatchingPage> with TickerProviderStateMix
                           ),
                         ),
                         const SizedBox(height: 12),
-                        Text(
-                          _celebrityResult!['compatibility'] ?? 'Analysis unavailable',
-                          style: GoogleFonts.raleway(
-                            fontSize: 16,
-                            height: 1.5,
-                          ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: _celebrityResult!.entries.map((entry) {
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    entry.key,
+                                    style: GoogleFonts.cinzel(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                      color: const Color(0xFF4097FF),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    entry.value.toString(),
+                                    style: GoogleFonts.raleway(
+                                      fontSize: 16,
+                                      height: 1.5,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }).toList(),
                         ),
                       ],
                     ),
@@ -4174,7 +4244,7 @@ class _MatchingPageState extends State<MatchingPage> with TickerProviderStateMix
       print('Error finding celebrity match: $e');
       setState(() {
         _celebrityResult = {
-          'compatibility': 'Unable to connect to the server. Please check your connection and try again.'
+          'Error': 'Unable to connect to the server. Please check your connection and try again.'
         };
         _isLoadingCelebrity = false;
       });
@@ -4187,20 +4257,3 @@ class _MatchingPageState extends State<MatchingPage> with TickerProviderStateMix
   ];
 }
 
-class AboutUsPage extends StatelessWidget {
-  const AboutUsPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('About Us'),
-        backgroundColor: const Color(0xFF4097FF),
-        foregroundColor: Colors.white,
-      ),
-      body: const Center(
-        child: Text('About Us Page - Coming Soon!'),
-      ),
-    );
-  }
-}

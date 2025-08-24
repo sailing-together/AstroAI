@@ -24,4 +24,10 @@ def get_response(some_prompt: str):
 
         return response.text.strip()
     except Exception as e:
-        return f"Error generating content: {str(e)}"
+        error_msg = str(e)
+        if "429" in error_msg or "quota" in error_msg.lower():
+            return "API quota exceeded. Please try again later or contact support to upgrade the API plan."
+        elif "API" in error_msg:
+            return "API service temporarily unavailable. Please try again later."
+        else:
+            return f"Service temporarily unavailable: {error_msg}"
