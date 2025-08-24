@@ -3232,27 +3232,58 @@ class _NatalChartPageState extends State<NatalChartPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF3F8),
-      appBar: AppBar(
-        title: Text(
-          'Natal Chart',
-          style: GoogleFonts.cinzel(
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
+      body: Stack(
+        children: [
+          // Main content with top padding to account for fixed header
+          Padding(
+            padding: const EdgeInsets.only(top: 89), // Header height
+            child: Container(
+              color: const Color(0xFF1A1A2E),
+              child: Center(
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 1152),
+                  padding: const EdgeInsets.all(24),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Natal Chart Analysis',
+                          style: GoogleFonts.cinzel(
+                            fontSize: 50,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                            letterSpacing: -1,
+                            height: 1.3,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Text(
+                          'Unlock the secrets of your birth chart. Discover your planetary positions, houses, and aspects that shape your personality and destiny.',
+                          style: GoogleFonts.raleway(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.white.withOpacity(0.8),
+                            height: 1.5,
+                          ),
+                        ),
+                        const SizedBox(height: 40),
+                        _natalChartData == null ? _buildForm() : _buildResults(),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ),
-        ),
-        backgroundColor: const Color(0xFF4097FF),
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Center(
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 800),
-            child: _natalChartData == null ? _buildForm() : _buildResults(),
+          // Fixed header on top
+          const Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: NavigationHeader(),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -3770,42 +3801,101 @@ class _MatchingPageState extends State<MatchingPage> with TickerProviderStateMix
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF3F8),
-      appBar: AppBar(
-        title: Text(
-          'Zodiac Matching',
-          style: GoogleFonts.cinzel(
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        backgroundColor: const Color(0xFF4097FF),
-        foregroundColor: Colors.white,
-        elevation: 0,
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: Colors.white,
-          tabs: [
-            Tab(
-              child: Text(
-                'Sign Compatibility',
-                style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
-              ),
-            ),
-            Tab(
-              child: Text(
-                'Celebrity Match',
-                style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
-              ),
-            ),
-          ],
-        ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
+      body: Stack(
         children: [
-          _buildCompatibilityTab(),
-          _buildCelebrityTab(),
+          // Main content with top padding to account for fixed header
+          Padding(
+            padding: const EdgeInsets.only(top: 89), // Header height
+            child: Container(
+              color: const Color(0xFFF3F3F3),
+              child: Center(
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 1152),
+                  padding: const EdgeInsets.all(24),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Compatibility Analysis',
+                          style: GoogleFonts.cinzel(
+                            fontSize: 50,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.black,
+                            letterSpacing: -1,
+                            height: 1.3,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Text(
+                          'Discover your cosmic connections through advanced astrological compatibility analysis. Find your perfect match based on zodiac signs, birth charts, and celestial alignments.',
+                          style: GoogleFonts.raleway(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.black.withOpacity(0.8),
+                            height: 1.5,
+                          ),
+                        ),
+                        const SizedBox(height: 40),
+                        // Tab selector
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                offset: const Offset(0, 2),
+                                blurRadius: 8,
+                              ),
+                            ],
+                          ),
+                          child: TabBar(
+                            controller: _tabController,
+                            indicatorColor: const Color(0xFF4097FF),
+                            labelColor: const Color(0xFF4097FF),
+                            unselectedLabelColor: Colors.grey[600],
+                            tabs: [
+                              Tab(
+                                child: Text(
+                                  'Sign Compatibility',
+                                  style: GoogleFonts.cinzel(fontSize: 16, fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                              Tab(
+                                child: Text(
+                                  'Celebrity Match',
+                                  style: GoogleFonts.cinzel(fontSize: 16, fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        SizedBox(
+                          height: 600, // Fixed height for TabBarView
+                          child: TabBarView(
+                            controller: _tabController,
+                            children: [
+                              _buildCompatibilityTab(),
+                              _buildCelebrityTab(),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // Fixed header on top
+          const Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: NavigationHeader(),
+          ),
         ],
       ),
     );
@@ -3813,10 +3903,10 @@ class _MatchingPageState extends State<MatchingPage> with TickerProviderStateMix
 
   Widget _buildCompatibilityTab() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(16),
       child: Center(
         child: Container(
-          constraints: const BoxConstraints(maxWidth: 600),
+          constraints: const BoxConstraints(maxWidth: 800),
           child: Container(
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
@@ -3946,10 +4036,10 @@ class _MatchingPageState extends State<MatchingPage> with TickerProviderStateMix
 
   Widget _buildCelebrityTab() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(16),
       child: Center(
         child: Container(
-          constraints: const BoxConstraints(maxWidth: 600),
+          constraints: const BoxConstraints(maxWidth: 800),
           child: Container(
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
