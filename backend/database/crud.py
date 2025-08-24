@@ -109,31 +109,68 @@ def get_todays_events():
     today = str(date.today())
     db = config.SessionLocal()
     
-    # For Lunar Events
-    lunar_events = db.query(LunarEvent).filter(
-        or_(
-            LunarEvent.start == today,
-            LunarEvent.end == today
-        )
-    ).all()
+    try:
+        # For Lunar Events
+        lunar_events_query = db.query(LunarEvent).filter(
+            or_(
+                LunarEvent.start == today,
+                LunarEvent.end == today
+            )
+        ).all()
         
-    # For Planetary Retrogrades
-    retrogrades = db.query(PlanetaryRetrograde).filter(
-        or_(
-            PlanetaryRetrograde.start == today,
-            PlanetaryRetrograde.end == today
-        )
-    ).all()
-    
-    # For Planetary Ingresses
-    ingresses = db.query(PlanetaryIngress).filter(
-    func.substring(PlanetaryIngress.time, 1, 10) == today
-    ).all()
-    return {
-        "date": today,
-        "lunar_events": lunar_events,
-        "retrogrades": retrogrades,
-        "ingresses": ingresses
-    }
+        # Convert to serializable dictionaries
+        lunar_events = [
+            {
+                "id": event.id,
+                "event": event.event,
+                "start": event.start,
+                "end": event.end,
+                "duration_days": event.duration_days
+            } for event in lunar_events_query
+        ]
+            
+        # For Planetary Retrogrades
+        retrogrades_query = db.query(PlanetaryRetrograde).filter(
+            or_(
+                PlanetaryRetrograde.start == today,
+                PlanetaryRetrograde.end == today
+            )
+        ).all()
+        
+        # Convert to serializable dictionaries
+        retrogrades = [
+            {
+                "id": retrograde.id,
+                "planet": retrograde.planet,
+                "start": retrograde.start,
+                "end": retrograde.end,
+                "duration_days": retrograde.duration_days
+            } for retrograde in retrogrades_query
+        ]
+        
+        # For Planetary Ingresses
+        ingresses_query = db.query(PlanetaryIngress).filter(
+        func.substring(PlanetaryIngress.time, 1, 10) == today
+        ).all()
+        
+        # Convert to serializable dictionaries
+        ingresses = [
+            {
+                "id": ingress.id,
+                "planet": ingress.planet,
+                "time": ingress.time,
+                "sign": ingress.sign,
+                "sign_number": ingress.sign_number
+            } for ingress in ingresses_query
+        ]
+        
+        return {
+            "date": today,
+            "lunar_events": lunar_events,
+            "retrogrades": retrogrades,
+            "ingresses": ingresses
+        }
+    finally:
+        db.close()
 
 #print(get_todays_events())

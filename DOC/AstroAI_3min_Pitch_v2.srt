@@ -1,0 +1,94 @@
+1
+00:00:00,000 --> 00:00:08,000
+Yang: Imagine starting your day with a sixty‑second check‑in
+that actually makes you feel calmer and more focused.
+
+2
+00:00:08,000 --> 00:00:15,000
+Yang: We’re AstroAI — a practical tool and a thoughtful
+companion that turns astrology into gentle, actionable
+guidance you can use every day.
+
+3
+00:00:15,000 --> 00:00:25,000
+Cynthia: Most astrology apps push walls of text and vague
+advice.
+
+4
+00:00:25,000 --> 00:00:30,000
+Cynthia: People don’t need more noise — they want something
+personal, practical, and caring.
+
+5
+00:00:30,000 --> 00:00:40,000
+Yang: Our prototype delivers three core moments.
+
+6
+00:00:40,000 --> 00:00:55,000
+Yang: Daily Cosmic Insights with a tiny “Try today” step;
+Compatibility with a score plus two strengths and two
+watch‑outs; and a Natal Chart with a clean wheel and
+plain‑English summary.
+
+7
+00:00:55,000 --> 00:01:05,000
+Cynthia: We move from vague to specific.
+
+8
+00:01:05,000 --> 00:01:20,000
+Cynthia: Old way — “You may have financial challenges.”
+AstroAI way — “Based on Saturn’s transit, this is a poor
+week for high‑risk investments. Try a 7‑day budget and
+review recurring expenses.”
+
+9
+00:01:20,000 --> 00:01:32,000
+Yang: We also go from passive to actionable. Our Event
+Analysis turns signals into next steps.
+
+10
+00:01:32,000 --> 00:01:40,000
+Yang: For an interview, we suggest communication tactics and
+times of day you’re likely to be at your sharpest.
+
+11
+00:01:40,000 --> 00:01:55,000
+Cynthia: And we’re deeply personal. Every suggestion is
+synthesized from your unique natal chart and current
+transits — not just a sun sign.
+
+12
+00:01:55,000 --> 00:02:05,000
+Yang: Who loves this? Students who want quick clarity and
+better sleep.
+
+13
+00:02:05,000 --> 00:02:15,000
+Yang: Busy professionals who want timing tips and
+compatibility snapshots; mindful explorers who want calming
+rituals and deeper insight.
+
+14
+00:02:15,000 --> 00:02:30,000
+Cynthia: Business model: start free, with Premium for deeper
+compatibility, ASMR and guided meditations, and a lite AI
+Astrologer. We’ll pilot expert sessions and curated
+mental‑health content.
+
+15
+00:02:30,000 --> 00:02:50,000
+Yang: Why us, why now? Our edge is a deterministic astrology
+engine paired with an AI layer, wrapped in a practical,
+caring user experience — supportive tone, clear limits, and
+privacy by design.
+
+16
+00:02:50,000 --> 00:02:55,000
+Cynthia: Today, the prototype works.
+
+17
+00:02:55,000 --> 00:03:00,000
+Yang: Next — transits and notifications, the lite AI
+Astrologer, then ASMR and mobile apps after the web launch.
+We’re seeking mentors, pilot partners, and early users.
+Thank you!
