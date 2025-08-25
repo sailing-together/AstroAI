@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:AstroAI/widgets/common/navigation_header.dart';
+import 'package:AstroAI/services/api_service.dart';
 import 'main.dart';
 import 'package:AstroAI/pages/natal_chart_page.dart';
 export 'package:AstroAI/pages/natal_chart_page.dart';
@@ -387,8 +388,27 @@ class ContactPage extends StatelessWidget {
 }
 
 // Matching Page - Compatibility Analysis
-class MatchingPage extends StatelessWidget {
+class MatchingPage extends StatefulWidget {
   const MatchingPage({super.key});
+
+  @override
+  State<MatchingPage> createState() => _MatchingPageState();
+}
+
+class _MatchingPageState extends State<MatchingPage> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -429,7 +449,58 @@ class MatchingPage extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 40),
-                        _buildCompatibilitySection(),
+                        
+                        // Tab Bar
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                offset: const Offset(0, 4),
+                                blurRadius: 20,
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            children: [
+                              TabBar(
+                                controller: _tabController,
+                                tabs: const [
+                                  Tab(text: 'SIGN COMPATIBILITY'),
+                                  Tab(text: 'CELEBRITY MATCH'),
+                                ],
+                                labelColor: const Color(0xFF6953B9),
+                                unselectedLabelColor: Colors.black.withOpacity(0.6),
+                                labelStyle: GoogleFonts.cinzel(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                unselectedLabelStyle: GoogleFonts.cinzel(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                indicator: BoxDecoration(
+                                  color: const Color(0xFF6953B9),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                indicatorSize: TabBarIndicatorSize.tab,
+                                dividerColor: Colors.transparent,
+                              ),
+                              SizedBox(
+                                height: 600,
+                                child: TabBarView(
+                                  controller: _tabController,
+                                  children: [
+                                    _buildCompatibilitySection(),
+                                    _buildCelebritySection(),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                         const SizedBox(height: 40),
                         _buildMatchingTypes(),
                       ],
@@ -451,101 +522,17 @@ class MatchingPage extends StatelessWidget {
     );
   }
 
+  // Sign Compatibility Tab
   Widget _buildCompatibilitySection() {
-    return Container(
-      padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            offset: const Offset(0, 4),
-            blurRadius: 20,
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Find Your Perfect Match',
-            style: GoogleFonts.cinzel(
-              fontSize: 32,
-              fontWeight: FontWeight.w700,
-              color: Colors.black,
-            ),
-          ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              Expanded(
-                child: _buildInputCard('Your Sign', 'Select your zodiac sign'),
-              ),
-              const SizedBox(width: 24),
-              const Icon(Icons.favorite, color: Color(0xFF6953B9), size: 32),
-              const SizedBox(width: 24),
-              Expanded(
-                child: _buildInputCard('Partner\'s Sign', 'Select partner\'s sign'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 32),
-          Center(
-            child: ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF6953B9),
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: Text(
-                'Analyze Compatibility',
-                style: GoogleFonts.inter(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
+    return SingleChildScrollView(
+      child: _SignCompatibilityWidget(),
     );
   }
 
-  Widget _buildInputCard(String title, String hint) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: GoogleFonts.cinzel(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: Colors.black,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            hint,
-            style: GoogleFonts.raleway(
-              fontSize: 14,
-              fontWeight: FontWeight.w400,
-              color: Colors.black.withOpacity(0.6),
-            ),
-          ),
-        ],
-      ),
+  // Celebrity Match Tab  
+  Widget _buildCelebritySection() {
+    return SingleChildScrollView(
+      child: _CelebrityMatchWidget(),
     );
   }
 
@@ -627,7 +614,718 @@ class MatchingPage extends StatelessWidget {
   }
 }
 
+// Sign Compatibility Widget
+class _SignCompatibilityWidget extends StatefulWidget {
+  @override
+  State<_SignCompatibilityWidget> createState() => _SignCompatibilityWidgetState();
+}
 
+class _SignCompatibilityWidgetState extends State<_SignCompatibilityWidget> {
+  String? _selectedSign1;
+  String? _selectedSign2;
+  String? _selectedRelationType;
+  bool _isLoading = false;
+  Map<String, dynamic>? _compatibilityResult;
+
+  final List<String> _zodiacSigns = [
+    'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
+    'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'
+  ];
+
+  final List<String> _relationshipTypes = [
+    'lover', 'friend', 'business', 'family', 'other'
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Find Your Perfect Match',
+            style: GoogleFonts.cinzel(
+              fontSize: 32,
+              fontWeight: FontWeight.w700,
+              color: Colors.black,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: _buildInputCard('Your Sign', 'Select your zodiac sign', _selectedSign1, (value) {
+                  setState(() => _selectedSign1 = value);
+                }),
+              ),
+              const SizedBox(width: 16),
+              const Icon(Icons.favorite, color: Color(0xFF6953B9), size: 24),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildInputCard('Partner\'s Sign', 'Select partner\'s sign', _selectedSign2, (value) {
+                  setState(() => _selectedSign2 = value);
+                }),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildRelationshipTypeCard(),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 32),
+          Center(
+            child: ElevatedButton(
+              onPressed: _selectedSign1 != null && _selectedSign2 != null && !_isLoading
+                  ? _analyzeCompatibility
+                  : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF6953B9),
+                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: _isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                    )
+                  : Text(
+                      'Analyze Compatibility',
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+            ),
+          ),
+          if (_compatibilityResult != null) ...[
+            const SizedBox(height: 24),
+            _buildResults(),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInputCard(String title, String hint, String? selectedValue, Function(String?) onChanged) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: GoogleFonts.cinzel(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.black,
+            ),
+          ),
+          const SizedBox(height: 8),
+          DropdownButton<String>(
+            value: selectedValue,
+            hint: Text(
+              hint,
+              style: GoogleFonts.raleway(
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                color: Colors.black.withOpacity(0.6),
+              ),
+            ),
+            isExpanded: true,
+            underline: const SizedBox(),
+            items: _zodiacSigns.map((sign) {
+              return DropdownMenuItem(
+                value: sign,
+                child: Text(
+                  sign,
+                  style: GoogleFonts.raleway(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              );
+            }).toList(),
+            onChanged: onChanged,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRelationshipTypeCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Relationship Type',
+            style: GoogleFonts.cinzel(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.black,
+            ),
+          ),
+          const SizedBox(height: 8),
+          DropdownButton<String>(
+            value: _selectedRelationType,
+            hint: Text(
+              'Optional',
+              style: GoogleFonts.raleway(
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                color: Colors.black.withOpacity(0.6),
+              ),
+            ),
+            isExpanded: true,
+            underline: const SizedBox(),
+            items: _relationshipTypes.map((type) {
+              return DropdownMenuItem(
+                value: type,
+                child: Text(
+                  type.toUpperCase(),
+                  style: GoogleFonts.raleway(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              );
+            }).toList(),
+            onChanged: (value) {
+              setState(() {
+                _selectedRelationType = value;
+                _compatibilityResult = null; // Clear previous results
+              });
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildResults() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                'Compatibility Results',
+                style: GoogleFonts.cinzel(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black,
+                ),
+              ),
+              if (_compatibilityResult!['relationship_type'] != null) ...[
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF6953B9).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFF6953B9).withOpacity(0.3)),
+                  ),
+                  child: Text(
+                    _compatibilityResult!['relationship_type'].toString(),
+                    style: GoogleFonts.raleway(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF6953B9),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (_compatibilityResult!['compatibility_score'] != null)
+            Text(
+              'Score: ${_compatibilityResult!['compatibility_score']}/10',
+              style: GoogleFonts.raleway(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF6953B9),
+              ),
+            ),
+          const SizedBox(height: 8),
+          if (_compatibilityResult!['analysis'] != null)
+            Text(
+              _compatibilityResult!['analysis'].toString(),
+              style: GoogleFonts.raleway(
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                color: Colors.black.withOpacity(0.8),
+                height: 1.4,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _analyzeCompatibility() async {
+    setState(() => _isLoading = true);
+    
+    try {
+      Map<String, dynamic>? result;
+      
+      // If "other" is selected or no relationship type is selected, call API
+      if (_selectedRelationType == null || _selectedRelationType == 'other') {
+        final apiService = ApiService();
+        result = await apiService.getCompatibility(_selectedSign1!, _selectedSign2!);
+      } else {
+        // Generate predefined information for specific relationship types
+        result = _generateRelationshipTypeInfo(_selectedSign1!, _selectedSign2!, _selectedRelationType!);
+      }
+      
+      setState(() {
+        _compatibilityResult = result;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _compatibilityResult = {
+          'analysis': 'Unable to analyze compatibility at this time. Please try again later.',
+          'compatibility_score': 'N/A'
+        };
+      });
+    }
+  }
+
+  Map<String, dynamic> _generateRelationshipTypeInfo(String sign1, String sign2, String relationType) {
+    // Generate predefined compatibility information based on relationship type
+    String analysis;
+    String score;
+    
+    switch (relationType) {
+      case 'lover':
+        analysis = _getLoverCompatibility(sign1, sign2);
+        score = _getCompatibilityScore(sign1, sign2, 'lover');
+        break;
+      case 'friend':
+        analysis = _getFriendCompatibility(sign1, sign2);
+        score = _getCompatibilityScore(sign1, sign2, 'friend');
+        break;
+      case 'business':
+        analysis = _getBusinessCompatibility(sign1, sign2);
+        score = _getCompatibilityScore(sign1, sign2, 'business');
+        break;
+      case 'family':
+        analysis = _getFamilyCompatibility(sign1, sign2);
+        score = _getCompatibilityScore(sign1, sign2, 'family');
+        break;
+      default:
+        analysis = 'Compatibility analysis for $sign1 and $sign2.';
+        score = '7';
+    }
+    
+    return {
+      'analysis': analysis,
+      'compatibility_score': score,
+      'relationship_type': relationType.toUpperCase()
+    };
+  }
+
+  String _getLoverCompatibility(String sign1, String sign2) {
+    return '''💕 Romantic Compatibility: $sign1 & $sign2
+
+As lovers, your connection brings together ${_getSignElement(sign1)} and ${_getSignElement(sign2)} energies. This creates a dynamic where passion meets understanding.
+
+Key Relationship Dynamics:
+• Emotional Connection: ${_getEmotionalConnection(sign1, sign2)}
+• Communication Style: ${_getCommunicationStyle(sign1, sign2)}
+• Intimacy Level: ${_getIntimacyLevel(sign1, sign2)}
+• Long-term Potential: ${_getLongTermPotential(sign1, sign2)}
+
+Remember that true love transcends astrological compatibility - nurture your connection with understanding, patience, and open communication.''';
+  }
+
+  String _getFriendCompatibility(String sign1, String sign2) {
+    return '''🤝 Friendship Compatibility: $sign1 & $sign2
+
+Your friendship combines the unique qualities of ${_getSignElement(sign1)} and ${_getSignElement(sign2)} signs, creating a bond built on mutual respect and shared experiences.
+
+Friendship Highlights:
+• Shared Activities: ${_getSharedActivities(sign1, sign2)}
+• Support Style: ${_getSupportStyle(sign1, sign2)}
+• Conflict Resolution: ${_getConflictResolution(sign1, sign2)}
+• Growth Together: ${_getGrowthPotential(sign1, sign2)}
+
+This friendship has the potential to be both meaningful and lasting when you embrace each other's differences and celebrate your unique strengths.''';
+  }
+
+  String _getBusinessCompatibility(String sign1, String sign2) {
+    return '''💼 Business Partnership: $sign1 & $sign2
+
+Your professional partnership brings together complementary skills and approaches. ${sign1}'s ${_getBusinessStrength(sign1)} pairs well with ${sign2}'s ${_getBusinessStrength(sign2)}.
+
+Partnership Dynamics:
+• Leadership Style: ${_getLeadershipDynamic(sign1, sign2)}
+• Decision Making: ${_getDecisionMaking(sign1, sign2)}
+• Risk Management: ${_getRiskManagement(sign1, sign2)}
+• Innovation Approach: ${_getInnovationApproach(sign1, sign2)}
+
+Success in business requires clear communication of goals, defined roles, and mutual respect for each other's working styles.''';
+  }
+
+  String _getFamilyCompatibility(String sign1, String sign2) {
+    return '''👨‍👩‍👧‍👦 Family Harmony: $sign1 & $sign2
+
+Your family relationship is enriched by the blend of ${_getSignElement(sign1)} and ${_getSignElement(sign2)} energies, creating a unique family dynamic.
+
+Family Dynamics:
+• Communication Pattern: ${_getFamilyCommunication(sign1, sign2)}
+• Support System: ${_getFamilySupport(sign1, sign2)}
+• Tradition & Values: ${_getFamilyValues(sign1, sign2)}
+• Conflict Resolution: ${_getFamilyConflictResolution(sign1, sign2)}
+
+Family bonds are strengthened through understanding, patience, and celebrating the unique gifts each person brings to the family unit.''';
+  }
+
+  String _getCompatibilityScore(String sign1, String sign2, String relationType) {
+    // Simple scoring logic based on element compatibility
+    final elements1 = _getSignElement(sign1);
+    final elements2 = _getSignElement(sign2);
+    
+    if (elements1 == elements2) return '9'; // Same element
+    if (_areCompatibleElements(elements1, elements2)) return '8'; // Compatible elements
+    return '7'; // Different but workable
+  }
+
+  String _getSignElement(String sign) {
+    const elements = {
+      'Aries': 'Fire', 'Leo': 'Fire', 'Sagittarius': 'Fire',
+      'Taurus': 'Earth', 'Virgo': 'Earth', 'Capricorn': 'Earth',
+      'Gemini': 'Air', 'Libra': 'Air', 'Aquarius': 'Air',
+      'Cancer': 'Water', 'Scorpio': 'Water', 'Pisces': 'Water'
+    };
+    return elements[sign] ?? 'Unknown';
+  }
+
+  bool _areCompatibleElements(String element1, String element2) {
+    const compatible = {
+      'Fire': ['Air'],
+      'Air': ['Fire'],
+      'Earth': ['Water'],
+      'Water': ['Earth']
+    };
+    return compatible[element1]?.contains(element2) ?? false;
+  }
+
+  // Helper methods for generating detailed compatibility text
+  String _getEmotionalConnection(String sign1, String sign2) => 'Deep and intuitive understanding';
+  String _getCommunicationStyle(String sign1, String sign2) => 'Open and honest dialogue';
+  String _getIntimacyLevel(String sign1, String sign2) => 'Strong physical and emotional bond';
+  String _getLongTermPotential(String sign1, String sign2) => 'Excellent with mutual growth';
+  String _getSharedActivities(String sign1, String sign2) => 'Adventure and creative pursuits';
+  String _getSupportStyle(String sign1, String sign2) => 'Encouraging and loyal';
+  String _getConflictResolution(String sign1, String sign2) => 'Direct but respectful discussion';
+  String _getGrowthPotential(String sign1, String sign2) => 'Inspiring each other to excel';
+  String _getBusinessStrength(String sign) => 'strategic planning and execution';
+  String _getLeadershipDynamic(String sign1, String sign2) => 'Collaborative leadership approach';
+  String _getDecisionMaking(String sign1, String sign2) => 'Balanced analytical and intuitive choices';
+  String _getRiskManagement(String sign1, String sign2) => 'Calculated risks with careful planning';
+  String _getInnovationApproach(String sign1, String sign2) => 'Creative solutions with practical implementation';
+  String _getFamilyCommunication(String sign1, String sign2) => 'Open and supportive dialogue';
+  String _getFamilySupport(String sign1, String sign2) => 'Unconditional love and encouragement';
+  String _getFamilyValues(String sign1, String sign2) => 'Shared core values with room for individual expression';
+  String _getFamilyConflictResolution(String sign1, String sign2) => 'Patient discussion with focus on understanding';
+}
+
+// Celebrity Match Widget
+class _CelebrityMatchWidget extends StatefulWidget {
+  @override
+  State<_CelebrityMatchWidget> createState() => _CelebrityMatchWidgetState();
+}
+
+class _CelebrityMatchWidgetState extends State<_CelebrityMatchWidget> {
+  DateTime? _selectedDate;
+  String? _zodiacSign;
+  String? _celebrityName;
+  bool _isLoading = false;
+  Map<String, dynamic>? _matchResult;
+  final TextEditingController _birthdateController = TextEditingController();
+  final TextEditingController _celebrityController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Celebrity Match',
+            style: GoogleFonts.cinzel(
+              fontSize: 32,
+              fontWeight: FontWeight.w700,
+              color: Colors.black,
+            ),
+          ),
+          const SizedBox(height: 24),
+          
+          // Birth Date Input
+          GestureDetector(
+            onTap: () async {
+              final date = await showDatePicker(
+                context: context,
+                initialDate: DateTime(1995, 1, 1),
+                firstDate: DateTime(1900),
+                lastDate: DateTime.now(),
+              );
+              if (date != null) {
+                setState(() {
+                  _selectedDate = date;
+                  _birthdateController.text = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+                  _zodiacSign = _getZodiacSign(date);
+                });
+              }
+            },
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Your Birth Date',
+                    style: GoogleFonts.cinzel(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _selectedDate != null 
+                        ? '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}'
+                        : 'Select your birth date',
+                    style: GoogleFonts.raleway(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: _selectedDate != null 
+                          ? Colors.black 
+                          : Colors.black.withOpacity(0.6),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // Celebrity Name Input (Optional)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Celebrity Name (Optional)',
+                  style: GoogleFonts.cinzel(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _celebrityController,
+                  decoration: InputDecoration(
+                    hintText: 'Enter celebrity name for specific match',
+                    hintStyle: GoogleFonts.raleway(
+                      fontSize: 14,
+                      color: Colors.black.withOpacity(0.6),
+                    ),
+                    border: InputBorder.none,
+                  ),
+                  style: GoogleFonts.raleway(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+                      _celebrityName = value.isNotEmpty ? value : null;
+                    });
+                  },
+                ),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 32),
+          Center(
+            child: ElevatedButton(
+              onPressed: _selectedDate != null && !_isLoading
+                  ? _findCelebrityMatch
+                  : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF6953B9),
+                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: _isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                    )
+                  : Text(
+                      'Find Celebrity Match',
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+            ),
+          ),
+          if (_matchResult != null) ...[
+            const SizedBox(height: 24),
+            _buildCelebrityResults(),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCelebrityResults() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Celebrity Match Results',
+            style: GoogleFonts.cinzel(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.black,
+            ),
+          ),
+          const SizedBox(height: 8),
+          if (_matchResult!['celebrity_name'] != null)
+            Text(
+              'Match: ${_matchResult!['celebrity_name']}',
+              style: GoogleFonts.raleway(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF6953B9),
+              ),
+            ),
+          if (_matchResult!['celebrity_sign'] != null)
+            Text(
+              'Sign: ${_matchResult!['celebrity_sign']}',
+              style: GoogleFonts.raleway(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Colors.black.withOpacity(0.7),
+              ),
+            ),
+          const SizedBox(height: 8),
+          if (_matchResult!['analysis'] != null)
+            Text(
+              _matchResult!['analysis'].toString(),
+              style: GoogleFonts.raleway(
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                color: Colors.black.withOpacity(0.8),
+                height: 1.4,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _findCelebrityMatch() async {
+    setState(() => _isLoading = true);
+    
+    try {
+      final apiService = ApiService();
+      final result = await apiService.getCelebrityCompatibility(
+        _birthdateController.text,
+        sign: _zodiacSign,
+        celebrityName: _celebrityName,
+      );
+      
+      setState(() {
+        _matchResult = result;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _matchResult = {
+          'analysis': 'Unable to find celebrity matches at this time. Please try again later.',
+          'celebrity_name': 'N/A'
+        };
+      });
+    }
+  }
+
+  String _getZodiacSign(DateTime birthDate) {
+    final month = birthDate.month;
+    final day = birthDate.day;
+    
+    if ((month == 3 && day >= 21) || (month == 4 && day <= 19)) return 'Aries';
+    if ((month == 4 && day >= 20) || (month == 5 && day <= 20)) return 'Taurus';
+    if ((month == 5 && day >= 21) || (month == 6 && day <= 20)) return 'Gemini';
+    if ((month == 6 && day >= 21) || (month == 7 && day <= 22)) return 'Cancer';
+    if ((month == 7 && day >= 23) || (month == 8 && day <= 22)) return 'Leo';
+    if ((month == 8 && day >= 23) || (month == 9 && day <= 22)) return 'Virgo';
+    if ((month == 9 && day >= 23) || (month == 10 && day <= 22)) return 'Libra';
+    if ((month == 10 && day >= 23) || (month == 11 && day <= 21)) return 'Scorpio';
+    if ((month == 11 && day >= 22) || (month == 12 && day <= 21)) return 'Sagittarius';
+    if ((month == 12 && day >= 22) || (month == 1 && day <= 19)) return 'Capricorn';
+    if ((month == 1 && day >= 20) || (month == 2 && day <= 18)) return 'Aquarius';
+    return 'Pisces';
+  }
+}
 
 // ASMR Page
 class ASMRPage extends StatelessWidget {
