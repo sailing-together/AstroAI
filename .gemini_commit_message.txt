@@ -1,0 +1,10 @@
+feat: Implement scheduled notification events and database maintenance
+
+This commit introduces periodic tasks for updating and clearing the astrological event database, and adds an endpoint to retrieve daily events.
+
+- Implemented daily event fetching via `/events-today` endpoint.
+- Integrated `APScheduler` for scheduled database updates and cleanup (every 30 days) and daily event fetching.
+- Refactored scheduler logic into `backend/services/scheduler_service.py` for cleaner `main.py`.
+- Updated `backend/README.md` with API endpoint details and database information.
+
+Fixes #34
