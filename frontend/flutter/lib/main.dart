@@ -7,8 +7,8 @@ import 'pages/daily_insights_page.dart';
 import 'pages/ai_assistant_page.dart';
 import 'pages/home_page.dart'; // Import the new home_page.dart
 import 'pages/signup_page.dart'; // Import the new signup_page.dart
-import 'pages/natal_chart_page.dart'; // Import the new natal_chart_page.dart
-import 'widgets/common/navigation_header.dart'; // Import the new navigation_header.dart
+// Import the new natal_chart_page.dart
+// Import the new navigation_header.dart
 
 void main() {
   print('AstroAI App Started!');

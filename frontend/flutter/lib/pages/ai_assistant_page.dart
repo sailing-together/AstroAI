@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_state.dart';
-import '../main.dart';
-import '../models/user_data.dart';
 
 class AiAssistantPage extends StatefulWidget {
   const AiAssistantPage({super.key});

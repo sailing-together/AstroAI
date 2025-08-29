@@ -69,11 +69,13 @@ class HeroSection extends StatelessWidget {
           stops: [0.0, 0.5, 1.0],
         ),
       ),
-      padding: const EdgeInsets.fromLTRB(24, 80, 24, 80),
-      child: Center(
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 1440),
-          child: _buildHeroContent(context),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 80, 24, 80),
+        child: Center(
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 1440),
+            child: _buildHeroContent(context),
+          ),
         ),
       ),
     );
@@ -1377,73 +1379,6 @@ class _PersonalisedSectionState extends State<PersonalisedSection> {
             const SizedBox(height: 24),
           ],
           
-          // Full Horoscope Reading
-          if (_fullHoroscope != null) ...[
-            Text(
-              'Complete Reading',
-              style: GoogleFonts.cinzel(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF4097FF),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: const Color(0xFF4097FF).withOpacity(0.1),
-                  width: 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    offset: const Offset(0, 2),
-                    blurRadius: 8,
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 4,
-                        height: 20,
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF4097FF), Color(0xFF8E2DE2)],
-                          ),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Your Cosmic Narrative',
-                        style: GoogleFonts.cinzel(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF4097FF),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    _fullHoroscope!,
-                    style: GoogleFonts.raleway(
-                      fontSize: 15,
-                      height: 1.7,
-                      color: Colors.black.withOpacity(0.8),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
         ],
       ),
     );
@@ -2269,15 +2204,12 @@ class _TodaysEventsSectionState extends State<TodaysEventsSection> {
       case 'lunar':
         cardColor = const Color(0xFFA5E5F9);
         icon = '🌙';
-        break;
       case 'retrograde':
         cardColor = const Color(0xFFFF92A2);
         icon = '🪐';
-        break;
       case 'ingress':
         cardColor = const Color(0xFF8985CF);
         icon = '✨';
-        break;
       default:
         cardColor = const Color(0xFF4097FF);
         icon = '⭐';

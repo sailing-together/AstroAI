@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:AstroAI/widgets/common/navigation_header.dart';
 import 'package:AstroAI/services/api_service.dart';
-import 'main.dart';
-import 'package:AstroAI/pages/natal_chart_page.dart';
+import 'dart:convert';
+import 'dart:math' as math;
 export 'package:AstroAI/pages/natal_chart_page.dart';
 
 // Page classes for navigation
@@ -448,7 +449,12 @@ class _MatchingPageState extends State<MatchingPage> with SingleTickerProviderSt
                             height: 1.5,
                           ),
                         ),
-                        const SizedBox(height: 40),
+                        const SizedBox(height: 32),
+                        
+                        // Compatibility Types Instructions
+                        _buildMatchingTypesInstruction(),
+                        
+                        const SizedBox(height: 32),
                         
                         // Tab Bar
                         Container(
@@ -471,8 +477,8 @@ class _MatchingPageState extends State<MatchingPage> with SingleTickerProviderSt
                                   Tab(text: 'SIGN COMPATIBILITY'),
                                   Tab(text: 'CELEBRITY MATCH'),
                                 ],
-                                labelColor: const Color(0xFF6953B9),
-                                unselectedLabelColor: Colors.black.withOpacity(0.6),
+                                labelColor: Colors.white,
+                                unselectedLabelColor: Colors.black.withOpacity(0.8),
                                 labelStyle: GoogleFonts.cinzel(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
@@ -489,20 +495,22 @@ class _MatchingPageState extends State<MatchingPage> with SingleTickerProviderSt
                                 dividerColor: Colors.transparent,
                               ),
                               SizedBox(
-                                height: 600,
+                                height: 800,
                                 child: TabBarView(
                                   controller: _tabController,
                                   children: [
-                                    _buildCompatibilitySection(),
-                                    _buildCelebritySection(),
+                                    SingleChildScrollView(
+                                      child: _buildCompatibilitySection(),
+                                    ),
+                                    SingleChildScrollView(
+                                      child: _buildCelebritySection(),
+                                    ),
                                   ],
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        const SizedBox(height: 40),
-                        _buildMatchingTypes(),
                       ],
                     ),
                   ),
@@ -524,61 +532,94 @@ class _MatchingPageState extends State<MatchingPage> with SingleTickerProviderSt
 
   // Sign Compatibility Tab
   Widget _buildCompatibilitySection() {
-    return SingleChildScrollView(
-      child: _SignCompatibilityWidget(),
-    );
+    return _SignCompatibilityWidget();
   }
 
   // Celebrity Match Tab  
   Widget _buildCelebritySection() {
-    return SingleChildScrollView(
-      child: _CelebrityMatchWidget(),
-    );
+    return _CelebrityMatchWidget();
   }
 
-  Widget _buildMatchingTypes() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Compatibility Types',
-          style: GoogleFonts.cinzel(
-            fontSize: 32,
-            fontWeight: FontWeight.w700,
-            color: Colors.black,
-          ),
-        ),
-        const SizedBox(height: 24),
-        GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 2,
-          crossAxisSpacing: 24,
-          mainAxisSpacing: 24,
-          childAspectRatio: 1.2,
-          children: [
-            _buildTypeCard('Romantic Love', '💕', 'Find your soulmate through astrological compatibility'),
-            _buildTypeCard('Friendship', '🤝', 'Discover lasting friendships with cosmic connections'),
-            _buildTypeCard('Business Partnership', '💼', 'Align with partners for professional success'),
-            _buildTypeCard('Family Harmony', '👨‍👩‍👧‍👦', 'Understand family dynamics and relationships'),
+  // Compact instruction version at the top
+  Widget _buildMatchingTypesInstruction() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFF9398DF).withOpacity(0.1),
+            const Color(0xFF6953B9).withOpacity(0.1),
           ],
         ),
-      ],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: const Color(0xFF6953B9).withOpacity(0.2),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.info_outline,
+                color: const Color(0xFF6953B9),
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Compatibility Types We Analyze',
+                style: GoogleFonts.cinzel(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF6953B9),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildCompactTypeChip('💕 Romantic Love', 'Find your soulmate through astrological compatibility'),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildCompactTypeChip('🤝 Friendship', 'Discover lasting friendships with cosmic connections'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildCompactTypeChip('💼 Business Partnership', 'Align with partners for professional success'),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildCompactTypeChip('👨‍👩‍👧‍👦 Family Harmony', 'Understand family dynamics and relationships'),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
-
-  Widget _buildTypeCard(String title, String emoji, String description) {
+  
+  Widget _buildCompactTypeChip(String text, String description) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: const Color(0xFF6953B9).withOpacity(0.3),
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
             offset: const Offset(0, 2),
-            blurRadius: 8,
+            blurRadius: 4,
           ),
         ],
       ),
@@ -586,32 +627,28 @@ class _MatchingPageState extends State<MatchingPage> with SingleTickerProviderSt
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            emoji,
-            style: const TextStyle(fontSize: 40),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            title,
+            text,
             style: GoogleFonts.cinzel(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: Colors.black,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF6953B9),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
             description,
             style: GoogleFonts.raleway(
               fontSize: 14,
               fontWeight: FontWeight.w400,
               color: Colors.black.withOpacity(0.7),
-              height: 1.4,
+              height: 1.3,
             ),
           ),
         ],
       ),
     );
   }
+
 }
 
 // Sign Compatibility Widget
@@ -893,13 +930,38 @@ class _SignCompatibilityWidgetState extends State<_SignCompatibilityWidget> {
     try {
       Map<String, dynamic>? result;
       
-      // If "other" is selected or no relationship type is selected, call API
-      if (_selectedRelationType == null || _selectedRelationType == 'other') {
-        final apiService = ApiService();
-        result = await apiService.getCompatibility(_selectedSign1!, _selectedSign2!);
+      // Always call the API first for the base compatibility analysis
+      final apiService = ApiService();
+      final apiResult = await apiService.getCompatibility(_selectedSign1!, _selectedSign2!);
+      
+      if (apiResult != null && apiResult['compatibility'] != null) {
+        // Successfully got API response
+        String compatibilityText = apiResult['compatibility'].toString();
+        String score = _extractCompatibilityScore(compatibilityText);
+        
+        // If specific relationship type is selected, combine with API result
+        if (_selectedRelationType != null && _selectedRelationType != 'other') {
+          String relationshipSpecificInfo = _getRelationshipSpecificInfo(_selectedSign1!, _selectedSign2!, _selectedRelationType!);
+          compatibilityText = '$relationshipSpecificInfo\n\n$compatibilityText';
+        }
+        
+        result = {
+          'analysis': compatibilityText,
+          'compatibility_score': score,
+          'relationship_type': _selectedRelationType?.toUpperCase()
+        };
       } else {
-        // Generate predefined information for specific relationship types
-        result = _generateRelationshipTypeInfo(_selectedSign1!, _selectedSign2!, _selectedRelationType!);
+        // API failed, use fallback with predefined information
+        if (_selectedRelationType != null && _selectedRelationType != 'other') {
+          result = _generateRelationshipTypeInfo(_selectedSign1!, _selectedSign2!, _selectedRelationType!);
+        } else {
+          // Use generic fallback
+          result = {
+            'analysis': _getGenericCompatibilityFallback(_selectedSign1!, _selectedSign2!),
+            'compatibility_score': _getCompatibilityScore(_selectedSign1!, _selectedSign2!, 'general'),
+            'relationship_type': null
+          };
+        }
       }
       
       setState(() {
@@ -911,7 +973,8 @@ class _SignCompatibilityWidgetState extends State<_SignCompatibilityWidget> {
         _isLoading = false;
         _compatibilityResult = {
           'analysis': 'Unable to analyze compatibility at this time. Please try again later.',
-          'compatibility_score': 'N/A'
+          'compatibility_score': 'N/A',
+          'relationship_type': _selectedRelationType?.toUpperCase()
         };
       });
     }
@@ -926,19 +989,15 @@ class _SignCompatibilityWidgetState extends State<_SignCompatibilityWidget> {
       case 'lover':
         analysis = _getLoverCompatibility(sign1, sign2);
         score = _getCompatibilityScore(sign1, sign2, 'lover');
-        break;
       case 'friend':
         analysis = _getFriendCompatibility(sign1, sign2);
         score = _getCompatibilityScore(sign1, sign2, 'friend');
-        break;
       case 'business':
         analysis = _getBusinessCompatibility(sign1, sign2);
         score = _getCompatibilityScore(sign1, sign2, 'business');
-        break;
       case 'family':
         analysis = _getFamilyCompatibility(sign1, sign2);
         score = _getCompatibilityScore(sign1, sign2, 'family');
-        break;
       default:
         analysis = 'Compatibility analysis for $sign1 and $sign2.';
         score = '7';
@@ -982,7 +1041,7 @@ This friendship has the potential to be both meaningful and lasting when you emb
   String _getBusinessCompatibility(String sign1, String sign2) {
     return '''💼 Business Partnership: $sign1 & $sign2
 
-Your professional partnership brings together complementary skills and approaches. ${sign1}'s ${_getBusinessStrength(sign1)} pairs well with ${sign2}'s ${_getBusinessStrength(sign2)}.
+Your professional partnership brings together complementary skills and approaches. $sign1's ${_getBusinessStrength(sign1)} pairs well with $sign2's ${_getBusinessStrength(sign2)}.
 
 Partnership Dynamics:
 • Leadership Style: ${_getLeadershipDynamic(sign1, sign2)}
@@ -1037,6 +1096,69 @@ Family bonds are strengthened through understanding, patience, and celebrating t
     return compatible[element1]?.contains(element2) ?? false;
   }
 
+  // Extract compatibility score from API response text
+  String _extractCompatibilityScore(String compatibilityText) {
+    // Look for patterns like "6/10", "7 out of 10", "score of 8", etc.
+    final scorePattern = RegExp(r'(\d+(?:\.\d+)?)[\/\s]*(?:out of |\/)?10|score.*?(\d+(?:\.\d+)?)|(\d+(?:\.\d+)?)\/10');
+    final match = scorePattern.firstMatch(compatibilityText.toLowerCase());
+    
+    if (match != null) {
+      String? score = match.group(1) ?? match.group(2) ?? match.group(3);
+      if (score != null) {
+        double scoreValue = double.tryParse(score) ?? 7.0;
+        // Ensure score is between 1-10
+        scoreValue = scoreValue.clamp(1.0, 10.0);
+        return scoreValue.toStringAsFixed(1);
+      }
+    }
+    
+    // Default fallback score based on element compatibility
+    return _getCompatibilityScore(_selectedSign1 ?? '', _selectedSign2 ?? '', 'general');
+  }
+  
+  // Get relationship-specific intro for API response
+  String _getRelationshipSpecificInfo(String sign1, String sign2, String relationType) {
+    switch (relationType) {
+      case 'lover':
+        return '💕 ROMANTIC COMPATIBILITY: $sign1 & $sign2\nThis analysis focuses on your romantic potential together.';
+      case 'friend':
+        return '🤝 FRIENDSHIP COMPATIBILITY: $sign1 & $sign2\nThis analysis explores your friendship dynamics and shared interests.';
+      case 'business':
+        return '💼 BUSINESS PARTNERSHIP: $sign1 & $sign2\nThis analysis examines your professional collaboration potential.';
+      case 'family':
+        return '👨‍👩‍👧‍👦 FAMILY HARMONY: $sign1 & $sign2\nThis analysis looks at your family relationship dynamics.';
+      default:
+        return '';
+    }
+  }
+  
+  // Generic fallback when API fails and no relationship type is selected
+  String _getGenericCompatibilityFallback(String sign1, String sign2) {
+    final element1 = _getSignElement(sign1);
+    final element2 = _getSignElement(sign2);
+    
+    String elementDescription = '';
+    if (element1 == element2) {
+      elementDescription = 'Both $sign1 and $sign2 are $element1 signs, sharing similar core energies and approaches to life.';
+    } else if (_areCompatibleElements(element1, element2)) {
+      elementDescription = '$sign1 ($element1) and $sign2 ($element2) represent complementary elemental energies.';
+    } else {
+      elementDescription = '$sign1 ($element1) and $sign2 ($element2) bring different elemental perspectives to their relationship.';
+    }
+    
+    return '''$elementDescription
+
+This pairing offers opportunities for mutual growth and understanding. While every relationship requires effort and communication, astrological compatibility can provide insights into natural strengths and potential challenges.
+
+Key areas to focus on:
+• Communication: Find common ground in your different communication styles
+• Values: Respect each other's core values and motivations  
+• Growth: Support each other's personal development and goals
+• Balance: Appreciate both similarities and differences
+
+Remember that successful relationships depend more on mutual respect, understanding, and commitment than purely on astrological compatibility.''';
+  }
+
   // Helper methods for generating detailed compatibility text
   String _getEmotionalConnection(String sign1, String sign2) => 'Deep and intuitive understanding';
   String _getCommunicationStyle(String sign1, String sign2) => 'Open and honest dialogue';
@@ -1068,7 +1190,7 @@ class _CelebrityMatchWidgetState extends State<_CelebrityMatchWidget> {
   String? _zodiacSign;
   String? _celebrityName;
   bool _isLoading = false;
-  Map<String, dynamic>? _matchResult;
+  List<Map<String, String>> _celebrityResults = [];
   final TextEditingController _birthdateController = TextEditingController();
   final TextEditingController _celebrityController = TextEditingController();
 
@@ -1089,105 +1211,112 @@ class _CelebrityMatchWidgetState extends State<_CelebrityMatchWidget> {
           ),
           const SizedBox(height: 24),
           
-          // Birth Date Input
-          GestureDetector(
-            onTap: () async {
-              final date = await showDatePicker(
-                context: context,
-                initialDate: DateTime(1995, 1, 1),
-                firstDate: DateTime(1900),
-                lastDate: DateTime.now(),
-              );
-              if (date != null) {
-                setState(() {
-                  _selectedDate = date;
-                  _birthdateController.text = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-                  _zodiacSign = _getZodiacSign(date);
-                });
-              }
-            },
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade50,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.shade300),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Your Birth Date',
-                    style: GoogleFonts.cinzel(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _selectedDate != null 
-                        ? '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}'
-                        : 'Select your birth date',
-                    style: GoogleFonts.raleway(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w400,
-                      color: _selectedDate != null 
-                          ? Colors.black 
-                          : Colors.black.withOpacity(0.6),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          
-          const SizedBox(height: 16),
-          
-          // Celebrity Name Input (Optional)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade300),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Celebrity Name (Optional)',
-                  style: GoogleFonts.cinzel(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _celebrityController,
-                  decoration: InputDecoration(
-                    hintText: 'Enter celebrity name for specific match',
-                    hintStyle: GoogleFonts.raleway(
-                      fontSize: 14,
-                      color: Colors.black.withOpacity(0.6),
-                    ),
-                    border: InputBorder.none,
-                  ),
-                  style: GoogleFonts.raleway(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  onChanged: (value) {
-                    setState(() {
-                      _celebrityName = value.isNotEmpty ? value : null;
-                    });
+          // Birth Date and Celebrity Name in one line
+          Row(
+            children: [
+              // Birth Date Input (Left side)
+              Expanded(
+                child: GestureDetector(
+                  onTap: () async {
+                    final date = await showDatePicker(
+                      context: context,
+                      initialDate: DateTime(1995, 1, 1),
+                      firstDate: DateTime(1900),
+                      lastDate: DateTime.now(),
+                    );
+                    if (date != null) {
+                      setState(() {
+                        _selectedDate = date;
+                        _birthdateController.text = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+                        _zodiacSign = _getZodiacSign(date);
+                      });
+                    }
                   },
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Your Birth Date',
+                          style: GoogleFonts.cinzel(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          _selectedDate != null 
+                              ? '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}'
+                              : 'Select your birth date',
+                          style: GoogleFonts.raleway(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w400,
+                            color: _selectedDate != null 
+                                ? Colors.black 
+                                : Colors.black.withOpacity(0.6),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              ],
-            ),
+              ),
+              
+              const SizedBox(width: 16),
+              
+              // Celebrity Name Input (Right side)
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Celebrity Name (Optional)',
+                        style: GoogleFonts.cinzel(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: _celebrityController,
+                        decoration: InputDecoration(
+                          hintText: 'Enter celebrity name for specific match',
+                          hintStyle: GoogleFonts.raleway(
+                            fontSize: 14,
+                            color: Colors.black.withOpacity(0.6),
+                          ),
+                          border: InputBorder.none,
+                        ),
+                        style: GoogleFonts.raleway(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        onChanged: (value) {
+                          setState(() {
+                            _celebrityName = value.isNotEmpty ? value : null;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
           
           const SizedBox(height: 32),
@@ -1219,7 +1348,7 @@ class _CelebrityMatchWidgetState extends State<_CelebrityMatchWidget> {
                     ),
             ),
           ),
-          if (_matchResult != null) ...[
+          if (_celebrityResults.isNotEmpty) ...[
             const SizedBox(height: 24),
             _buildCelebrityResults(),
           ],
@@ -1229,56 +1358,106 @@ class _CelebrityMatchWidgetState extends State<_CelebrityMatchWidget> {
   }
 
   Widget _buildCelebrityResults() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Celebrity Match Results',
-            style: GoogleFonts.cinzel(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: Colors.black,
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Celebrity Match Results',
+          style: GoogleFonts.cinzel(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: Colors.black,
           ),
-          const SizedBox(height: 8),
-          if (_matchResult!['celebrity_name'] != null)
-            Text(
-              'Match: ${_matchResult!['celebrity_name']}',
-              style: GoogleFonts.raleway(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF6953B9),
-              ),
+        ),
+        const SizedBox(height: 16),
+        // Display multiple celebrity cards
+        ..._celebrityResults.asMap().entries.map((entry) {
+          int index = entry.key;
+          Map<String, String> celebrity = entry.value;
+          
+          return Container(
+            margin: EdgeInsets.only(bottom: index < _celebrityResults.length - 1 ? 16 : 0),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade300),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  offset: const Offset(0, 2),
+                  blurRadius: 8,
+                ),
+              ],
             ),
-          if (_matchResult!['celebrity_sign'] != null)
-            Text(
-              'Sign: ${_matchResult!['celebrity_sign']}',
-              style: GoogleFonts.raleway(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Colors.black.withOpacity(0.7),
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Celebrity name and score header
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        celebrity['name'] ?? 'Celebrity Match ${index + 1}',
+                        style: GoogleFonts.cinzel(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF6953B9),
+                        ),
+                      ),
+                    ),
+                    if (celebrity['score'] != null)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF6953B9).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFF6953B9).withOpacity(0.3)),
+                        ),
+                        child: Text(
+                          celebrity['score']!,
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF6953B9),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                
+                // Birth date if available
+                if (celebrity['birth_date'] != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    'Born: ${celebrity['birth_date']}',
+                    style: GoogleFonts.raleway(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black.withOpacity(0.6),
+                    ),
+                  ),
+                ],
+                
+                const SizedBox(height: 12),
+                
+                // Analysis text
+                if (celebrity['analysis'] != null)
+                  Text(
+                    celebrity['analysis']!,
+                    style: GoogleFonts.raleway(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.black.withOpacity(0.8),
+                      height: 1.5,
+                    ),
+                  ),
+              ],
             ),
-          const SizedBox(height: 8),
-          if (_matchResult!['analysis'] != null)
-            Text(
-              _matchResult!['analysis'].toString(),
-              style: GoogleFonts.raleway(
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                color: Colors.black.withOpacity(0.8),
-                height: 1.4,
-              ),
-            ),
-        ],
-      ),
+          );
+        }),
+      ],
     );
   }
 
@@ -1293,17 +1472,150 @@ class _CelebrityMatchWidgetState extends State<_CelebrityMatchWidget> {
         celebrityName: _celebrityName,
       );
       
-      setState(() {
-        _matchResult = result;
-        _isLoading = false;
-      });
+      if (result != null) {
+        // Parse API response with multiple celebrities
+        List<Map<String, String>> celebrities = _parseApiResponse(result);
+        
+        setState(() {
+          _celebrityResults = celebrities;
+          _isLoading = false;
+        });
+      } else {
+        // API failed, use fallback data
+        await _loadFallbackData();
+      }
     } catch (e) {
+      print('Celebrity Match API error: $e');
+      // API failed, use fallback data
+      await _loadFallbackData();
+    }
+  }
+
+  // Parse API response format
+  List<Map<String, String>> _parseApiResponse(Map<String, dynamic> apiResult) {
+    List<Map<String, String>> celebrities = [];
+    
+    // API returns celebrities as "Celebrity 1", "Celebrity 2", "Celebrity 3"
+    for (int i = 1; i <= 3; i++) {
+      String key = 'Celebrity $i';
+      if (apiResult.containsKey(key)) {
+        String celebrityText = apiResult[key].toString();
+        Map<String, String> parsedCelebrity = _parseCelebrityText(celebrityText);
+        if (parsedCelebrity.isNotEmpty) {
+          celebrities.add(parsedCelebrity);
+        }
+      }
+    }
+    
+    // If API returns only one celebrity (when celebrity name is specified)
+    if (celebrities.isEmpty && apiResult.isNotEmpty) {
+      // Check for single celebrity response format
+      apiResult.forEach((key, value) {
+        if (key.toLowerCase().contains('celebrity') || value.toString().contains('born')) {
+          Map<String, String> parsedCelebrity = _parseCelebrityText(value.toString());
+          if (parsedCelebrity.isNotEmpty) {
+            celebrities.add(parsedCelebrity);
+          }
+        }
+      });
+    }
+    
+    return celebrities;
+  }
+
+  // Parse individual celebrity text to extract name, birth date, and analysis
+  Map<String, String> _parseCelebrityText(String celebrityText) {
+    Map<String, String> celebrity = {};
+    
+    try {
+      // Extract celebrity name (before the first parenthesis)
+      RegExp namePattern = RegExp(r'^([^(]+)\(');
+      Match? nameMatch = namePattern.firstMatch(celebrityText);
+      if (nameMatch != null) {
+        celebrity['name'] = nameMatch.group(1)!.trim();
+      }
+      
+      // Extract birth date (inside parentheses)
+      RegExp datePattern = RegExp(r'\(born ([^)]+)\)');
+      Match? dateMatch = datePattern.firstMatch(celebrityText);
+      if (dateMatch != null) {
+        celebrity['birth_date'] = dateMatch.group(1)!.trim();
+      }
+      
+      // Extract compatibility score
+      RegExp scorePattern = RegExp(r'Compatibility Score: ([\d.]+\/10|\d+\.\d+\/10|\d+\/10)');
+      Match? scoreMatch = scorePattern.firstMatch(celebrityText);
+      if (scoreMatch != null) {
+        celebrity['score'] = scoreMatch.group(1)!.trim();
+      }
+      
+      // The analysis is the full text
+      celebrity['analysis'] = celebrityText;
+      
+      // If we couldn't extract a name, try a different approach
+      if (!celebrity.containsKey('name')) {
+        List<String> parts = celebrityText.split(':');
+        if (parts.isNotEmpty) {
+          celebrity['name'] = parts[0].trim().replaceAll(RegExp(r'\([^)]*\)'), '').trim();
+        }
+      }
+      
+    } catch (e) {
+      print('Error parsing celebrity text: $e');
+    }
+    
+    return celebrity;
+  }
+
+  // Load fallback data from JSON file
+  Future<void> _loadFallbackData() async {
+    try {
+      String jsonString = await rootBundle.loadString('assets/celebrity_matches.json');
+      Map<String, dynamic> allMatches = json.decode(jsonString);
+      
+      if (_zodiacSign != null && allMatches.containsKey(_zodiacSign)) {
+        Map<String, dynamic> signMatches = allMatches[_zodiacSign!];
+        List<Map<String, String>> celebrities = [];
+        
+        for (int i = 1; i <= 3; i++) {
+          String key = 'Celebrity $i';
+          if (signMatches.containsKey(key)) {
+            String celebrityText = signMatches[key].toString();
+            Map<String, String> parsedCelebrity = _parseCelebrityText(celebrityText);
+            if (parsedCelebrity.isNotEmpty) {
+              celebrities.add(parsedCelebrity);
+            }
+          }
+        }
+        
+        setState(() {
+          _celebrityResults = celebrities;
+          _isLoading = false;
+        });
+      } else {
+        // Ultimate fallback
+        setState(() {
+          _celebrityResults = [
+            {
+              'name': 'Celebrity Match',
+              'analysis': 'Celebrity compatibility data is currently unavailable. Please try again later.',
+              'score': 'N/A'
+            }
+          ];
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('Error loading fallback data: $e');
       setState(() {
+        _celebrityResults = [
+          {
+            'name': 'Error',
+            'analysis': 'Unable to load celebrity matches at this time.',
+            'score': 'N/A'
+          }
+        ];
         _isLoading = false;
-        _matchResult = {
-          'analysis': 'Unable to find celebrity matches at this time. Please try again later.',
-          'celebrity_name': 'N/A'
-        };
       });
     }
   }
@@ -2110,7 +2422,7 @@ class ZodiacDetailPage extends StatelessWidget {
               ),
             ],
           ),
-        )).toList(),
+        )),
       ],
     );
   }
