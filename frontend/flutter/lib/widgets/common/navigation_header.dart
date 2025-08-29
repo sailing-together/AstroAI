@@ -18,6 +18,30 @@ class _NavigationHeaderState extends State<NavigationHeader> {
   String _currentMenuItem = 'Home';  // Default selected menu item
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Update current menu item based on current route
+    final currentRoute = ModalRoute.of(context)?.settings.name;
+    setState(() {
+      switch (currentRoute) {
+        case '/':
+          _currentMenuItem = 'Home';
+        case '/daily-insights':
+          _currentMenuItem = 'Horoscope';
+        case '/about':
+          _currentMenuItem = 'About Us';
+        case '/matching':
+        case '/natal-chart':
+        case '/asmr':
+        case '/tarot':
+          _currentMenuItem = 'More Features';
+        default:
+          _currentMenuItem = 'Home';
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
@@ -158,7 +182,6 @@ class _NavigationHeaderState extends State<NavigationHeader> {
           ),
           (route) => false,
         );
-        break;
       case 'Horoscope':
         // Check if we're already on the daily insights page
         if (ModalRoute.of(context)?.settings.name == '/daily-insights') return;
@@ -170,7 +193,6 @@ class _NavigationHeaderState extends State<NavigationHeader> {
             settings: const RouteSettings(name: '/daily-insights'),
           ),
         );
-        break;
       case 'About Us':
         // Check if we're already on the about page
         if (ModalRoute.of(context)?.settings.name == '/about') return;
@@ -182,7 +204,6 @@ class _NavigationHeaderState extends State<NavigationHeader> {
             settings: const RouteSettings(name: '/about'),
           ),
         );
-        break;
       default:
         break;
     }
@@ -262,7 +283,6 @@ class _NavigationHeaderState extends State<NavigationHeader> {
                 settings: const RouteSettings(name: '/matching'),
               ),
             );
-            break;
           case 'Natal chart':
             Navigator.pushReplacement(
               context,
@@ -271,7 +291,6 @@ class _NavigationHeaderState extends State<NavigationHeader> {
                 settings: const RouteSettings(name: '/natal-chart'),
               ),
             );
-            break;
           case 'ASMR':
             Navigator.pushReplacement(
               context,
@@ -280,7 +299,6 @@ class _NavigationHeaderState extends State<NavigationHeader> {
                 settings: const RouteSettings(name: '/asmr'),
               ),
             );
-            break;
           case 'Tarot':
             Navigator.pushReplacement(
               context,
@@ -289,7 +307,6 @@ class _NavigationHeaderState extends State<NavigationHeader> {
                 settings: const RouteSettings(name: '/tarot'),
               ),
             );
-            break;
         }
       },
     );

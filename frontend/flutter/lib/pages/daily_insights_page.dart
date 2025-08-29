@@ -439,7 +439,7 @@ class _DailyInsightsPageState extends State<DailyInsightsPage> {
                 ],
               ],
             ),
-          )).toList(),
+          )),
       ],
     );
   }

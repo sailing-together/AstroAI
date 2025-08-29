@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:math' as math;
 import 'package:AstroAI/pages.dart';
 import 'package:AstroAI/pages/signup_page.dart';
-import 'package:AstroAI/widgets/common/navigation_header.dart';
+import 'package:AstroAI/services/api_service.dart';
 import 'package:AstroAI/widgets/common/navigation_header.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -69,11 +69,13 @@ class HeroSection extends StatelessWidget {
           stops: [0.0, 0.5, 1.0],
         ),
       ),
-      padding: const EdgeInsets.fromLTRB(24, 80, 24, 80),
-      child: Center(
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 1440),
-          child: _buildHeroContent(context),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 80, 24, 80),
+        child: Center(
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 1440),
+            child: _buildHeroContent(context),
+          ),
         ),
       ),
     );
@@ -1033,13 +1035,18 @@ class _PersonalisedSectionState extends State<PersonalisedSection> {
           ElevatedButton(
             onPressed: _selectedDate != null && !_isLoading ? _generateInsights : null,
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFFFF3F8),
-              foregroundColor: const Color(0xFF4097FF),
+              backgroundColor: _selectedDate != null 
+                  ? const Color(0xFF4097FF) 
+                  : const Color(0xFFE0E0E0),
+              foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(30),
               ),
-              elevation: 8,
+              elevation: _selectedDate != null ? 8 : 2,
+              shadowColor: _selectedDate != null 
+                  ? const Color(0xFF4097FF).withOpacity(0.3)
+                  : Colors.grey.withOpacity(0.2),
             ),
             child: _isLoading
                 ? const SizedBox(
@@ -1055,7 +1062,9 @@ class _PersonalisedSectionState extends State<PersonalisedSection> {
                     style: GoogleFonts.inter(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: Colors.white,
+                      color: _selectedDate != null 
+                          ? Colors.white 
+                          : Colors.grey,
                     ),
                   ),
           ),
@@ -1281,7 +1290,7 @@ class _PersonalisedSectionState extends State<PersonalisedSection> {
   }
 
   Widget _buildHoroscopeContent() {
-    if (_fullHoroscope == null) return const SizedBox.shrink();
+    if (_fullHoroscope == null && _responses.isEmpty) return const SizedBox.shrink();
     
     // Check if any response contains error messages
     bool hasErrors = _responses.values.any((response) => 
@@ -1309,6 +1318,7 @@ class _PersonalisedSectionState extends State<PersonalisedSection> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header Section
           Row(
             children: [
               Container(
@@ -1352,31 +1362,111 @@ class _PersonalisedSectionState extends State<PersonalisedSection> {
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  offset: const Offset(0, 2),
-                  blurRadius: 8,
-                ),
-              ],
-            ),
-            child: Text(
-              _fullHoroscope!,
-              style: GoogleFonts.raleway(
-                fontSize: 15,
-                height: 1.7,
-                color: Colors.black.withOpacity(0.8),
+          const SizedBox(height: 24),
+          
+          // Detailed Insights Grid
+          if (_responses.isNotEmpty) ...[
+            Text(
+              'Detailed Cosmic Insights',
+              style: GoogleFonts.cinzel(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF4097FF),
               ),
             ),
-          ),
+            const SizedBox(height: 16),
+            _buildInsightCards(),
+            const SizedBox(height: 24),
+          ],
+          
         ],
       ),
+    );
+  }
+
+  Widget _buildInsightCards() {
+    final insights = [
+      {'key': 'Daily Horoscope', 'icon': '🔮', 'color': Color(0xFF9C27B0)},
+      {'key': 'Love', 'icon': '💖', 'color': Color(0xFFFF92A2)},
+      {'key': 'Career', 'icon': '🚀', 'color': Color(0xFF4CAF50)},
+      {'key': 'Wealth', 'icon': '💰', 'color': Color(0xFFA5E5F9)},
+      {'key': 'Guidance', 'icon': '💡', 'color': Color(0xFF4CAF50)},
+      {'key': 'Motivation', 'icon': '⭐', 'color': Color(0xFF6B46C1)},
+    ];
+
+    return Column(
+      children: insights.map((insight) {
+        final key = insight['key'] as String;
+        final icon = insight['icon'] as String;
+        final color = insight['color'] as Color;
+        final response = _responses[key] ?? '';
+        
+        if (response.isEmpty) return const SizedBox.shrink();
+        
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: color.withOpacity(0.2),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: color.withOpacity(0.1),
+                offset: const Offset(0, 2),
+                blurRadius: 6,
+              ),
+            ],
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    icon,
+                    style: const TextStyle(fontSize: 20),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      key,
+                      style: GoogleFonts.cinzel(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: color,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      response,
+                      style: GoogleFonts.raleway(
+                        fontSize: 13,
+                        height: 1.5,
+                        color: Colors.black.withOpacity(0.7),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
     );
   }
 
@@ -1400,16 +1490,17 @@ class _PersonalisedSectionState extends State<PersonalisedSection> {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
+        final horoscopeData = data['horoscope'] ?? {};
         
         setState(() {
-          _fullHoroscope = data['horoscope'];
+          _fullHoroscope = _buildFullHoroscopeText(horoscopeData);
           _responses = {
-            'Daily Horoscope': data['overall_horoscope'] ?? 'Today holds unique cosmic energies that guide your path toward growth and fulfillment.',
-            'Love': data['love_advice'] ?? 'Open your heart to the possibilities that love brings into your life today.',
-            'Career': data['career_advice'] ?? 'Professional opportunities await those who remain focused and determined.',
-            'Wealth': data['wealth_advice'] ?? 'Financial wisdom comes from mindful decisions and patient planning.',
-            'Guidance': data['daily_suggestion'] ?? 'Embrace the day with confidence and stay true to your inner wisdom.',
-            'Motivation': data['daily_encouragement_message'] ?? 'You have the strength and wisdom to make today extraordinary.',
+            'Daily Horoscope': horoscopeData['overall_horoscope']?.toString() ?? 'Today holds unique cosmic energies that guide your path toward growth and fulfillment.',
+            'Love': horoscopeData['love_advice']?.toString() ?? 'Open your heart to the possibilities that love brings into your life today.',
+            'Career': horoscopeData['career_advice']?.toString() ?? 'Professional opportunities await those who remain focused and determined.',
+            'Wealth': horoscopeData['wealth_advice']?.toString() ?? 'Financial wisdom comes from mindful decisions and patient planning.',
+            'Guidance': horoscopeData['daily_suggestion']?.toString() ?? 'Embrace the day with confidence and stay true to your inner wisdom.',
+            'Motivation': horoscopeData['daily_encouragement_message']?.toString() ?? 'You have the strength and wisdom to make today extraordinary.',
           };
           _isLoading = false;
         });
@@ -1480,6 +1571,36 @@ class _PersonalisedSectionState extends State<PersonalisedSection> {
     if ((month == 1 && day >= 20) || (month == 2 && day <= 18)) return 'Aquarius';
     return 'Pisces';
   }
+
+  String _buildFullHoroscopeText(Map<String, dynamic> horoscopeData) {
+    final sections = <String>[];
+    
+    if (horoscopeData['overall_horoscope'] != null) {
+      sections.add('Overall: ${horoscopeData['overall_horoscope']}');
+    }
+    
+    if (horoscopeData['love_advice'] != null) {
+      sections.add('Love: ${horoscopeData['love_advice']}');
+    }
+    
+    if (horoscopeData['career_advice'] != null) {
+      sections.add('Career: ${horoscopeData['career_advice']}');
+    }
+    
+    if (horoscopeData['wealth_advice'] != null) {
+      sections.add('Wealth: ${horoscopeData['wealth_advice']}');
+    }
+    
+    if (horoscopeData['daily_suggestion'] != null) {
+      sections.add('Guidance: ${horoscopeData['daily_suggestion']}');
+    }
+    
+    if (horoscopeData['daily_encouragement_message'] != null) {
+      sections.add('Motivation: ${horoscopeData['daily_encouragement_message']}');
+    }
+    
+    return sections.join('\n\n');
+  }
 }
 
 class FeaturesSection extends StatelessWidget {
@@ -1497,7 +1618,7 @@ class FeaturesSection extends StatelessWidget {
           child: Column(
           children: [
             Text(
-              'more features',
+              'MORE FEATURES',
               style: GoogleFonts.cinzel(
                 fontSize: 50,
                 fontWeight: FontWeight.w700,
@@ -1506,9 +1627,9 @@ class FeaturesSection extends StatelessWidget {
                 height: 1.3,
               ),
               textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 30),
-            _buildStaggeredFeatureLayout(context),
+            ), 
+            const SizedBox(height: 50), 
+            _buildFeatureGrid(context),
           ],
         ),
       ),
@@ -1516,222 +1637,133 @@ class FeaturesSection extends StatelessWidget {
     );
   }
 
-  Widget _buildStaggeredFeatureLayout(BuildContext context) {
-    final List<Map<String, dynamic>> features = [
-      {'title': 'Matching', 'color': const Color(0xFF4097FF), 'delay': 0},
-      {'title': 'Natal chart', 'color': const Color(0xFFFF92A2), 'delay': 200},
-      {'title': 'ASMR', 'color': const Color(0xFFA5E5F9), 'delay': 400},
-      {'title': 'Tarot', 'color': const Color(0xFF8985CF), 'delay': 600},
+  Widget _buildFeatureGrid(BuildContext context) {
+    final features = [
+      {
+        'title': 'MATCHING',
+        'description': 'Discover your cosmic compatibility with others. Find your perfect match based on zodiac signs, birth charts, and astrological harmony.',
+        'color': const Color(0xFF4097FF),
+        'page': const MatchingPage(),
+      },
+      {
+        'title': 'NATAL CHART',
+        'description': 'Get your complete birth chart analysis. Explore planetary positions, houses, and aspects that shape your personality and life path.',
+        'color': const Color(0xFFFF92A2),
+        'page': const NatalChartPage(),
+      },
+      {
+        'title': 'ASMR',
+        'description': 'Relax with cosmic soundscapes and guided meditations. Soothing audio experiences designed for deep relaxation and spiritual connection.',
+        'color': const Color(0xFFA5E5F9),
+        'page': const ASMRPage(),
+      },
+      {
+        'title': 'TAROT',
+        'description': 'Unveil insights through mystical tarot readings. Get guidance on love, career, and life decisions with AI-powered card interpretations.',
+        'color': const Color(0xFF8985CF),
+        'page': const TarotPage(),
+      },
     ];
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (constraints.maxWidth < 800) {
-          // Mobile: Stack vertically with alternating alignment
-          return Column(
-            children: features.asMap().entries.map((entry) {
-              final index = entry.key;
-              final feature = entry.value;
-              final isEven = index % 2 == 0;
-              
-              return Container(
-                margin: EdgeInsets.only(
-                  bottom: 30,
-                  left: isEven ? 0 : 40,
-                  right: isEven ? 40 : 0,
-                ),
-                child: TweenAnimationBuilder<double>(
-                  duration: Duration(milliseconds: 800 + (feature['delay'] as int)),
-                  tween: Tween(begin: 0.0, end: 1.0),
-                  builder: (context, value, child) {
-                    return Transform.translate(
-                      offset: Offset(
-                        isEven ? -50 * (1 - value) : 50 * (1 - value),
-                        20 * (1 - value),
-                      ),
-                      child: Opacity(
-                        opacity: value,
-                        child: _buildFloatingFeatureCard(
-                          context, 
-                          feature['title'], 
-                          feature['color'],
-                          index,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              );
-            }).toList(),
-          );
-        }
-        
-        // Desktop: 2x2 staggered grid
-        return Column(
-          children: [
-            // First row
-            Row(
-              children: [
-                Expanded(
-                  flex: 1,
-                  child: Container(
-                    margin: const EdgeInsets.only(right: 20, bottom: 30),
-                    child: TweenAnimationBuilder<double>(
-                      duration: const Duration(milliseconds: 800),
-                      tween: Tween(begin: 0.0, end: 1.0),
-                      builder: (context, value, child) {
-                        return Transform.translate(
-                          offset: Offset(-30 * (1 - value), 20 * (1 - value)),
-                          child: Opacity(
-                            opacity: value,
-                            child: _buildFloatingFeatureCard(
-                              context, 
-                              'Matching', 
-                              const Color(0xFF4097FF),
-                              0,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 1,
-                  child: Container(
-                    margin: const EdgeInsets.only(left: 20, top: 40, bottom: 30),
-                    child: TweenAnimationBuilder<double>(
-                      duration: const Duration(milliseconds: 1000),
-                      tween: Tween(begin: 0.0, end: 1.0),
-                      builder: (context, value, child) {
-                        return Transform.translate(
-                          offset: Offset(30 * (1 - value), 15 * (1 - value)),
-                          child: Opacity(
-                            opacity: value,
-                            child: _buildFloatingFeatureCard(
-                              context, 
-                              'Natal chart', 
-                              const Color(0xFFFF92A2),
-                              1,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            // Second row
-            Row(
-              children: [
-                Expanded(
-                  flex: 1,
-                  child: Container(
-                    margin: const EdgeInsets.only(right: 20, top: 20),
-                    child: TweenAnimationBuilder<double>(
-                      duration: const Duration(milliseconds: 1200),
-                      tween: Tween(begin: 0.0, end: 1.0),
-                      builder: (context, value, child) {
-                        return Transform.translate(
-                          offset: Offset(-25 * (1 - value), 25 * (1 - value)),
-                          child: Opacity(
-                            opacity: value,
-                            child: _buildFloatingFeatureCard(
-                              context, 
-                              'ASMR', 
-                              const Color(0xFFA5E5F9),
-                              2,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 1,
-                  child: Container(
-                    margin: const EdgeInsets.only(left: 20, top: 60),
-                    child: TweenAnimationBuilder<double>(
-                      duration: const Duration(milliseconds: 1400),
-                      tween: Tween(begin: 0.0, end: 1.0),
-                      builder: (context, value, child) {
-                        return Transform.translate(
-                          offset: Offset(25 * (1 - value), 20 * (1 - value)),
-                          child: Opacity(
-                            opacity: value,
-                            child: _buildFloatingFeatureCard(
-                              context, 
-                              'Tarot', 
-                              const Color(0xFF8985CF),
-                              3,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
+        final isSmallScreen = constraints.maxWidth < 800;
+        final crossAxisCount = isSmallScreen ? 1 : 2;
+        final childAspectRatio = isSmallScreen ? 1.2 : 1.3;
+
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            childAspectRatio: childAspectRatio,
+            crossAxisSpacing: 30,
+            mainAxisSpacing: 30,
+          ),
+          itemCount: features.length,
+          itemBuilder: (context, index) {
+            return _buildFeatureCard(context, features[index]);
+          },
         );
       },
     );
   }
 
-  Widget _buildFloatingFeatureCard(BuildContext context, String title, Color color, int index) {
-    return GestureDetector(
-      onTap: () {
-        switch (title) {
-          case 'Matching':
-            Navigator.push(context, MaterialPageRoute(builder: (context) => const MatchingPage()));
-            break;
-          case 'Natal chart':
-            Navigator.push(context, MaterialPageRoute(builder: (context) => const NatalChartPage()));
-            break;
-          case 'ASMR':
-            Navigator.push(context, MaterialPageRoute(builder: (context) => const ASMRPage()));
-            break;
-          case 'Tarot':
-            Navigator.push(context, MaterialPageRoute(builder: (context) => const TarotPage()));
-            break;
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.all(32),
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: color.withOpacity(0.4),
-              offset: const Offset(0, 12),
-              blurRadius: 30,
-              spreadRadius: -5,
+  Widget _buildFeatureCard(BuildContext context, Map<String, dynamic> feature) {
+    return Container(
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            offset: const Offset(0, 8),
+            blurRadius: 32,
+            spreadRadius: -4,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Colored circle icon
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: feature['color'],
+              shape: BoxShape.circle,
             ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: GoogleFonts.cinzel(
-                fontSize: 24,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
+          ),
+          const SizedBox(height: 24),
+          
+          // Title
+          Text(
+            feature['title'],
+            style: GoogleFonts.cinzel(
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              color: Colors.black,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 12),
+          
+          // Description
+          Text(
+            feature['description'],
+            style: GoogleFonts.raleway(
+              fontSize: 16,
+              fontWeight: FontWeight.w400,
+              color: Colors.black.withOpacity(0.7),
+              height: 1.5,
+            ),
+          ),
+          const Spacer(),
+          
+          // Learn more link
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => feature['page']),
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Text(
+                'learn more',
+                style: GoogleFonts.raleway(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black,
+                  decoration: TextDecoration.underline,
+                ),
               ),
             ),
-            const SizedBox(height: 12),
-            Icon(
-              Icons.arrow_forward,
-              color: Colors.white.withOpacity(0.8),
-              size: 24,
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -1900,36 +1932,360 @@ class WavePatternPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-class TodaysEventsSection extends StatelessWidget {
+class TodaysEventsSection extends StatefulWidget {
   const TodaysEventsSection({super.key});
+
+  @override
+  State<TodaysEventsSection> createState() => _TodaysEventsSectionState();
+}
+
+class _TodaysEventsSectionState extends State<TodaysEventsSection> {
+  bool _isLoading = true;
+  List<Map<String, dynamic>>? _events;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTodaysEvents();
+  }
+
+  Future<void> _loadTodaysEvents() async {
+    try {
+      final apiService = ApiService();
+      final response = await apiService.getTodaysEvents();
+      
+      setState(() {
+        _isLoading = false;
+        if (response != null && response['events'] != null) {
+          _events = List<Map<String, dynamic>>.from(response['events']);
+        } else {
+          _events = [];
+        }
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Unable to load cosmic events';
+        _events = [];
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: const Color(0xFFFFF3F8),
+      color: const Color(0xFFFFFFFF),
       padding: const EdgeInsets.symmetric(vertical: 80, horizontal: 24),
       child: Center(
         child: Container(
           constraints: const BoxConstraints(maxWidth: 1440),
           child: Column(
             children: [
-              Text(
-                "Today's Cosmic Events",
-                style: GoogleFonts.cinzel(
-                  fontSize: 50,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.black,
-                  letterSpacing: -1,
-                  height: 1.3,
-                ),
-                textAlign: TextAlign.center,
+              TweenAnimationBuilder<double>(
+                duration: const Duration(milliseconds: 800),
+                tween: Tween(begin: 0.0, end: 1.0),
+                builder: (context, value, child) {
+                  return Transform.translate(
+                    offset: Offset(0, 30 * (1 - value)),
+                    child: Opacity(
+                      opacity: value,
+                      child: Text(
+                        "TODAY'S COSMIC EVENTS",
+                        style: GoogleFonts.cinzel(
+                          fontSize: 50,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF4097FF),
+                          letterSpacing: -1,
+                          height: 1.3,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 20),
+              TweenAnimationBuilder<double>(
+                duration: const Duration(milliseconds: 1000),
+                tween: Tween(begin: 0.0, end: 1.0),
+                builder: (context, value, child) {
+                  return Transform.translate(
+                    offset: Offset(0, 20 * (1 - value)),
+                    child: Opacity(
+                      opacity: value,
+                      child: Text(
+                        'Discover what the cosmos has in store for you today',
+                        style: GoogleFonts.raleway(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w400,
+                          color: Colors.black.withOpacity(0.7),
+                          letterSpacing: -0.32,
+                          height: 1.5,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 60),
-              // Add event cards here
+              _buildEventsContent(),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildEventsContent() {
+    if (_isLoading) {
+      return TweenAnimationBuilder<double>(
+        duration: const Duration(milliseconds: 1200),
+        tween: Tween(begin: 0.0, end: 1.0),
+        builder: (context, value, child) {
+          return Transform.scale(
+            scale: 0.8 + (0.2 * value),
+            child: Opacity(
+              opacity: value,
+              child: Container(
+                padding: const EdgeInsets.all(40),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF4097FF).withOpacity(0.1),
+                      offset: const Offset(0, 8),
+                      blurRadius: 24,
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    const CircularProgressIndicator(
+                      color: Color(0xFF4097FF),
+                      strokeWidth: 3,
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Loading cosmic events...',
+                      style: GoogleFonts.raleway(
+                        fontSize: 16,
+                        color: Colors.black.withOpacity(0.6),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      );
+    }
+
+    if (_events == null || _events!.isEmpty) {
+      return TweenAnimationBuilder<double>(
+        duration: const Duration(milliseconds: 1200),
+        tween: Tween(begin: 0.0, end: 1.0),
+        builder: (context, value, child) {
+          return Transform.scale(
+            scale: 0.8 + (0.2 * value),
+            child: Opacity(
+              opacity: value,
+              child: Container(
+                padding: const EdgeInsets.all(40),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFFF8F4FF),
+                      Color(0xFFE8F7FF),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: const Color(0xFF4097FF).withOpacity(0.2),
+                    width: 1,
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF4097FF).withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Center(
+                        child: Text(
+                          '⭐',
+                          style: TextStyle(fontSize: 40),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'NO SPECIAL COSMIC EVENTS TODAY',
+                      style: GoogleFonts.cinzel(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF4097FF),
+                        letterSpacing: 1,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      _errorMessage ?? 'The cosmos is in a peaceful state today',
+                      style: GoogleFonts.raleway(
+                        fontSize: 16,
+                        color: Colors.black.withOpacity(0.6),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      );
+    }
+
+    return TweenAnimationBuilder<double>(
+      duration: const Duration(milliseconds: 1200),
+      tween: Tween(begin: 0.0, end: 1.0),
+      builder: (context, value, child) {
+        return Transform.translate(
+          offset: Offset(0, 30 * (1 - value)),
+          child: Opacity(
+            opacity: value,
+            child: Column(
+              children: _events!.asMap().entries.map((entry) {
+                final index = entry.key;
+                final event = entry.value;
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 20),
+                  child: TweenAnimationBuilder<double>(
+                    duration: Duration(milliseconds: 1400 + (index * 200)),
+                    tween: Tween(begin: 0.0, end: 1.0),
+                    builder: (context, animValue, child) {
+                      return Transform.translate(
+                        offset: Offset(0, 20 * (1 - animValue)),
+                        child: Opacity(
+                          opacity: animValue,
+                          child: _buildEventCard(event),
+                        ),
+                      );
+                    },
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildEventCard(Map<String, dynamic> event) {
+    final String eventType = event['event_type'] ?? '';
+    final String description = event['description'] ?? '';
+    final String eventDate = event['event_date'] ?? '';
+
+    Color cardColor;
+    String icon;
+    
+    switch (eventType.toLowerCase()) {
+      case 'lunar':
+        cardColor = const Color(0xFFA5E5F9);
+        icon = '🌙';
+      case 'retrograde':
+        cardColor = const Color(0xFFFF92A2);
+        icon = '🪐';
+      case 'ingress':
+        cardColor = const Color(0xFF8985CF);
+        icon = '✨';
+      default:
+        cardColor = const Color(0xFF4097FF);
+        icon = '⭐';
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: cardColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: cardColor.withOpacity(0.3),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: cardColor.withOpacity(0.1),
+            offset: const Offset(0, 8),
+            blurRadius: 24,
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: cardColor,
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(
+                icon,
+                style: const TextStyle(fontSize: 28),
+              ),
+            ),
+          ),
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  eventType.toUpperCase(),
+                  style: GoogleFonts.cinzel(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: cardColor,
+                    letterSpacing: 1,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  description,
+                  style: GoogleFonts.raleway(
+                    fontSize: 14,
+                    color: Colors.black.withOpacity(0.7),
+                    height: 1.4,
+                  ),
+                ),
+                if (eventDate.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    'Date: $eventDate',
+                    style: GoogleFonts.raleway(
+                      fontSize: 12,
+                      color: Colors.black.withOpacity(0.5),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

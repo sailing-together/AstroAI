@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:AstroAI/models/natal_chart_data.dart';
 import 'package:AstroAI/widgets/natal_chart_painter.dart';
+import 'package:AstroAI/widgets/common/navigation_header.dart';
 import 'dart:html' as html;
 
 class NatalChartPage extends StatefulWidget {
@@ -189,110 +190,266 @@ class _NatalChartPageState extends State<NatalChartPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1A2E),
-      appBar: AppBar(
-        title: Text('Natal Chart', style: GoogleFonts.cinzel(color: Colors.white)),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (_history.isNotEmpty)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
-                decoration: BoxDecoration(
-                  color: Colors.grey[800],
-                  borderRadius: BorderRadius.circular(8.0),
+      body: Stack(
+        children: [
+          // Main content with top padding to account for fixed header
+          Padding(
+            padding: const EdgeInsets.only(top: 89), // Header height
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0xFF1A1A2E),
+                    Color(0xFF16213E),
+                    Color(0xFF0F3460),
+                  ],
                 ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<Map<String, dynamic>>(
-                    value: null, // Always show hint text
-                    isExpanded: true,
-                    hint: const Text("Select from History", style: TextStyle(color: Colors.white70)),
-                    icon: const Icon(Icons.history, color: Color(0xFFFBF7BA)),
-                    dropdownColor: Colors.grey[850],
-                    onChanged: (Map<String, dynamic>? newValue) {
-                      if (newValue != null) {
-                        _applyHistoryEntry(newValue);
-                      }
-                    },
-                    items: _history.map<DropdownMenuItem<Map<String, dynamic>>>((entry) {
-                      return DropdownMenuItem<Map<String, dynamic>>(
-                        value: entry,
-                        child: Text(
-                          '${entry["location"]} - ${entry["date"]} @ ${entry["time"]}',
-                          style: const TextStyle(color: Colors.white),
+              ),
+              child: Center(
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 1152),
+                  padding: const EdgeInsets.all(24),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Page Header
+                        Container(
+                          padding: const EdgeInsets.all(32),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF9398DF), Color(0xFF6953B9)],
+                            ),
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.3),
+                                offset: const Offset(0, 8),
+                                blurRadius: 32,
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            children: [
+                              Text(
+                                'NATAL CHART',
+                                style: GoogleFonts.cinzel(
+                                  fontSize: 36,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                  letterSpacing: 2,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Discover your complete astrological blueprint',
+                                style: GoogleFonts.raleway(
+                                  fontSize: 18,
+                                  color: Colors.white.withOpacity(0.9),
+                                  height: 1.5,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
                         ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ),
-            const SizedBox(height: 20),
+                        const SizedBox(height: 32),
+                        // Input Form Container
+                        Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.white.withOpacity(0.2)),
+                          ),
+                          child: Column(
+                            children: [
+                              if (_history.isNotEmpty)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8.0),
+                                  ),
+                                  child: DropdownButtonHideUnderline(
+                                    child: DropdownButton<Map<String, dynamic>>(
+                                      value: null, // Always show hint text
+                                      isExpanded: true,
+                                      hint: const Text("Select from History", style: TextStyle(color: Colors.white70)),
+                                      icon: const Icon(Icons.history, color: Color(0xFFFBF7BA)),
+                                      dropdownColor: const Color(0xFF16213E),
+                                      onChanged: (Map<String, dynamic>? newValue) {
+                                        if (newValue != null) {
+                                          _applyHistoryEntry(newValue);
+                                        }
+                                      },
+                                      items: _history.map<DropdownMenuItem<Map<String, dynamic>>>((entry) {
+                                        return DropdownMenuItem<Map<String, dynamic>>(
+                                          value: entry,
+                                          child: Text(
+                                            '${entry["location"]} - ${entry["date"]} @ ${entry["time"]}',
+                                            style: const TextStyle(color: Colors.white),
+                                          ),
+                                        );
+                                      }).toList(),
+                                    ),
+                                  ),
+                                ),
+                              if (_history.isNotEmpty) const SizedBox(height: 20),
 
-            ListTile(
-              title: const Text('Birth Date', style: TextStyle(color: Colors.white)),
-              subtitle: Text('${_selectedDate.toLocal()}'.split(' ')[0], style: TextStyle(color: Colors.white70)),
-              trailing: const Icon(Icons.calendar_today, color: Color(0xFFFBF7BA)),
-              onTap: () => _selectDate(context),
-            ),
-            ListTile(
-              title: const Text('Birth Time', style: TextStyle(color: Colors.white)),
-              subtitle: Text(_selectedTime.format(context), style: TextStyle(color: Colors.white70)),
-              trailing: const Icon(Icons.access_time, color: Color(0xFFFBF7BA)),
-              onTap: () => _selectTime(context),
-            ),
-            TextField(
-              controller: _locationController,
-              style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(
-                labelText: 'Birth Location (City, Country)',
-                labelStyle: TextStyle(color: Colors.white70),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white54),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFFFBF7BA)),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _isLoading ? null : _fetchNatalChart,
-              style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
-              child: _isLoading
-                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 3, color: Colors.white))
-                  : const Text('Generate Natal Chart'),
-            ),
-            if (_errorMessage != null)
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  _errorMessage!,
-                  style: const TextStyle(color: Colors.redAccent),
-                ),
-              ),
-            if (_natalChartData != null)
-              Column(
-                children: [
-                  const SizedBox(height: 32),
-                  Center(
-                    child: CustomPaint(
-                      size: const Size(300, 300),
-                      painter: NatalChartPainter(_natalChartData!),
+                              // Birth Date
+                              Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: ListTile(
+                                  contentPadding: EdgeInsets.zero,
+                                  title: Text('Birth Date', style: GoogleFonts.raleway(color: Colors.white, fontWeight: FontWeight.w600)),
+                                  subtitle: Text('${_selectedDate.toLocal()}'.split(' ')[0], style: GoogleFonts.raleway(color: Colors.white70)),
+                                  trailing: const Icon(Icons.calendar_today, color: Color(0xFFFBF7BA)),
+                                  onTap: () => _selectDate(context),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+
+                              // Birth Time
+                              Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: ListTile(
+                                  contentPadding: EdgeInsets.zero,
+                                  title: Text('Birth Time', style: GoogleFonts.raleway(color: Colors.white, fontWeight: FontWeight.w600)),
+                                  subtitle: Text(_selectedTime.format(context), style: GoogleFonts.raleway(color: Colors.white70)),
+                                  trailing: const Icon(Icons.access_time, color: Color(0xFFFBF7BA)),
+                                  onTap: () => _selectTime(context),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+
+                              // Birth Location
+                              TextField(
+                                controller: _locationController,
+                                style: GoogleFonts.raleway(color: Colors.white),
+                                decoration: InputDecoration(
+                                  labelText: 'Birth Location (City, Country)',
+                                  labelStyle: GoogleFonts.raleway(color: Colors.white70),
+                                  filled: true,
+                                  fillColor: Colors.white.withOpacity(0.1),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(color: Color(0xFFFBF7BA)),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+
+                              // Generate Button
+                              ElevatedButton(
+                                onPressed: _isLoading ? null : _fetchNatalChart,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF9398DF),
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  elevation: 8,
+                                ),
+                                child: _isLoading
+                                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 3, color: Colors.white))
+                                    : Text('Generate Natal Chart', style: GoogleFonts.raleway(fontSize: 16, fontWeight: FontWeight.w600)),
+                              ),
+                            ],
+                          ),
+                        ),
+                        
+                        // Error Message
+                        if (_errorMessage != null)
+                          Container(
+                            margin: const EdgeInsets.only(top: 16),
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.red.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.red.withOpacity(0.3)),
+                            ),
+                            child: Text(
+                              _errorMessage!,
+                              style: GoogleFonts.raleway(
+                                color: Colors.red.shade300,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        
+                        // Results Section
+                        if (_natalChartData != null)
+                          Column(
+                            children: [
+                              const SizedBox(height: 32),
+                              
+                              // Chart Display
+                              Container(
+                                padding: const EdgeInsets.all(24),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(color: Colors.white.withOpacity(0.2)),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      'YOUR NATAL CHART',
+                                      style: GoogleFonts.cinzel(
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.white,
+                                        letterSpacing: 1,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 24),
+                                    Center(
+                                      child: CustomPaint(
+                                        size: const Size(300, 300),
+                                        painter: NatalChartPainter(_natalChartData!),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 32),
+                              _PlanetPositions(planets: _natalChartData!.planets),
+                              const SizedBox(height: 32),
+                              _HousePositions(houses: _natalChartData!.houses),
+                            ],
+                          ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 32),
-                  _PlanetPositions(planets: _natalChartData!.planets),
-                  const SizedBox(height: 32),
-                  _HousePositions(houses: _natalChartData!.houses),
-                ],
+                ),
               ),
-          ],
-        ),
+            ),
+          ),
+          // Fixed header on top
+          const Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: NavigationHeader(),
+          ),
+        ],
       ),
     );
   }
