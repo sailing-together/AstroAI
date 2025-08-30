@@ -433,8 +433,19 @@ class ApiService {
     }
   }
 
-  // Get Today's Events with fallback
+  // Get Today's Events with fallback (prioritize rich JSON data)
   Future<Map<String, dynamic>?> getTodaysEvents() async {
+    // First try to get rich fallback data from JSON
+    final fallbackData = await _getFallbackTodaysEvents();
+    
+    // If we have rich fallback data (multiple events or detailed content), use it
+    if (fallbackData['source'] == 'cosmic_events_fallback' && 
+        (fallbackData['events']?.length > 1 || 
+         fallbackData['celestial_highlights']?.toString().isNotEmpty == true)) {
+      return fallbackData;
+    }
+    
+    // Otherwise, try the API
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/events-today'),
@@ -443,15 +454,59 @@ class ApiService {
 
       if (response.statusCode == 200) {
         final apiResult = jsonDecode(response.body);
-        apiResult['source'] = 'gemini_live';
-        return apiResult;
+        
+        // Format API response to match UI expectations
+        List<Map<String, dynamic>> allEvents = [];
+        
+        // Add lunar events from API
+        if (apiResult['lunar_events'] != null) {
+          for (var event in apiResult['lunar_events']) {
+            allEvents.add({
+              'type': 'lunar',
+              'event': event['event'] ?? event['type'] ?? 'Lunar Event',
+              'time': event['time'] ?? '',
+              'description': event['description'] ?? '',
+            });
+          }
+        }
+        
+        // Add retrogrades from API
+        if (apiResult['retrogrades'] != null) {
+          for (var event in apiResult['retrogrades']) {
+            allEvents.add({
+              'type': 'retrograde',
+              'event': '${event['planet']} retrograde in ${event['sign'] ?? ''}',
+              'time': event['time'] ?? '',
+              'description': event['description'] ?? 'Planetary retrograde energy',
+            });
+          }
+        }
+        
+        // Add ingresses from API
+        if (apiResult['ingresses'] != null) {
+          for (var event in apiResult['ingresses']) {
+            allEvents.add({
+              'type': 'ingress',
+              'event': '${event['planet']} enters ${event['sign']}',
+              'time': event['time'] ?? '',
+              'description': event['description'] ?? 'Planetary sign change',
+            });
+          }
+        }
+        
+        return {
+          'source': 'gemini_live',
+          'date': apiResult['date'],
+          'events': allEvents,
+          'total_events': allEvents.length,
+        };
       } else {
         print('Today\'s Events API error: ${response.statusCode}');
-        return await _getFallbackTodaysEvents();
+        return fallbackData;
       }
     } catch (e) {
       print('Today\'s Events API exception: $e');
-      return await _getFallbackTodaysEvents();
+      return fallbackData;
     }
   }
 
@@ -466,29 +521,75 @@ class ApiService {
       if (cosmicData.containsKey(yearKey) && cosmicData[yearKey].containsKey(todayKey)) {
         final todayData = cosmicData[yearKey][todayKey];
         
+        // Create a single consolidated event with all today's cosmic information
+        List<Map<String, dynamic>> allEvents = [];
+        
+        // Create one comprehensive cosmic event with all information
+        String consolidatedDescription = '';
+        
+        // Add celestial highlights
+        if (todayData['celestial_highlights'] != null) {
+          consolidatedDescription += todayData['celestial_highlights'] + '\n\n';
+        }
+        
+        // Add overall interpretation
+        if (todayData['overall_interpretation'] != null) {
+          consolidatedDescription += todayData['overall_interpretation'] + '\n\n';
+        }
+        
+        // Add specific events details
+        String eventDetails = '';
+        
+        if (todayData['lunar_events'] != null && todayData['lunar_events'].isNotEmpty) {
+          for (var event in todayData['lunar_events']) {
+            eventDetails += '🌙 ${event['event']} at ${event['time']}\n${event['description']}\n\n';
+          }
+        }
+        
+        if (todayData['retrogrades'] != null && todayData['retrogrades'].isNotEmpty) {
+          for (var event in todayData['retrogrades']) {
+            eventDetails += '🪐 ${event['planet']} ${event['status']} in ${event['sign']}\n${event['description']}\n\n';
+          }
+        }
+        
+        if (todayData['ingresses'] != null && todayData['ingresses'].isNotEmpty) {
+          for (var event in todayData['ingresses']) {
+            eventDetails += '✨ ${event['planet']} enters ${event['sign']} at ${event['time']}\n${event['description']}\n\n';
+          }
+        }
+        
+        consolidatedDescription += eventDetails;
+        
+        // Create single comprehensive event
+        allEvents.add({
+          'event_type': 'cosmic_overview',
+          'description': consolidatedDescription.trim(),
+          'event_date': todayData['date'] ?? '',
+        });
+        
         return {
           'source': 'cosmic_events_fallback',
           'date': todayData['date'],
-          'lunar_events': todayData['lunar_events'] ?? [],
-          'retrogrades': todayData['retrogrades'] ?? [],
-          'ingresses': todayData['ingresses'] ?? [],
+          'events': allEvents,
           'celestial_highlights': todayData['celestial_highlights'] ?? '',
           'overall_interpretation': todayData['overall_interpretation'] ?? '',
-          'total_events': (todayData['lunar_events']?.length ?? 0) + 
-                         (todayData['retrogrades']?.length ?? 0) + 
-                         (todayData['ingresses']?.length ?? 0),
+          'total_events': allEvents.length,
         };
       } else {
         // Generic fallback for dates not in our data
         return {
           'source': 'generic_fallback',
           'date': now.toIso8601String().split('T')[0],
-          'lunar_events': [],
-          'retrogrades': [],
-          'ingresses': [],
+          'events': [
+            {
+              'event_type': 'cosmic_overview',
+              'description': '🌟 **Daily Cosmic Flow** - The universe continues its eternal dance, bringing opportunities for growth, love, and spiritual development.\n\nEvery day offers cosmic gifts and lessons. Stay open to synchronicities and trust that the universe is supporting your highest path.',
+              'event_date': now.toIso8601String().split('T')[0],
+            }
+          ],
           'celestial_highlights': '🌟 **Daily Cosmic Flow** - The universe continues its eternal dance, bringing opportunities for growth, love, and spiritual development.',
           'overall_interpretation': 'Every day offers cosmic gifts and lessons. Stay open to synchronicities and trust that the universe is supporting your highest path.',
-          'total_events': 0,
+          'total_events': 1,
         };
       }
     } catch (e) {
@@ -496,12 +597,16 @@ class ApiService {
       return {
         'source': 'error_fallback',
         'date': DateTime.now().toIso8601String().split('T')[0],
-        'lunar_events': [],
-        'retrogrades': [],
-        'ingresses': [],
+        'events': [
+          {
+            'event_type': 'cosmic_overview',
+            'description': '🌟 The cosmic energies are flowing in mysterious ways today.\n\nTrust in the universe\'s plan and stay open to the magic around you.',
+            'event_date': DateTime.now().toIso8601String().split('T')[0],
+          }
+        ],
         'celestial_highlights': '🌟 The cosmic energies are flowing in mysterious ways today.',
         'overall_interpretation': 'Trust in the universe\'s plan and stay open to the magic around you.',
-        'total_events': 0,
+        'total_events': 1,
         'message': 'Cosmic events data temporarily unavailable',
       };
     }
