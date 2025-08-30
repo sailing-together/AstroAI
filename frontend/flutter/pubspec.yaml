@@ -25,3 +25,6 @@ flutter:
     - assets/space.jpg
     - assets/MainSpace.png
     - assets/celebrity_matches.json
+    - assets/daily_horoscopes.json
+    - assets/sign_compatibility.json
+    - assets/cosmic_events_2025.json

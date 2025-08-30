@@ -209,8 +209,8 @@ class _NatalChartPageState extends State<NatalChartPage> {
               ),
               child: Center(
                 child: Container(
-                  constraints: const BoxConstraints(maxWidth: 1152),
-                  padding: const EdgeInsets.all(24),
+                  constraints: const BoxConstraints(maxWidth: 1440),
+                  padding: const EdgeInsets.all(32),
                   child: SingleChildScrollView(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
