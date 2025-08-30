@@ -670,7 +670,7 @@ class _SignCompatibilityWidgetState extends State<_SignCompatibilityWidget> {
   ];
 
   final List<String> _relationshipTypes = [
-    'lover', 'friend', 'business', 'family', 'other'
+    'lover', 'friend', 'business', 'family', 'all'
   ];
 
   @override
@@ -998,9 +998,10 @@ class _SignCompatibilityWidgetState extends State<_SignCompatibilityWidget> {
       case 'family':
         analysis = _getFamilyCompatibility(sign1, sign2);
         score = _getCompatibilityScore(sign1, sign2, 'family');
+      case 'all':
       default:
-        analysis = 'Compatibility analysis for $sign1 and $sign2.';
-        score = '7';
+        analysis = _getAllTypesCompatibility(sign1, sign2);
+        score = _getCompatibilityScore(sign1, sign2, 'all');
     }
     
     return {
@@ -1066,6 +1067,35 @@ Family Dynamics:
 Family bonds are strengthened through understanding, patience, and celebrating the unique gifts each person brings to the family unit.''';
   }
 
+  String _getAllTypesCompatibility(String sign1, String sign2) {
+    return '''🌟 Complete Compatibility Analysis: $sign1 & $sign2
+
+Your cosmic connection spans across all relationship dimensions, blending ${_getSignElement(sign1)} and ${_getSignElement(sign2)} energies in a harmonious dance.
+
+💕 ROMANTIC POTENTIAL
+• Attraction Level: ${_getRomanticAttraction(sign1, sign2)}
+• Emotional Connection: ${_getEmotionalConnection(sign1, sign2)}
+• Long-term Compatibility: ${_getLongTermCompatibility(sign1, sign2)}
+
+🤝 FRIENDSHIP DYNAMICS  
+• Social Compatibility: ${_getSocialCompatibility(sign1, sign2)}
+• Shared Interests: ${_getSharedInterests(sign1, sign2)}
+• Loyalty Factor: ${_getLoyaltyFactor(sign1, sign2)}
+
+💼 PROFESSIONAL SYNERGY
+• Work Style Match: ${_getWorkStyleMatch(sign1, sign2)}
+• Decision Making: ${_getDecisionMaking(sign1, sign2)}
+• Innovation Potential: ${_getInnovationApproach(sign1, sign2)}
+
+👨‍👩‍👧‍👦 FAMILY HARMONY
+• Communication Style: ${_getFamilyCommunication(sign1, sign2)}
+• Shared Values: ${_getFamilyValues(sign1, sign2)}
+• Support System: ${_getFamilySupport(sign1, sign2)}
+
+✨ OVERALL COSMIC INSIGHT
+This multi-dimensional compatibility reveals the full spectrum of your potential connection. Whether as lovers, friends, colleagues, or family, your signs create a dynamic that encourages growth, understanding, and mutual support across all areas of life.''';
+  }
+
   String _getCompatibilityScore(String sign1, String sign2, String relationType) {
     // Simple scoring logic based on element compatibility
     final elements1 = _getSignElement(sign1);
@@ -1127,8 +1157,10 @@ Family bonds are strengthened through understanding, patience, and celebrating t
         return '💼 BUSINESS PARTNERSHIP: $sign1 & $sign2\nThis analysis examines your professional collaboration potential.';
       case 'family':
         return '👨‍👩‍👧‍👦 FAMILY HARMONY: $sign1 & $sign2\nThis analysis looks at your family relationship dynamics.';
+      case 'all':
+        return '🌟 COMPLETE COMPATIBILITY ANALYSIS: $sign1 & $sign2\nThis comprehensive analysis covers all relationship dimensions - romantic, friendship, business, and family connections.';
       default:
-        return '';
+        return '🌟 COMPLETE COMPATIBILITY ANALYSIS: $sign1 & $sign2\nThis comprehensive analysis covers all relationship dimensions - romantic, friendship, business, and family connections.';
     }
   }
   
@@ -1177,6 +1209,14 @@ Remember that successful relationships depend more on mutual respect, understand
   String _getFamilySupport(String sign1, String sign2) => 'Unconditional love and encouragement';
   String _getFamilyValues(String sign1, String sign2) => 'Shared core values with room for individual expression';
   String _getFamilyConflictResolution(String sign1, String sign2) => 'Patient discussion with focus on understanding';
+  
+  // Additional methods for ALL types compatibility
+  String _getRomanticAttraction(String sign1, String sign2) => 'Strong magnetic pull with deep understanding';
+  String _getLongTermCompatibility(String sign1, String sign2) => 'Promising potential for lasting partnership';
+  String _getSocialCompatibility(String sign1, String sign2) => 'Natural ease in social settings together';
+  String _getSharedInterests(String sign1, String sign2) => 'Common passions and complementary hobbies';
+  String _getLoyaltyFactor(String sign1, String sign2) => 'High trust and mutual reliability';
+  String _getWorkStyleMatch(String sign1, String sign2) => 'Complementary approaches to tasks and goals';
 }
 
 // Celebrity Match Widget
