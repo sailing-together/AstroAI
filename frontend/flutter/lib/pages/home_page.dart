@@ -850,42 +850,42 @@ class _PersonalisedSectionState extends State<PersonalisedSection> {
     {
       'title': 'Daily Horoscope',
       'icon': '🔮',
-      'color': Color(0xFF9C27B0),
+      'color': Color(0xFF4097FF), // Primary blue
       'description': 'Your complete daily astrological forecast',
       'api_key': 'overall_horoscope',
     },
     {
       'title': 'Love',
       'icon': '💖',
-      'color': Color(0xFFFF92A2),
+      'color': Color(0xFFFF92A2), // Pink
       'description': 'Romantic relationships and connections',
       'api_key': 'love_advice',
     },
     {
       'title': 'Career',
       'icon': '🚀',
-      'color': Color(0xFF000000),
+      'color': Color(0xFF8985CF), // Purple
       'description': 'Professional growth and opportunities',
       'api_key': 'career_advice',
     },
     {
       'title': 'Wealth',
       'icon': '💰',
-      'color': Color(0xFFA5E5F9),
+      'color': Color(0xFF2E8B57), // Sea green - better contrast
       'description': 'Financial prosperity and abundance',
       'api_key': 'wealth_advice',
     },
     {
       'title': 'Guidance',
       'icon': '💡',
-      'color': Color(0xFF4CAF50),
+      'color': Color(0xFF4097FF), // Primary blue
       'description': 'Your personalized daily guidance',
       'api_key': 'daily_suggestion',
     },
     {
       'title': 'Motivation',
       'icon': '⭐',
-      'color': Color(0xFF6B46C1),
+      'color': Color(0xFF8985CF), // Purple
       'description': 'Inspirational message for your day',
       'api_key': 'daily_encouragement_message',
     },
@@ -895,7 +895,18 @@ class _PersonalisedSectionState extends State<PersonalisedSection> {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: const Color(0xFF4097FF),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFFE8F2FF), // Deeper light blue
+            Color(0xFFD6E7FF), // Slightly deeper blue
+            Color(0xFFE3E1F5), // Light lavender
+          ],
+          stops: [0.0, 0.6, 1.0],
+        ),
+      ),
       padding: const EdgeInsets.symmetric(vertical: 80, horizontal: 24),
       child: Center(
         child: Container(
@@ -915,7 +926,7 @@ class _PersonalisedSectionState extends State<PersonalisedSection> {
                         style: GoogleFonts.cinzel(
                           fontSize: 50,
                           fontWeight: FontWeight.w700,
-                          color: const Color(0xFFFFF3F8),
+                          color: const Color(0xFF4097FF),
                           letterSpacing: -1,
                           height: 1.3,
                         ),
@@ -939,7 +950,7 @@ class _PersonalisedSectionState extends State<PersonalisedSection> {
                         style: GoogleFonts.raleway(
                           fontSize: 18,
                           fontWeight: FontWeight.w400,
-                          color: const Color(0xFFFFF3F8).withOpacity(0.9),
+                          color: const Color(0xFF8985CF),
                           letterSpacing: -0.32,
                           height: 1.5,
                         ),
@@ -1006,7 +1017,7 @@ class _PersonalisedSectionState extends State<PersonalisedSection> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFFFF3F8).withOpacity(0.5)),
+                border: Border.all(color: const Color(0xFF8985CF).withOpacity(0.3)),
               ),
               child: Row(
                 children: [
@@ -1131,7 +1142,7 @@ class _PersonalisedSectionState extends State<PersonalisedSection> {
                                 category['description'],
                                 style: GoogleFonts.raleway(
                                   fontSize: 12,
-                                  color: const Color(0xFFFFF3F8).withOpacity(0.8),
+                                  color: const Color(0xFF8985CF).withOpacity(0.7),
                                 ),
                                 textAlign: TextAlign.center,
                               ),
@@ -1843,13 +1854,100 @@ class FooterSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: const Color(0xFF1A1A2E),
-      padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 24),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFFFFF3F8), // Light pink
+            Color(0xFFE8F2FF), // Light blue
+          ],
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 80, horizontal: 24),
       child: Center(
         child: Container(
           constraints: const BoxConstraints(maxWidth: 1440),
           child: Column(
             children: [
+              // Modern CTA Section
+              Container(
+                padding: const EdgeInsets.all(40),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF4097FF),
+                      Color(0xFF8985CF),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF4097FF).withOpacity(0.3),
+                      offset: const Offset(0, 12),
+                      blurRadius: 32,
+                      spreadRadius: 0,
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Ready to discover your cosmic destiny?',
+                            style: GoogleFonts.cinzel(
+                              fontSize: 28,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                              height: 1.2,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Join thousands who trust AstroAI for personalized astrological insights, powered by advanced AI technology.',
+                            style: GoogleFonts.raleway(
+                              fontSize: 16,
+                              color: Colors.white.withOpacity(0.9),
+                              height: 1.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 32),
+                    ElevatedButton(
+                      onPressed: () {
+                        // Navigate to sign up or main feature
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: const Color(0xFF4097FF),
+                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 8,
+                      ),
+                      child: Text(
+                        'Get Started Free',
+                        style: GoogleFonts.inter(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 60),
+              
+              // Main Footer Content
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1863,37 +1961,57 @@ class FooterSection extends StatelessWidget {
                         Row(
                           children: [
                             Container(
-                              width: 40,
-                              height: 40,
+                              width: 48,
+                              height: 48,
                               decoration: BoxDecoration(
                                 gradient: const LinearGradient(
                                   colors: [Color(0xFF4097FF), Color(0xFFFF92A2)],
                                 ),
                                 shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF4097FF).withOpacity(0.3),
+                                    offset: const Offset(0, 4),
+                                    blurRadius: 12,
+                                  ),
+                                ],
                               ),
                               child: const Center(
-                                child: Text('✨', style: TextStyle(fontSize: 20)),
+                                child: Text('✨', style: TextStyle(fontSize: 24)),
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: 16),
                             Text(
                               'AstroAI',
                               style: GoogleFonts.cinzel(
-                                fontSize: 28,
+                                fontSize: 32,
                                 fontWeight: FontWeight.w700,
-                                color: Colors.white,
+                                color: const Color(0xFF4097FF),
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 20),
                         Text(
-                          'Your personal guide to the cosmos, blending ancient wisdom with modern technology.',
+                          'Your personal guide to the cosmos, blending ancient wisdom with modern AI technology.',
                           style: GoogleFonts.raleway(
-                            fontSize: 14,
-                            color: Colors.white.withOpacity(0.7),
-                            height: 1.5,
+                            fontSize: 16,
+                            color: const Color(0xFF8985CF),
+                            height: 1.6,
                           ),
+                        ),
+                        const SizedBox(height: 24),
+                        // Social Links
+                        Row(
+                          children: [
+                            _buildSocialButton(Icons.facebook, 'Facebook'),
+                            const SizedBox(width: 12),
+                            _buildSocialButton(Icons.telegram, 'Twitter'),
+                            const SizedBox(width: 12),
+                            _buildSocialButton(Icons.photo_camera, 'Instagram'),
+                            const SizedBox(width: 12),
+                            _buildSocialButton(Icons.youtube_searched_for, 'YouTube'),
+                          ],
                         ),
                       ],
                     ),
@@ -1903,40 +2021,153 @@ class FooterSection extends StatelessWidget {
                     flex: 3,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildLinkColumn('Features', ['Horoscope', 'Natal Chart', 'Compatibility', 'Tarot']),
-                        _buildLinkColumn('Resources', ['Blog', 'Glossary', 'FAQ', 'Support']),
-                        _buildLinkColumn('Company', ['About Us', 'Careers', 'Press', 'Contact']),
+                        _buildModernLinkColumn('Features', [
+                          'Daily Horoscope',
+                          'Natal Chart',
+                          'Compatibility',
+                          'Celebrity Match',
+                          'Tarot Reading',
+                          'ASMR Sounds',
+                        ]),
+                        _buildModernLinkColumn('Resources', [
+                          'Blog & Insights',
+                          'Astrology Guide',
+                          'API Documentation',
+                          'Help Center',
+                          'Contact Support',
+                        ]),
+                        _buildModernLinkColumn('Company', [
+                          'About AstroAI',
+                          'Privacy Policy',
+                          'Terms of Service',
+                          'Careers',
+                          'Press Kit',
+                        ]),
                       ],
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 40),
-              Divider(color: Colors.white.withOpacity(0.2)),
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '© 2024 AstroAI. All rights reserved.',
-                    style: GoogleFonts.raleway(
-                      fontSize: 12,
-                      color: Colors.white.withOpacity(0.5),
+              const SizedBox(height: 50),
+              
+              // Bottom Bar
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                decoration: BoxDecoration(
+                  border: Border(
+                    top: BorderSide(
+                      color: const Color(0xFF8985CF).withOpacity(0.2),
+                      width: 1,
                     ),
                   ),
-                  Row(
-                    children: [
-                      _buildSocialIcon(Icons.facebook),
-                      const SizedBox(width: 16),
-                      _buildSocialIcon(Icons.transcribe),
-                      const SizedBox(width: 16),
-                      _buildSocialIcon(Icons.apple),
-                    ],
-                  ),
-                ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '© 2025 AstroAI. All rights reserved.',
+                      style: GoogleFonts.raleway(
+                        fontSize: 14,
+                        color: const Color(0xFF8985CF).withOpacity(0.7),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        Text(
+                          'Made with ',
+                          style: GoogleFonts.raleway(
+                            fontSize: 14,
+                            color: const Color(0xFF8985CF).withOpacity(0.7),
+                          ),
+                        ),
+                        const Text('💜', style: TextStyle(fontSize: 14)),
+                        Text(
+                          ' for cosmic explorers',
+                          style: GoogleFonts.raleway(
+                            fontSize: 14,
+                            color: const Color(0xFF8985CF).withOpacity(0.7),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModernLinkColumn(String title, List<String> links) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: GoogleFonts.cinzel(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: const Color(0xFF4097FF),
+          ),
+        ),
+        const SizedBox(height: 16),
+        ...links.map((link) => Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          child: MouseRegion(
+            cursor: SystemMouseCursors.click,
+            child: GestureDetector(
+              onTap: () {
+                // Add navigation logic
+              },
+              child: Text(
+                link,
+                style: GoogleFonts.raleway(
+                  fontSize: 14,
+                  color: const Color(0xFF8985CF),
+                  fontWeight: FontWeight.w500,
+                  decoration: TextDecoration.none,
+                ),
+              ),
+            ),
+          ),
+        )),
+      ],
+    );
+  }
+
+  Widget _buildSocialButton(IconData icon, String platform) {
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF8985CF).withOpacity(0.1),
+            offset: const Offset(0, 4),
+            blurRadius: 12,
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () {
+            // Add social link logic
+          },
+          child: Center(
+            child: Icon(
+              icon,
+              color: const Color(0xFF4097FF),
+              size: 20,
+            ),
           ),
         ),
       ),
