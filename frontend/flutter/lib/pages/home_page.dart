@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 
-
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
@@ -1668,8 +1667,8 @@ class FeaturesSection extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final isSmallScreen = constraints.maxWidth < 800;
-        final crossAxisCount = isSmallScreen ? 1 : 2;
-        final childAspectRatio = isSmallScreen ? 1.2 : 1.3;
+        final crossAxisCount = isSmallScreen ? 2 : 4;
+        final childAspectRatio = isSmallScreen ? 0.8 : 0.9;
 
         return GridView.builder(
           shrinkWrap: true,
@@ -1677,95 +1676,163 @@ class FeaturesSection extends StatelessWidget {
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,
             childAspectRatio: childAspectRatio,
-            crossAxisSpacing: 30,
+            crossAxisSpacing: 20,
             mainAxisSpacing: 30,
           ),
           itemCount: features.length,
           itemBuilder: (context, index) {
-            return _buildFeatureCard(context, features[index]);
+            return _buildFeatureCard(context, features[index], index);
           },
         );
       },
     );
   }
 
-  Widget _buildFeatureCard(BuildContext context, Map<String, dynamic> feature) {
-    return Container(
-      padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            offset: const Offset(0, 8),
-            blurRadius: 32,
-            spreadRadius: -4,
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Colored circle icon
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              color: feature['color'],
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(height: 24),
-          
-          // Title
-          Text(
-            feature['title'],
-            style: GoogleFonts.cinzel(
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-              color: Colors.black,
-              letterSpacing: 0.5,
-            ),
-          ),
-          const SizedBox(height: 12),
-          
-          // Description
-          Text(
-            feature['description'],
-            style: GoogleFonts.raleway(
-              fontSize: 16,
-              fontWeight: FontWeight.w400,
-              color: Colors.black.withOpacity(0.7),
-              height: 1.5,
-            ),
-          ),
-          const Spacer(),
-          
-          // Learn more link
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => feature['page']),
-              );
-            },
+  Widget _buildFeatureCard(BuildContext context, Map<String, dynamic> feature, int index) {
+    return TweenAnimationBuilder<double>(
+      duration: Duration(milliseconds: 800 + (index * 200)),
+      tween: Tween(begin: 0.0, end: 1.0),
+      builder: (context, value, child) {
+        return Transform.translate(
+          offset: Offset(0, 30 * (1 - value)),
+          child: Opacity(
+            opacity: value,
             child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Text(
-                'learn more',
-                style: GoogleFonts.raleway(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black,
-                  decoration: TextDecoration.underline,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    feature['color'].withOpacity(0.9),
+                    feature['color'].withOpacity(0.7),
+                  ],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: feature['color'].withOpacity(0.3),
+                    offset: const Offset(0, 12),
+                    blurRadius: 24,
+                    spreadRadius: 2,
+                  ),
+                  BoxShadow(
+                    color: feature['color'].withOpacity(0.1),
+                    offset: const Offset(0, 4),
+                    blurRadius: 8,
+                  ),
+                ],
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => feature['page']),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(20),
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Icon with 3D effect
+                        Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.9),
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                offset: const Offset(0, 4),
+                                blurRadius: 8,
+                              ),
+                            ],
+                          ),
+                          child: Icon(
+                            _getFeatureIcon(feature['title']),
+                            color: feature['color'],
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        // Title
+                        Text(
+                          feature['title'],
+                          style: GoogleFonts.cinzel(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        
+                        // Description
+                        Expanded(
+                          child: Text(
+                            feature['description'],
+                            style: GoogleFonts.raleway(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.white.withOpacity(0.9),
+                              height: 1.4,
+                            ),
+                            maxLines: 4,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        
+                        // Learn more button
+                        Container(
+                          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: Text(
+                            'Learn More',
+                            style: GoogleFonts.raleway(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
           ),
-        ],
-      ),
+        );
+      },
     );
+  }
+
+  IconData _getFeatureIcon(String title) {
+    switch (title) {
+      case 'MATCHING':
+        return Icons.favorite;
+      case 'NATAL CHART':
+        return Icons.stars;
+      case 'ASMR':
+        return Icons.headphones;
+      case 'TAROT':
+        return Icons.auto_awesome;
+      default:
+        return Icons.star;
+    }
   }
 }
 
