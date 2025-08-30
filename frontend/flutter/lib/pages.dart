@@ -420,11 +420,20 @@ class _MatchingPageState extends State<MatchingPage> with SingleTickerProviderSt
           Padding(
             padding: const EdgeInsets.only(top: 89), // Header height
             child: Container(
-              color: const Color(0xFFF3F3F3),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFFFFF3F8),
+                    Color(0xFFF0F8FF),
+                  ],
+                ),
+              ),
               child: Center(
                 child: Container(
-                  constraints: const BoxConstraints(maxWidth: 1152),
-                  padding: const EdgeInsets.all(24),
+                  constraints: const BoxConstraints(maxWidth: 1440),
+                  padding: const EdgeInsets.all(32),
                   child: SingleChildScrollView(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
