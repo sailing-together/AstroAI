@@ -18,7 +18,7 @@ class NatalChartPage extends StatefulWidget {
 class _NatalChartPageState extends State<NatalChartPage> {
   DateTime _selectedDate = DateTime.now();
   TimeOfDay _selectedTime = TimeOfDay.now();
-  final TextEditingController _locationController = TextEditingController();
+  final TextEditingController _locationController = TextEditingController(text: 'Melbourne');
 
   NatalChartData? _natalChartData;
   bool _isLoading = false;
@@ -217,17 +217,20 @@ class _NatalChartPageState extends State<NatalChartPage> {
                 ),
                 child: Center(
                   child: Container(
-                    constraints: const BoxConstraints(maxWidth: 1440),
+                    constraints: const BoxConstraints(maxWidth: 1200),
                     padding: const EdgeInsets.all(32),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         // Page Header
-                        Container(
-                          padding: const EdgeInsets.all(32),
+                        Center(
+                          child: Container(
+                            constraints: const BoxConstraints(maxWidth: 800),
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(24),
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.95),
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(16),
                             border: Border.all(
                               color: Theme.of(context).palette.lightBlue.withValues(alpha: 0.4),
                             ),
@@ -264,10 +267,14 @@ class _NatalChartPageState extends State<NatalChartPage> {
                             ],
                           ),
                         ),
+                        ),
                         const SizedBox(height: 32),
                         // Input Form Container
-                        Container(
-                          padding: const EdgeInsets.all(24),
+                        Center(
+                          child: Container(
+                            constraints: const BoxConstraints(maxWidth: 800),
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(24),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(16),
@@ -293,7 +300,7 @@ class _NatalChartPageState extends State<NatalChartPage> {
                                     child: DropdownButton<Map<String, dynamic>>(
                                       value: null, // Always show hint text
                                       isExpanded: true,
-                                      hint: Text("Select from History", style: TextStyle(color: Colors.grey.shade600)),
+                                      hint: Text("Select from History", style: TextStyle(color: Theme.of(context).palette.secondary.withValues(alpha: 0.7))),
                                       icon: Icon(Icons.history, color: Theme.of(context).palette.accent),
                                       dropdownColor: Colors.white,
                                       onChanged: (Map<String, dynamic>? newValue) {
@@ -306,7 +313,7 @@ class _NatalChartPageState extends State<NatalChartPage> {
                                           value: entry,
                                           child: Text(
                                             '${entry["location"]} - ${entry["date"]} @ ${entry["time"]}',
-                                            style: const TextStyle(color: Colors.black87),
+                                            style: TextStyle(color: Theme.of(context).palette.primary),
                                           ),
                                         );
                                       }).toList(),
@@ -336,11 +343,11 @@ class _NatalChartPageState extends State<NatalChartPage> {
                                               children: [
                                                 Icon(Icons.calendar_today, color: Theme.of(context).palette.accent, size: 20),
                                                 const SizedBox(width: 8),
-                                                Text('Birth Date', style: GoogleFonts.raleway(color: Colors.black87, fontWeight: FontWeight.w600, fontSize: 14)),
+                                                Text('Birth Date', style: GoogleFonts.raleway(color: Theme.of(context).palette.primary, fontWeight: FontWeight.w600, fontSize: 14)),
                                               ],
                                             ),
                                             const SizedBox(height: 8),
-                                            Text('${_selectedDate.toLocal()}'.split(' ')[0], style: GoogleFonts.raleway(color: Colors.grey.shade600, fontSize: 16)),
+                                            Text('${_selectedDate.toLocal()}'.split(' ')[0], style: GoogleFonts.raleway(color: Theme.of(context).palette.primary.withValues(alpha: 0.8), fontSize: 16)),
                                           ],
                                         ),
                                       ),
@@ -365,11 +372,11 @@ class _NatalChartPageState extends State<NatalChartPage> {
                                               children: [
                                                 Icon(Icons.access_time, color: Theme.of(context).palette.accent, size: 20),
                                                 const SizedBox(width: 8),
-                                                Text('Birth Time', style: GoogleFonts.raleway(color: Colors.black87, fontWeight: FontWeight.w600, fontSize: 14)),
+                                                Text('Birth Time', style: GoogleFonts.raleway(color: Theme.of(context).palette.secondary, fontWeight: FontWeight.w600, fontSize: 14)),
                                               ],
                                             ),
                                             const SizedBox(height: 8),
-                                            Text(_selectedTime.format(context), style: GoogleFonts.raleway(color: Colors.grey.shade600, fontSize: 16)),
+                                            Text(_selectedTime.format(context), style: GoogleFonts.raleway(color: Theme.of(context).palette.secondary.withValues(alpha: 0.8), fontSize: 16)),
                                           ],
                                         ),
                                       ),
@@ -382,9 +389,9 @@ class _NatalChartPageState extends State<NatalChartPage> {
                                     child: Container(
                                       padding: const EdgeInsets.all(16),
                                       decoration: BoxDecoration(
-                                        color: Theme.of(context).palette.accent.withValues(alpha: 0.1),
+                                        color: Theme.of(context).palette.primary.withValues(alpha: 0.1),
                                         borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(color: Theme.of(context).palette.accent.withValues(alpha: 0.3)),
+                                        border: Border.all(color: Theme.of(context).palette.primary.withValues(alpha: 0.3)),
                                       ),
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -393,16 +400,16 @@ class _NatalChartPageState extends State<NatalChartPage> {
                                             children: [
                                               Icon(Icons.location_on, color: Theme.of(context).palette.accent, size: 20),
                                               const SizedBox(width: 8),
-                                              Text('Birth Location', style: GoogleFonts.raleway(color: Colors.black87, fontWeight: FontWeight.w600, fontSize: 14)),
+                                              Text('Birth Location', style: GoogleFonts.raleway(color: Theme.of(context).palette.primary, fontWeight: FontWeight.w600, fontSize: 14)),
                                             ],
                                           ),
                                           const SizedBox(height: 8),
                                           TextField(
                                             controller: _locationController,
-                                            style: GoogleFonts.raleway(color: Colors.black87, fontSize: 16),
+                                            style: GoogleFonts.raleway(color: Theme.of(context).palette.primary.withValues(alpha: 0.8), fontSize: 16),
                                             decoration: InputDecoration(
                                               hintText: 'City, Country',
-                                              hintStyle: GoogleFonts.raleway(color: Colors.grey.shade600),
+                                              hintStyle: GoogleFonts.raleway(color: Theme.of(context).palette.primary.withValues(alpha: 0.6)),
                                               border: InputBorder.none,
                                               contentPadding: EdgeInsets.zero,
                                               isDense: true,
@@ -453,6 +460,7 @@ class _NatalChartPageState extends State<NatalChartPage> {
                             ],
                           ),
                         ),
+                        ),
                         
                         // Error Message
                         if (_errorMessage != null)
@@ -480,12 +488,30 @@ class _NatalChartPageState extends State<NatalChartPage> {
                               const SizedBox(height: 32),
                               
                               // Chart Display
-                              Container(
-                                padding: const EdgeInsets.all(24),
+                              Center(
+                                child: Container(
+                                  constraints: const BoxConstraints(maxWidth: 800),
+                                  padding: const EdgeInsets.all(24),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.1),
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      Theme.of(context).palette.secondary.withValues(alpha: 0.8),
+                                      Theme.of(context).palette.primary.withValues(alpha: 0.9),
+                                      Theme.of(context).palette.secondary.withValues(alpha: 0.7),
+                                    ],
+                                    stops: const [0.0, 0.5, 1.0],
+                                  ),
                                   borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(color: Colors.white.withOpacity(0.2)),
+                                  border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Theme.of(context).palette.primary.withValues(alpha: 0.3),
+                                      offset: const Offset(0, 8),
+                                      blurRadius: 24,
+                                    ),
+                                  ],
                                 ),
                                 child: Column(
                                   children: [
@@ -508,10 +534,21 @@ class _NatalChartPageState extends State<NatalChartPage> {
                                   ],
                                 ),
                               ),
+                                ),
                               const SizedBox(height: 32),
-                              _PlanetPositions(planets: _natalChartData!.planets),
+                              Center(
+                                child: Container(
+                                  constraints: const BoxConstraints(maxWidth: 800),
+                                  child: _PlanetPositions(planets: _natalChartData!.planets),
+                                ),
+                              ),
                               const SizedBox(height: 32),
-                              _HousePositions(houses: _natalChartData!.houses),
+                              Center(
+                                child: Container(
+                                  constraints: const BoxConstraints(maxWidth: 800),
+                                  child: _HousePositions(houses: _natalChartData!.houses),
+                                ),
+                              ),
                             ],
                           ),
                       ],
@@ -544,8 +581,25 @@ class _PlanetPositions extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Theme.of(context).palette.secondary.withValues(alpha: 0.8),
+            Theme.of(context).palette.primary.withValues(alpha: 0.9),
+            Theme.of(context).palette.secondary.withValues(alpha: 0.7),
+          ],
+          stops: const [0.0, 0.5, 1.0],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).palette.primary.withValues(alpha: 0.3),
+            offset: const Offset(0, 8),
+            blurRadius: 24,
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -627,8 +681,25 @@ class _HousePositions extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Theme.of(context).palette.secondary.withValues(alpha: 0.8),
+            Theme.of(context).palette.primary.withValues(alpha: 0.9),
+            Theme.of(context).palette.secondary.withValues(alpha: 0.7),
+          ],
+          stops: const [0.0, 0.5, 1.0],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).palette.primary.withValues(alpha: 0.3),
+            offset: const Offset(0, 8),
+            blurRadius: 24,
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

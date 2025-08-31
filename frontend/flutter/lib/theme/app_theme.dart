@@ -135,7 +135,9 @@ class AppTheme {
       // Input Decoration Theme
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: palette.surface,
+        fillColor: brightness == Brightness.dark 
+            ? palette.primary.withValues(alpha: 0.15) 
+            : palette.surface,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide(color: palette.divider),
@@ -152,8 +154,16 @@ class AppTheme {
           borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide(color: palette.error),
         ),
-        labelStyle: textTheme.bodyMedium?.copyWith(color: palette.textSecondary),
-        hintStyle: textTheme.bodyMedium?.copyWith(color: palette.textSecondary),
+        labelStyle: textTheme.bodyMedium?.copyWith(
+          color: brightness == Brightness.dark 
+              ? Colors.white.withValues(alpha: 0.9) 
+              : palette.textSecondary,
+        ),
+        hintStyle: textTheme.bodyMedium?.copyWith(
+          color: brightness == Brightness.dark 
+              ? Colors.white.withValues(alpha: 0.7) 
+              : palette.textSecondary,
+        ),
       ),
 
       // Dialog Theme

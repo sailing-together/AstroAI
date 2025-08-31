@@ -215,6 +215,8 @@ class _NavigationHeaderState extends State<NavigationHeader> {
   Widget _buildMenuItemWithDropdown(String text, [BuildContext? context]) {
     return PopupMenuButton<String>(
       offset: const Offset(0, 45),
+      color: Colors.white,
+      surfaceTintColor: Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
       ),
@@ -244,28 +246,40 @@ class _NavigationHeaderState extends State<NavigationHeader> {
           value: 'Matching',
           child: Text(
             'Matching',
-            style: GoogleFonts.inter(fontSize: 14),
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              color: Colors.black.withOpacity(0.8),
+            ),
           ),
         ),
         PopupMenuItem<String>(
           value: 'Natal chart',
           child: Text(
             'Natal chart',
-            style: GoogleFonts.inter(fontSize: 14),
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              color: Colors.black.withOpacity(0.8),
+            ),
           ),
         ),
         PopupMenuItem<String>(
           value: 'ASMR',
           child: Text(
             'ASMR',
-            style: GoogleFonts.inter(fontSize: 14),
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              color: Colors.black.withOpacity(0.8),
+            ),
           ),
         ),
         PopupMenuItem<String>(
           value: 'Tarot',
           child: Text(
             'Tarot',
-            style: GoogleFonts.inter(fontSize: 14),
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              color: Colors.black.withOpacity(0.8),
+            ),
           ),
         ),
       ],

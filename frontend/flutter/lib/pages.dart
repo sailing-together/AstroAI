@@ -26,8 +26,8 @@ class HoroscopePage extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Color(0xFFFFF3F8),
-                    Color(0xFFF0F8FF),
+                    Color(0xFFFEFEFE),
+                    Color(0xFFFAFCFF),
                   ],
                 ),
               ),
@@ -88,8 +88,9 @@ class HoroscopePage extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 24),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.white.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.1),
@@ -130,139 +131,311 @@ class AboutUsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ContentPageWrapper(
-      title: 'AstroAI',
-      subtitle: 'Your Personal Cosmic Guide 🌌',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return Scaffold(
+      body: Stack(
         children: [
-          _buildSection('Vision', 'AstroAI combines traditional astrology with modern AI technology and immersive sound experiences to create a comprehensive personal cosmic guidance platform.'),
-          _buildFeatureGrid(),
-          _buildSection('AI Integration 🤖', 'Our AI Astrologer Assistant provides natural language interaction, personalized astrological guidance, and real-time question answering.'),
-          _buildSection('Premium Features ✨', 'Experience our exclusive ASMR & Meditation Suite with 12 unique zodiac-themed sound experiences, emotion-based recommendations, and AI-powered personalization.'),
+          // Main content with top padding
+          Padding(
+            padding: const EdgeInsets.only(top: 89),
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0xFFFFFBFD),
+                    Color(0xFFF8FCFF),
+                    Color(0xFFF0F8FF),
+                  ],
+                ),
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    _buildHeroSection(context),
+                    _buildStorySection(context),
+                    _buildValuesSection(context),
+                    _buildFeaturesSection(context),
+                    _buildTeamSection(context),
+                    _buildCallToActionSection(context),
+                    const SizedBox(height: 80),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          // Fixed header
+          const Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: NavigationHeader(),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildSection(String title, String content) {
-    return Builder(
-      builder: (context) => Container(
-        margin: const EdgeInsets.only(bottom: 32),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: GoogleFonts.cinzel(
-                fontSize: 28,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-                letterSpacing: -0.5,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              content,
-              style: GoogleFonts.raleway(
-                fontSize: 16,
-                fontWeight: FontWeight.w400,
-                color: Colors.white.withValues(alpha: 0.9),
-                height: 1.5,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFeatureGrid() {
-    return Builder(
-      builder: (context) => Container(
-        margin: const EdgeInsets.only(bottom: 32),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Core Features 🌟',
-              style: GoogleFonts.cinzel(
-                fontSize: 28,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-                letterSpacing: -0.5,
-              ),
-            ),
-            const SizedBox(height: 24),
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              crossAxisSpacing: 24,
-              mainAxisSpacing: 24,
-              childAspectRatio: 1.5,
-              children: [
-                _buildFeatureCard('Compatibility Analysis', 'Relationship matching, friendship compatibility, and business partnership synergy.', Theme.of(context).palette.primary),
-                _buildFeatureCard('Natal Chart Analysis', 'Personalized birth chart generation with detailed planet positions interpretation.', Theme.of(context).palette.secondary),
-                _buildFeatureCard('Smart Notifications', 'Astrological event reminders and personalized cosmic advice.', Theme.of(context).palette.lightBlue),
-                _buildFeatureCard('ASMR & Meditation', '12 unique zodiac-themed sound experiences with AI-powered personalization.', Theme.of(context).palette.accent),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFeatureCard(String title, String description, Color color) {
+  // Hero Section
+  Widget _buildHeroSection(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 80),
+      child: Center(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 1200),
+          child: Column(
+            children: [
+              // Main headline
+              Text(
+                'Your Personal',
+                style: GoogleFonts.cinzel(
+                  fontSize: 64,
+                  fontWeight: FontWeight.w300,
+                  color: Colors.black.withValues(alpha: 0.9),
+                  height: 1.1,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              ShaderMask(
+                shaderCallback: (bounds) => LinearGradient(
+                  colors: [
+                    Theme.of(context).palette.primary,
+                    Theme.of(context).palette.secondary,
+                    Theme.of(context).palette.accent,
+                  ],
+                ).createShader(bounds),
+                child: Text(
+                  'Cosmic Guide',
+                  style: GoogleFonts.cinzel(
+                    fontSize: 64,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                    height: 1.1,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(height: 32),
+              // Subtitle
+              Text(
+                'AstroAI merges astrology, AI, Tarot, and immersive audio into a thoughtful companion—delivering daily insights, emotional support, and mystical tools for modern life.',
+                style: GoogleFonts.raleway(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w400,
+                  color: Colors.black.withValues(alpha: 0.7),
+                  height: 1.6,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 3,
+              ),
+              const SizedBox(height: 48),
+              // CTA Buttons
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {},
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).palette.primary,
+                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                    ),
+                    child: Text(
+                      'Get Started',
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 24),
+                  OutlinedButton(
+                    onPressed: () {},
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: Theme.of(context).palette.primary),
+                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                    ),
+                    child: Text(
+                      'Learn More',
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).palette.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Story Section
+  Widget _buildStorySection(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 80),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.95),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+        color: Colors.white.withValues(alpha: 0.6),
+      ),
+      child: Center(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 1000),
+          child: Column(
+            children: [
+              Text(
+                'Our Story',
+                style: GoogleFonts.cinzel(
+                  fontSize: 48,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black.withValues(alpha: 0.9),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 32),
+              Text(
+                'Unlike generic horoscope apps, AstroAI is designed to be your thoughtful companion. We believe that astrology, combined with modern AI and immersive experiences, can provide meaningful guidance for life\'s most important decisions.',
+                style: GoogleFonts.raleway(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w400,
+                  color: Colors.black.withValues(alpha: 0.8),
+                  height: 1.7,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Our platform integrates traditional wisdom with cutting-edge technology to deliver personalized insights, emotional support, and mystical tools that actually make a difference in your daily life.',
+                style: GoogleFonts.raleway(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w400,
+                  color: Colors.black.withValues(alpha: 0.8),
+                  height: 1.7,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Values Section
+  Widget _buildValuesSection(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 80),
+      child: Center(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 1200),
+          child: Column(
+            children: [
+              Text(
+                'What Makes Us Different',
+                style: GoogleFonts.cinzel(
+                  fontSize: 48,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black.withValues(alpha: 0.9),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 64),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildValueCard(
+                      context,
+                      '🔮',
+                      'Traditional Wisdom',
+                      'Grounded in authentic astrological practices and time-tested mystical traditions.',
+                    ),
+                  ),
+                  const SizedBox(width: 32),
+                  Expanded(
+                    child: _buildValueCard(
+                      context,
+                      '🤖',
+                      'Modern AI',
+                      'Advanced AI that understands your unique birth chart and current planetary transits.',
+                    ),
+                  ),
+                  const SizedBox(width: 32),
+                  Expanded(
+                    child: _buildValueCard(
+                      context,
+                      '🎧',
+                      'Immersive Experience',
+                      'ASMR and meditation content designed specifically for your zodiac sign.',
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildValueCard(BuildContext context, String emoji, String title, String description) {
+    return Container(
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.8),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Theme.of(context).palette.primary.withValues(alpha: 0.1),
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            offset: const Offset(0, 8),
-            blurRadius: 32,
+            color: Colors.black.withValues(alpha: 0.05),
+            offset: const Offset(0, 10),
+            blurRadius: 30,
           ),
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(24),
-            ),
+          Text(
+            emoji,
+            style: const TextStyle(fontSize: 48),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           Text(
             title,
             style: GoogleFonts.cinzel(
-              fontSize: 18,
+              fontSize: 20,
               fontWeight: FontWeight.w700,
-              color: Colors.black87,
+              color: Colors.black.withValues(alpha: 0.9),
             ),
+            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
           Text(
             description,
             style: GoogleFonts.raleway(
-              fontSize: 14,
+              fontSize: 16,
               fontWeight: FontWeight.w400,
               color: Colors.black.withValues(alpha: 0.7),
-              height: 1.4,
+              height: 1.5,
             ),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
     );
   }
+  
+  Widget _buildFeaturesSection(BuildContext context) => const SizedBox();
+  Widget _buildTeamSection(BuildContext context) => const SizedBox();
+  Widget _buildCallToActionSection(BuildContext context) => const SizedBox();
 }
 
 class ContactPage extends StatelessWidget {
@@ -378,22 +551,22 @@ class _MatchingPageState extends State<MatchingPage> with SingleTickerProviderSt
           // Main content with top padding to account for fixed header
           Padding(
             padding: const EdgeInsets.only(top: 89), // Header height
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFFFFF3F8),
-                    Color(0xFFF0F8FF),
-                  ],
+            child: SingleChildScrollView(
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFFFFF3F8),
+                      Color(0xFFF0F8FF),
+                    ],
+                  ),
                 ),
-              ),
-              child: Center(
-                child: Container(
-                  constraints: const BoxConstraints(maxWidth: 1440),
-                  padding: const EdgeInsets.all(32),
-                  child: SingleChildScrollView(
+                child: Center(
+                  child: Container(
+                    constraints: const BoxConstraints(maxWidth: 1000),
+                    padding: const EdgeInsets.all(32),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -721,9 +894,9 @@ class _SignCompatibilityWidgetState extends State<_SignCompatibilityWidget> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: Theme.of(context).palette.primary.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: Theme.of(context).palette.primary.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -733,7 +906,7 @@ class _SignCompatibilityWidgetState extends State<_SignCompatibilityWidget> {
             style: GoogleFonts.cinzel(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: Colors.black,
+              color: Theme.of(context).palette.primary,
             ),
           ),
           const SizedBox(height: 8),
@@ -744,7 +917,7 @@ class _SignCompatibilityWidgetState extends State<_SignCompatibilityWidget> {
               style: GoogleFonts.raleway(
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
-                color: Colors.black.withOpacity(0.6),
+                color: Theme.of(context).palette.primary.withValues(alpha: 0.6),
               ),
             ),
             isExpanded: true,
@@ -757,6 +930,7 @@ class _SignCompatibilityWidgetState extends State<_SignCompatibilityWidget> {
                   style: GoogleFonts.raleway(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
+                    color: Theme.of(context).palette.secondary,
                   ),
                 ),
               );
@@ -772,9 +946,9 @@ class _SignCompatibilityWidgetState extends State<_SignCompatibilityWidget> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: Theme.of(context).palette.primary.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: Theme.of(context).palette.primary.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -784,7 +958,7 @@ class _SignCompatibilityWidgetState extends State<_SignCompatibilityWidget> {
             style: GoogleFonts.cinzel(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: Colors.black,
+              color: Theme.of(context).palette.primary,
             ),
           ),
           const SizedBox(height: 8),
@@ -795,7 +969,7 @@ class _SignCompatibilityWidgetState extends State<_SignCompatibilityWidget> {
               style: GoogleFonts.raleway(
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
-                color: Colors.black.withOpacity(0.6),
+                color: Theme.of(context).palette.primary.withValues(alpha: 0.6),
               ),
             ),
             isExpanded: true,
@@ -808,6 +982,7 @@ class _SignCompatibilityWidgetState extends State<_SignCompatibilityWidget> {
                   style: GoogleFonts.raleway(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
+                    color: Theme.of(context).palette.secondary,
                   ),
                 ),
               );
