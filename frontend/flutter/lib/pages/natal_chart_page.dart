@@ -208,11 +208,11 @@ class _NatalChartPageState extends State<NatalChartPage> {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      Theme.of(context).palette.lightPink.withValues(alpha: 0.3),
-                      Theme.of(context).palette.lightBlue.withValues(alpha: 0.3),
-                      Theme.of(context).palette.accent.withValues(alpha: 0.1),
+                      Theme.of(context).palette.lightBlue.withValues(alpha: 0.4),
+                      Theme.of(context).palette.primary.withValues(alpha: 0.2),
+                      Theme.of(context).palette.lightBlue.withValues(alpha: 0.6),
                     ],
-                    stops: const [0.0, 0.6, 1.0],
+                    stops: const [0.0, 0.5, 1.0],
                   ),
                 ),
                 child: Center(
@@ -379,22 +379,36 @@ class _NatalChartPageState extends State<NatalChartPage> {
                                   // Birth Location
                                   Expanded(
                                     flex: 2,
-                                    child: TextField(
-                                      controller: _locationController,
-                                      style: GoogleFonts.raleway(color: Colors.black87),
-                                      decoration: InputDecoration(
-                                        labelText: 'Birth Location (City, Country)',
-                                        labelStyle: GoogleFonts.raleway(color: Colors.grey.shade600),
-                                        filled: true,
-                                        fillColor: Theme.of(context).palette.accent.withValues(alpha: 0.1),
-                                        enabledBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(12),
-                                          borderSide: BorderSide(color: Theme.of(context).palette.accent.withValues(alpha: 0.3)),
-                                        ),
-                                        focusedBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(12),
-                                          borderSide: BorderSide(color: Theme.of(context).palette.accent),
-                                        ),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(context).palette.accent.withValues(alpha: 0.1),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(color: Theme.of(context).palette.accent.withValues(alpha: 0.3)),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Icon(Icons.location_on, color: Theme.of(context).palette.accent, size: 20),
+                                              const SizedBox(width: 8),
+                                              Text('Birth Location', style: GoogleFonts.raleway(color: Colors.black87, fontWeight: FontWeight.w600, fontSize: 14)),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 8),
+                                          TextField(
+                                            controller: _locationController,
+                                            style: GoogleFonts.raleway(color: Colors.black87, fontSize: 16),
+                                            decoration: InputDecoration(
+                                              hintText: 'City, Country',
+                                              hintStyle: GoogleFonts.raleway(color: Colors.grey.shade600),
+                                              border: InputBorder.none,
+                                              contentPadding: EdgeInsets.zero,
+                                              isDense: true,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ),
