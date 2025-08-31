@@ -5,6 +5,7 @@ import 'package:AstroAI/pages.dart';
 import 'package:AstroAI/pages/daily_insights_page.dart';
 import 'package:AstroAI/pages/signup_page.dart';
 import 'package:AstroAI/pages/home_page.dart';
+import 'package:AstroAI/pages/settings_page.dart';
 
 
 class NavigationHeader extends StatefulWidget {
@@ -130,7 +131,9 @@ class _NavigationHeaderState extends State<NavigationHeader> {
                       _buildMenuItem('Horoscope', context),
                       _buildMenuItemWithDropdown('More Features', context),
                       _buildMenuItem('About Us', context),
-                      _buildHighlightedMenuItem('Sign Up', context),
+                      _buildLoginIcon(context),
+                      const SizedBox(width: 8),
+                      _buildSettingsIcon(context),
                     ],
                   );
                 },
@@ -212,6 +215,8 @@ class _NavigationHeaderState extends State<NavigationHeader> {
   Widget _buildMenuItemWithDropdown(String text, [BuildContext? context]) {
     return PopupMenuButton<String>(
       offset: const Offset(0, 45),
+      color: Colors.white,
+      surfaceTintColor: Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
       ),
@@ -241,28 +246,40 @@ class _NavigationHeaderState extends State<NavigationHeader> {
           value: 'Matching',
           child: Text(
             'Matching',
-            style: GoogleFonts.inter(fontSize: 14),
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              color: Colors.black.withOpacity(0.8),
+            ),
           ),
         ),
         PopupMenuItem<String>(
           value: 'Natal chart',
           child: Text(
             'Natal chart',
-            style: GoogleFonts.inter(fontSize: 14),
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              color: Colors.black.withOpacity(0.8),
+            ),
           ),
         ),
         PopupMenuItem<String>(
           value: 'ASMR',
           child: Text(
             'ASMR',
-            style: GoogleFonts.inter(fontSize: 14),
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              color: Colors.black.withOpacity(0.8),
+            ),
           ),
         ),
         PopupMenuItem<String>(
           value: 'Tarot',
           child: Text(
             'Tarot',
-            style: GoogleFonts.inter(fontSize: 14),
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              color: Colors.black.withOpacity(0.8),
+            ),
           ),
         ),
       ],
@@ -333,6 +350,63 @@ class _NavigationHeaderState extends State<NavigationHeader> {
             fontWeight: FontWeight.w400,
             color: Colors.white,
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoginIcon(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const SignUpPage()),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF4097FF), Color(0xFF8985CF)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF4097FF).withValues(alpha: 0.2),
+              offset: const Offset(0, 2),
+              blurRadius: 4,
+            ),
+          ],
+        ),
+        child: const Icon(
+          Icons.person_outline,
+          size: 20,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSettingsIcon(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const SettingsPage()),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.grey.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: const Icon(
+          Icons.settings,
+          size: 20,
+          color: Colors.black54,
         ),
       ),
     );

@@ -4,6 +4,7 @@ import 'package:AstroAI/pages.dart';
 import 'package:AstroAI/pages/signup_page.dart';
 import 'package:AstroAI/services/api_service.dart';
 import 'package:AstroAI/widgets/common/navigation_header.dart';
+import 'package:AstroAI/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
@@ -14,7 +15,7 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF3F8),
+      backgroundColor: Theme.of(context).palette.lightPink,
       body: Stack(
         children: [
           // Main content with top padding to account for fixed header
@@ -56,16 +57,16 @@ class HeroSection extends StatelessWidget {
       constraints: BoxConstraints(
         minHeight: MediaQuery.of(context).size.height - 89, // Mac screen height minus header
       ),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFF4097FF),
-            Color(0xFFFF92A2),
-            Color(0xFFA5E5F9),
+            Theme.of(context).palette.primary,
+            Theme.of(context).palette.accent,
+            Theme.of(context).palette.lightBlue,
           ],
-          stops: [0.0, 0.5, 1.0],
+          stops: const [0.0, 0.5, 1.0],
         ),
       ),
       child: Padding(
@@ -2278,7 +2279,7 @@ class _TodaysEventsSectionState extends State<TodaysEventsSection> {
       padding: const EdgeInsets.symmetric(vertical: 80, horizontal: 24),
       child: Center(
         child: Container(
-          constraints: const BoxConstraints(maxWidth: 1440),
+          constraints: const BoxConstraints(maxWidth: 800),
           child: Column(
             children: [
               TweenAnimationBuilder<double>(
@@ -2552,7 +2553,7 @@ class _TodaysEventsSectionState extends State<TodaysEventsSection> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  eventType.toUpperCase(),
+                  eventType.toUpperCase().replaceAll('_', ' '),
                   style: GoogleFonts.cinzel(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
