@@ -203,16 +203,14 @@ class _NatalChartPageState extends State<NatalChartPage> {
                 constraints: BoxConstraints(
                   minHeight: MediaQuery.of(context).size.height - 89,
                 ),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      Theme.of(context).palette.primary,
-                      Theme.of(context).palette.accent,
-                      Theme.of(context).palette.lightBlue,
+                      Color(0xFFFFF3F8),
+                      Color(0xFFF0F8FF),
                     ],
-                    stops: const [0.0, 0.5, 1.0],
                   ),
                 ),
                 child: Center(
@@ -241,30 +239,22 @@ class _NatalChartPageState extends State<NatalChartPage> {
                           ),
                           child: Column(
                             children: [
-                              ShaderMask(
-                                shaderCallback: (bounds) => LinearGradient(
-                                  colors: [
-                                    Theme.of(context).palette.primary,
-                                    Theme.of(context).palette.secondary,
-                                  ],
-                                ).createShader(bounds),
-                                child: Text(
-                                  'NATAL CHART',
-                                  style: GoogleFonts.cinzel(
-                                    fontSize: 36,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.white,
-                                    letterSpacing: 2,
-                                  ),
-                                  textAlign: TextAlign.center,
+                              Text(
+                                'NATAL CHART',
+                                style: GoogleFonts.cinzel(
+                                  fontSize: 36,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.black,
+                                  letterSpacing: 2,
                                 ),
+                                textAlign: TextAlign.center,
                               ),
                               const SizedBox(height: 16),
                               Text(
                                 'Discover your complete astrological blueprint',
                                 style: GoogleFonts.raleway(
                                   fontSize: 18,
-                                  color: Theme.of(context).palette.textSecondary,
+                                  color: Colors.black.withValues(alpha: 0.8),
                                   height: 1.5,
                                 ),
                                 textAlign: TextAlign.center,
@@ -277,9 +267,15 @@ class _NatalChartPageState extends State<NatalChartPage> {
                         Container(
                           padding: const EdgeInsets.all(24),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.1),
+                            color: Colors.white,
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.white.withOpacity(0.2)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.1),
+                                offset: const Offset(0, 4),
+                                blurRadius: 20,
+                              ),
+                            ],
                           ),
                           child: Column(
                             children: [
@@ -287,16 +283,17 @@ class _NatalChartPageState extends State<NatalChartPage> {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.1),
+                                    color: Colors.grey.shade50,
                                     borderRadius: BorderRadius.circular(8.0),
+                                    border: Border.all(color: Colors.grey.shade300),
                                   ),
                                   child: DropdownButtonHideUnderline(
                                     child: DropdownButton<Map<String, dynamic>>(
                                       value: null, // Always show hint text
                                       isExpanded: true,
-                                      hint: const Text("Select from History", style: TextStyle(color: Colors.white70)),
+                                      hint: Text("Select from History", style: TextStyle(color: Colors.grey.shade600)),
                                       icon: Icon(Icons.history, color: Theme.of(context).palette.accent),
-                                      dropdownColor: const Color(0xFF16213E),
+                                      dropdownColor: Colors.white,
                                       onChanged: (Map<String, dynamic>? newValue) {
                                         if (newValue != null) {
                                           _applyHistoryEntry(newValue);
@@ -307,7 +304,7 @@ class _NatalChartPageState extends State<NatalChartPage> {
                                           value: entry,
                                           child: Text(
                                             '${entry["location"]} - ${entry["date"]} @ ${entry["time"]}',
-                                            style: const TextStyle(color: Colors.white),
+                                            style: const TextStyle(color: Colors.black87),
                                           ),
                                         );
                                       }).toList(),
@@ -320,13 +317,14 @@ class _NatalChartPageState extends State<NatalChartPage> {
                               Container(
                                 padding: const EdgeInsets.all(16),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.1),
+                                  color: Colors.grey.shade50,
                                   borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: Colors.grey.shade300),
                                 ),
                                 child: ListTile(
                                   contentPadding: EdgeInsets.zero,
-                                  title: Text('Birth Date', style: GoogleFonts.raleway(color: Colors.white, fontWeight: FontWeight.w600)),
-                                  subtitle: Text('${_selectedDate.toLocal()}'.split(' ')[0], style: GoogleFonts.raleway(color: Colors.white70)),
+                                  title: Text('Birth Date', style: GoogleFonts.raleway(color: Colors.black87, fontWeight: FontWeight.w600)),
+                                  subtitle: Text('${_selectedDate.toLocal()}'.split(' ')[0], style: GoogleFonts.raleway(color: Colors.grey.shade600)),
                                   trailing: Icon(Icons.calendar_today, color: Theme.of(context).palette.accent),
                                   onTap: () => _selectDate(context),
                                 ),
@@ -337,13 +335,14 @@ class _NatalChartPageState extends State<NatalChartPage> {
                               Container(
                                 padding: const EdgeInsets.all(16),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.1),
+                                  color: Colors.grey.shade50,
                                   borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: Colors.grey.shade300),
                                 ),
                                 child: ListTile(
                                   contentPadding: EdgeInsets.zero,
-                                  title: Text('Birth Time', style: GoogleFonts.raleway(color: Colors.white, fontWeight: FontWeight.w600)),
-                                  subtitle: Text(_selectedTime.format(context), style: GoogleFonts.raleway(color: Colors.white70)),
+                                  title: Text('Birth Time', style: GoogleFonts.raleway(color: Colors.black87, fontWeight: FontWeight.w600)),
+                                  subtitle: Text(_selectedTime.format(context), style: GoogleFonts.raleway(color: Colors.grey.shade600)),
                                   trailing: Icon(Icons.access_time, color: Theme.of(context).palette.accent),
                                   onTap: () => _selectTime(context),
                                 ),
@@ -353,15 +352,15 @@ class _NatalChartPageState extends State<NatalChartPage> {
                               // Birth Location
                               TextField(
                                 controller: _locationController,
-                                style: GoogleFonts.raleway(color: Colors.white),
+                                style: GoogleFonts.raleway(color: Colors.black87),
                                 decoration: InputDecoration(
                                   labelText: 'Birth Location (City, Country)',
-                                  labelStyle: GoogleFonts.raleway(color: Colors.white70),
+                                  labelStyle: GoogleFonts.raleway(color: Colors.grey.shade600),
                                   filled: true,
-                                  fillColor: Colors.white.withOpacity(0.1),
+                                  fillColor: Colors.grey.shade50,
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                                    borderSide: BorderSide(color: Colors.grey.shade300),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),

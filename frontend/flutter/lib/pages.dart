@@ -14,63 +14,112 @@ class HoroscopePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ContentPageWrapper(
-      title: 'Daily Cosmic Insights',
-      subtitle: 'Navigate your journey with celestial guidance',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return Scaffold(
+      body: Stack(
         children: [
-          _buildHoroscopeSection('Love & Relationships', 'Discover insights about your romantic life and connections.'),
-          _buildHoroscopeSection('Career Path', 'Navigate your professional journey with cosmic guidance.'),
-          _buildHoroscopeSection('Financial Outlook', 'Understand your financial potential and opportunities.'),
-          _buildHoroscopeSection('Health & Wellness', 'Align your wellbeing with celestial energies.'),
+          // Main content with top padding to account for fixed header
+          Padding(
+            padding: const EdgeInsets.only(top: 89), // Header height
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFFFFF3F8),
+                    Color(0xFFF0F8FF),
+                  ],
+                ),
+              ),
+              child: Center(
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 1440),
+                  padding: const EdgeInsets.all(32),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Daily Cosmic Insights',
+                          style: GoogleFonts.cinzel(
+                            fontSize: 50,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.black,
+                            letterSpacing: -1,
+                            height: 1.3,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Text(
+                          'Navigate your journey with celestial guidance and discover what the stars have in store for you today.',
+                          style: GoogleFonts.raleway(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.black.withValues(alpha: 0.8),
+                            height: 1.5,
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+                        _buildHoroscopeSection('Love & Relationships', 'Discover insights about your romantic life and connections.'),
+                        _buildHoroscopeSection('Career Path', 'Navigate your professional journey with cosmic guidance.'),
+                        _buildHoroscopeSection('Financial Outlook', 'Understand your financial potential and opportunities.'),
+                        _buildHoroscopeSection('Health & Wellness', 'Align your wellbeing with celestial energies.'),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // Fixed header on top
+          const Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: NavigationHeader(),
+          ),
         ],
       ),
     );
   }
 
   Widget _buildHoroscopeSection(String title, String description) {
-    return Builder(
-      builder: (context) => Container(
-        margin: const EdgeInsets.only(bottom: 24),
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.95),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.3),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            offset: const Offset(0, 4),
+            blurRadius: 20,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              offset: const Offset(0, 8),
-              blurRadius: 32,
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: GoogleFonts.cinzel(
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              color: Colors.black,
             ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: GoogleFonts.cinzel(
-                fontSize: 24,
-                fontWeight: FontWeight.w700,
-                color: Theme.of(context).palette.primary,
-              ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            description,
+            style: GoogleFonts.raleway(
+              fontSize: 16,
+              fontWeight: FontWeight.w400,
+              color: Colors.black.withValues(alpha: 0.8),
+              height: 1.4,
             ),
-            const SizedBox(height: 8),
-            Text(
-              description,
-              style: GoogleFonts.raleway(
-                fontSize: 16,
-                fontWeight: FontWeight.w400,
-                color: Theme.of(context).palette.textSecondary,
-                height: 1.4,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
