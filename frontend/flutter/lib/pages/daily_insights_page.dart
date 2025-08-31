@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../providers/app_state.dart';
 import '../models/user_data.dart';
 import '../main.dart';
+import '../theme/app_theme.dart';
 
 class DailyInsightsPage extends StatefulWidget {
   const DailyInsightsPage({super.key});
@@ -26,28 +27,34 @@ class _DailyInsightsPageState extends State<DailyInsightsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Theme.of(context).palette.lightPink,
       body: Stack(
         children: [
           // Main content with top padding to account for fixed header
           Padding(
             padding: const EdgeInsets.only(top: 89), // Header height
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Color(0xFF1A1A2E),
-                    Color(0xFF16213E),
-                    Color(0xFF0F3460),
-                  ],
+            child: SingleChildScrollView(
+              child: Container(
+                width: double.infinity,
+                constraints: BoxConstraints(
+                  minHeight: MediaQuery.of(context).size.height - 89,
                 ),
-              ),
-              child: Center(
-                child: Container(
-                  constraints: const BoxConstraints(maxWidth: 1152),
-                  padding: const EdgeInsets.all(24),
-                  child: SingleChildScrollView(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Theme.of(context).palette.primary,
+                      Theme.of(context).palette.accent,
+                      Theme.of(context).palette.lightBlue,
+                    ],
+                    stops: const [0.0, 0.5, 1.0],
+                  ),
+                ),
+                child: Center(
+                  child: Container(
+                    constraints: const BoxConstraints(maxWidth: 1152),
+                    padding: const EdgeInsets.all(24),
                     child: Consumer<AppState>(
                       builder: (context, appState, child) {
                         return Column(

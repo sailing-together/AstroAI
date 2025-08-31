@@ -6,6 +6,7 @@ import 'package:AstroAI/models/natal_chart_data.dart';
 import 'package:AstroAI/widgets/natal_chart_painter.dart';
 import 'package:AstroAI/widgets/common/navigation_header.dart';
 import 'dart:html' as html;
+import '../theme/app_theme.dart';
 
 class NatalChartPage extends StatefulWidget {
   const NatalChartPage({super.key});
@@ -190,28 +191,34 @@ class _NatalChartPageState extends State<NatalChartPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Theme.of(context).palette.lightPink,
       body: Stack(
         children: [
           // Main content with top padding to account for fixed header
           Padding(
             padding: const EdgeInsets.only(top: 89), // Header height
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Color(0xFF1A1A2E),
-                    Color(0xFF16213E),
-                    Color(0xFF0F3460),
-                  ],
+            child: SingleChildScrollView(
+              child: Container(
+                width: double.infinity,
+                constraints: BoxConstraints(
+                  minHeight: MediaQuery.of(context).size.height - 89,
                 ),
-              ),
-              child: Center(
-                child: Container(
-                  constraints: const BoxConstraints(maxWidth: 1440),
-                  padding: const EdgeInsets.all(32),
-                  child: SingleChildScrollView(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Theme.of(context).palette.primary,
+                      Theme.of(context).palette.accent,
+                      Theme.of(context).palette.lightBlue,
+                    ],
+                    stops: const [0.0, 0.5, 1.0],
+                  ),
+                ),
+                child: Center(
+                  child: Container(
+                    constraints: const BoxConstraints(maxWidth: 1440),
+                    padding: const EdgeInsets.all(32),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [

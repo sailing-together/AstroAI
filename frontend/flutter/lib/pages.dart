@@ -6,6 +6,7 @@ import 'package:AstroAI/services/api_service.dart';
 import 'dart:convert';
 import 'dart:math' as math;
 export 'package:AstroAI/pages/natal_chart_page.dart';
+import 'theme/app_theme.dart';
 
 // Page classes for navigation
 class HoroscopePage extends StatelessWidget {
@@ -13,88 +14,62 @@ class HoroscopePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
+    return ContentPageWrapper(
+      title: 'Daily Cosmic Insights',
+      subtitle: 'Navigate your journey with celestial guidance',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Main content with top padding to account for fixed header
-          Padding(
-            padding: const EdgeInsets.only(top: 89), // Header height
-            child: Container(
-              color: Colors.white,
-              child: Center(
-                child: Container(
-                  constraints: const BoxConstraints(maxWidth: 1152),
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Daily Cosmic Insights',
-                        style: GoogleFonts.cinzel(
-                          fontSize: 50,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.black,
-                          letterSpacing: -1,
-                          height: 1.3,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      _buildHoroscopeSection('Love & Relationships', 'Discover insights about your romantic life and connections.'),
-                      _buildHoroscopeSection('Career Path', 'Navigate your professional journey with cosmic guidance.'),
-                      _buildHoroscopeSection('Financial Outlook', 'Understand your financial potential and opportunities.'),
-                      _buildHoroscopeSection('Health & Wellness', 'Align your wellbeing with celestial energies.'),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-          // Fixed header on top
-          const Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: NavigationHeader(),
-          ),
+          _buildHoroscopeSection('Love & Relationships', 'Discover insights about your romantic life and connections.'),
+          _buildHoroscopeSection('Career Path', 'Navigate your professional journey with cosmic guidance.'),
+          _buildHoroscopeSection('Financial Outlook', 'Understand your financial potential and opportunities.'),
+          _buildHoroscopeSection('Health & Wellness', 'Align your wellbeing with celestial energies.'),
         ],
       ),
     );
   }
 
   Widget _buildHoroscopeSection(String title, String description) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 24),
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF4097FF), Color(0xFFFF92A2)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+    return Builder(
+      builder: (context) => Container(
+        margin: const EdgeInsets.only(bottom: 24),
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Theme.of(context).palette.primary,
+              Theme.of(context).palette.secondary,
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Theme.of(context).palette.lightBlue.withValues(alpha: 0.5),
+          ),
         ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFA5E5F9).withOpacity(0.5)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: GoogleFonts.cinzel(
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: GoogleFonts.cinzel(
+                fontSize: 24,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            description,
-            style: GoogleFonts.raleway(
-              fontSize: 16,
-              fontWeight: FontWeight.w400,
-              color: Colors.white.withOpacity(0.9),
+            const SizedBox(height: 8),
+            Text(
+              description,
+              style: GoogleFonts.raleway(
+                fontSize: 16,
+                fontWeight: FontWeight.w400,
+                color: Colors.white.withValues(alpha: 0.9),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -105,117 +80,86 @@ class AboutUsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
+    return ContentPageWrapper(
+      title: 'AstroAI',
+      subtitle: 'Your Personal Cosmic Guide 🌌',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Main content with top padding to account for fixed header
-          Padding(
-            padding: const EdgeInsets.only(top: 89), // Header height
-            child: Container(
-              color: Colors.white,
-              child: Center(
-                child: Container(
-                  constraints: const BoxConstraints(maxWidth: 1152),
-                  padding: const EdgeInsets.all(24),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'AstroAI - Your Personal Cosmic Guide 🌌',
-                          style: GoogleFonts.cinzel(
-                            fontSize: 40,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.black,
-                            letterSpacing: -1,
-                            height: 1.3,
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        _buildSection('Vision', 'AstroAI combines traditional astrology with modern AI technology and immersive sound experiences to create a comprehensive personal cosmic guidance platform.'),
-                        _buildFeatureGrid(),
-                        _buildSection('AI Integration 🤖', 'Our AI Astrologer Assistant provides natural language interaction, personalized astrological guidance, and real-time question answering.'),
-                        _buildSection('Premium Features ✨', 'Experience our exclusive ASMR & Meditation Suite with 12 unique zodiac-themed sound experiences, emotion-based recommendations, and AI-powered personalization.'),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          // Fixed header on top
-          const Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: NavigationHeader(),
-          ),
+          _buildSection('Vision', 'AstroAI combines traditional astrology with modern AI technology and immersive sound experiences to create a comprehensive personal cosmic guidance platform.'),
+          _buildFeatureGrid(),
+          _buildSection('AI Integration 🤖', 'Our AI Astrologer Assistant provides natural language interaction, personalized astrological guidance, and real-time question answering.'),
+          _buildSection('Premium Features ✨', 'Experience our exclusive ASMR & Meditation Suite with 12 unique zodiac-themed sound experiences, emotion-based recommendations, and AI-powered personalization.'),
         ],
       ),
     );
   }
 
   Widget _buildSection(String title, String content) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 32),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: GoogleFonts.cinzel(
-              fontSize: 28,
-              fontWeight: FontWeight.w700,
-              color: Colors.black,
-              letterSpacing: -0.5,
+    return Builder(
+      builder: (context) => Container(
+        margin: const EdgeInsets.only(bottom: 32),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: GoogleFonts.cinzel(
+                fontSize: 28,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+                letterSpacing: -0.5,
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            content,
-            style: GoogleFonts.raleway(
-              fontSize: 16,
-              fontWeight: FontWeight.w400,
-              color: Colors.black.withOpacity(0.8),
-              height: 1.5,
+            const SizedBox(height: 16),
+            Text(
+              content,
+              style: GoogleFonts.raleway(
+                fontSize: 16,
+                fontWeight: FontWeight.w400,
+                color: Colors.white.withValues(alpha: 0.9),
+                height: 1.5,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildFeatureGrid() {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 32),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Core Features 🌟',
-            style: GoogleFonts.cinzel(
-              fontSize: 28,
-              fontWeight: FontWeight.w700,
-              color: Colors.black,
-              letterSpacing: -0.5,
+    return Builder(
+      builder: (context) => Container(
+        margin: const EdgeInsets.only(bottom: 32),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Core Features 🌟',
+              style: GoogleFonts.cinzel(
+                fontSize: 28,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+                letterSpacing: -0.5,
+              ),
             ),
-          ),
-          const SizedBox(height: 24),
-          GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 2,
-            crossAxisSpacing: 24,
-            mainAxisSpacing: 24,
-            childAspectRatio: 1.5,
-            children: [
-              _buildFeatureCard('Compatibility Analysis', 'Relationship matching, friendship compatibility, and business partnership synergy.', const Color(0xFF4097FF)),
-              _buildFeatureCard('Natal Chart Analysis', 'Personalized birth chart generation with detailed planet positions interpretation.', const Color(0xFFFF92A2)),
-              _buildFeatureCard('Smart Notifications', 'Astrological event reminders and personalized cosmic advice.', const Color(0xFFA5E5F9)),
-              _buildFeatureCard('ASMR & Meditation', '12 unique zodiac-themed sound experiences with AI-powered personalization.', const Color(0xFF8985CF)),
-            ],
-          ),
-        ],
+            const SizedBox(height: 24),
+            GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: 2,
+              crossAxisSpacing: 24,
+              mainAxisSpacing: 24,
+              childAspectRatio: 1.5,
+              children: [
+                _buildFeatureCard('Compatibility Analysis', 'Relationship matching, friendship compatibility, and business partnership synergy.', Theme.of(context).palette.primary),
+                _buildFeatureCard('Natal Chart Analysis', 'Personalized birth chart generation with detailed planet positions interpretation.', Theme.of(context).palette.secondary),
+                _buildFeatureCard('Smart Notifications', 'Astrological event reminders and personalized cosmic advice.', Theme.of(context).palette.lightBlue),
+                _buildFeatureCard('ASMR & Meditation', '12 unique zodiac-themed sound experiences with AI-powered personalization.', Theme.of(context).palette.accent),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -224,14 +168,14 @@ class AboutUsPage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.white.withValues(alpha: 0.95),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            offset: const Offset(0, 4),
-            blurRadius: 8,
+            color: Colors.black.withValues(alpha: 0.1),
+            offset: const Offset(0, 8),
+            blurRadius: 32,
           ),
         ],
       ),
@@ -252,7 +196,7 @@ class AboutUsPage extends StatelessWidget {
             style: GoogleFonts.cinzel(
               fontSize: 18,
               fontWeight: FontWeight.w700,
-              color: Colors.black,
+              color: Colors.black87,
             ),
           ),
           const SizedBox(height: 8),
@@ -261,7 +205,7 @@ class AboutUsPage extends StatelessWidget {
             style: GoogleFonts.raleway(
               fontSize: 14,
               fontWeight: FontWeight.w400,
-              color: Colors.black.withOpacity(0.7),
+              color: Colors.black.withValues(alpha: 0.7),
               height: 1.4,
             ),
           ),
@@ -276,65 +220,23 @@ class ContactPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
+    return ContentPageWrapper(
+      title: 'Get in Touch',
+      subtitle: 'Connect with our cosmic guidance team for personalized support',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Main content with top padding to account for fixed header
-          Padding(
-            padding: const EdgeInsets.only(top: 89), // Header height
-            child: Container(
-              color: Colors.white,
-              child: Center(
-                child: Container(
-                  constraints: const BoxConstraints(maxWidth: 1152),
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Get in Touch',
-                        style: GoogleFonts.cinzel(
-                          fontSize: 50,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.black,
-                          letterSpacing: -1,
-                          height: 1.3,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        'Connect with our cosmic guidance team for personalized support, technical assistance, or partnership opportunities.',
-                        style: GoogleFonts.raleway(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w400,
-                          color: Colors.black.withOpacity(0.8),
-                          height: 1.5,
-                        ),
-                      ),
-                      const SizedBox(height: 40),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildContactCard('Email Support', 'support@astroai.com', 'Get technical help and account assistance'),
-                          ),
-                          const SizedBox(width: 24),
-                          Expanded(
-                            child: _buildContactCard('Partnerships', 'partners@astroai.com', 'Explore collaboration opportunities'),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
+          const SizedBox(height: 40),
+          Row(
+            children: [
+              Expanded(
+                child: _buildContactCard('Email Support', 'support@astroai.com', 'Get technical help and account assistance'),
               ),
-            ),
-          ),
-          // Fixed header on top
-          const Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: NavigationHeader(),
+              const SizedBox(width: 24),
+              Expanded(
+                child: _buildContactCard('Partnerships', 'partners@astroai.com', 'Explore collaboration opportunities'),
+              ),
+            ],
           ),
         ],
       ),
@@ -342,47 +244,54 @@ class ContactPage extends StatelessWidget {
   }
 
   Widget _buildContactCard(String title, String email, String description) {
-    return Container(
-      padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF4097FF), Color(0xFFFF92A2)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+    return Builder(
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(32),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.95),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Theme.of(context).palette.lightBlue.withValues(alpha: 0.3),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              offset: const Offset(0, 8),
+              blurRadius: 32,
+            ),
+          ],
         ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFA5E5F9).withOpacity(0.5)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: GoogleFonts.cinzel(
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: GoogleFonts.cinzel(
+                fontSize: 24,
+                fontWeight: FontWeight.w700,
+                color: Theme.of(context).palette.primary,
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            email,
-            style: GoogleFonts.inter(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
+            const SizedBox(height: 8),
+            Text(
+              email,
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).palette.secondary,
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            description,
-            style: GoogleFonts.raleway(
-              fontSize: 14,
-              fontWeight: FontWeight.w400,
-              color: Colors.white.withOpacity(0.9),
+            const SizedBox(height: 12),
+            Text(
+              description,
+              style: GoogleFonts.raleway(
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                color: Theme.of(context).palette.textSecondary,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
