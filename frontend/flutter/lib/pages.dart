@@ -35,18 +35,18 @@ class HoroscopePage extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 24),
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Theme.of(context).palette.primary,
-              Theme.of(context).palette.secondary,
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          color: Colors.white.withValues(alpha: 0.95),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: Theme.of(context).palette.lightBlue.withValues(alpha: 0.5),
+            color: Colors.white.withValues(alpha: 0.3),
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              offset: const Offset(0, 8),
+              blurRadius: 32,
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -56,7 +56,7 @@ class HoroscopePage extends StatelessWidget {
               style: GoogleFonts.cinzel(
                 fontSize: 24,
                 fontWeight: FontWeight.w700,
-                color: Colors.white,
+                color: Theme.of(context).palette.primary,
               ),
             ),
             const SizedBox(height: 8),
@@ -65,7 +65,8 @@ class HoroscopePage extends StatelessWidget {
               style: GoogleFonts.raleway(
                 fontSize: 16,
                 fontWeight: FontWeight.w400,
-                color: Colors.white.withValues(alpha: 0.9),
+                color: Theme.of(context).palette.textSecondary,
+                height: 1.4,
               ),
             ),
           ],

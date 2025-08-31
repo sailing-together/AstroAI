@@ -226,13 +226,14 @@ class _NatalChartPageState extends State<NatalChartPage> {
                         Container(
                           padding: const EdgeInsets.all(32),
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF9398DF), Color(0xFF6953B9)],
-                            ),
+                            color: Colors.white.withValues(alpha: 0.95),
                             borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.3),
+                            ),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.3),
+                                color: Colors.black.withValues(alpha: 0.1),
                                 offset: const Offset(0, 8),
                                 blurRadius: 32,
                               ),
@@ -240,22 +241,30 @@ class _NatalChartPageState extends State<NatalChartPage> {
                           ),
                           child: Column(
                             children: [
-                              Text(
-                                'NATAL CHART',
-                                style: GoogleFonts.cinzel(
-                                  fontSize: 36,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white,
-                                  letterSpacing: 2,
+                              ShaderMask(
+                                shaderCallback: (bounds) => LinearGradient(
+                                  colors: [
+                                    Theme.of(context).palette.primary,
+                                    Theme.of(context).palette.secondary,
+                                  ],
+                                ).createShader(bounds),
+                                child: Text(
+                                  'NATAL CHART',
+                                  style: GoogleFonts.cinzel(
+                                    fontSize: 36,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                    letterSpacing: 2,
+                                  ),
+                                  textAlign: TextAlign.center,
                                 ),
-                                textAlign: TextAlign.center,
                               ),
                               const SizedBox(height: 16),
                               Text(
                                 'Discover your complete astrological blueprint',
                                 style: GoogleFonts.raleway(
                                   fontSize: 18,
-                                  color: Colors.white.withOpacity(0.9),
+                                  color: Theme.of(context).palette.textSecondary,
                                   height: 1.5,
                                 ),
                                 textAlign: TextAlign.center,
@@ -286,7 +295,7 @@ class _NatalChartPageState extends State<NatalChartPage> {
                                       value: null, // Always show hint text
                                       isExpanded: true,
                                       hint: const Text("Select from History", style: TextStyle(color: Colors.white70)),
-                                      icon: const Icon(Icons.history, color: Color(0xFFFBF7BA)),
+                                      icon: Icon(Icons.history, color: Theme.of(context).palette.accent),
                                       dropdownColor: const Color(0xFF16213E),
                                       onChanged: (Map<String, dynamic>? newValue) {
                                         if (newValue != null) {
@@ -318,7 +327,7 @@ class _NatalChartPageState extends State<NatalChartPage> {
                                   contentPadding: EdgeInsets.zero,
                                   title: Text('Birth Date', style: GoogleFonts.raleway(color: Colors.white, fontWeight: FontWeight.w600)),
                                   subtitle: Text('${_selectedDate.toLocal()}'.split(' ')[0], style: GoogleFonts.raleway(color: Colors.white70)),
-                                  trailing: const Icon(Icons.calendar_today, color: Color(0xFFFBF7BA)),
+                                  trailing: Icon(Icons.calendar_today, color: Theme.of(context).palette.accent),
                                   onTap: () => _selectDate(context),
                                 ),
                               ),
@@ -335,7 +344,7 @@ class _NatalChartPageState extends State<NatalChartPage> {
                                   contentPadding: EdgeInsets.zero,
                                   title: Text('Birth Time', style: GoogleFonts.raleway(color: Colors.white, fontWeight: FontWeight.w600)),
                                   subtitle: Text(_selectedTime.format(context), style: GoogleFonts.raleway(color: Colors.white70)),
-                                  trailing: const Icon(Icons.access_time, color: Color(0xFFFBF7BA)),
+                                  trailing: Icon(Icons.access_time, color: Theme.of(context).palette.accent),
                                   onTap: () => _selectTime(context),
                                 ),
                               ),
@@ -356,7 +365,7 @@ class _NatalChartPageState extends State<NatalChartPage> {
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(color: Color(0xFFFBF7BA)),
+                                    borderSide: BorderSide(color: Theme.of(context).palette.accent),
                                   ),
                                 ),
                               ),
@@ -366,7 +375,7 @@ class _NatalChartPageState extends State<NatalChartPage> {
                               ElevatedButton(
                                 onPressed: _isLoading ? null : _fetchNatalChart,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF9398DF),
+                                  backgroundColor: Theme.of(context).palette.primary,
                                   foregroundColor: Colors.white,
                                   padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
                                   shape: RoundedRectangleBorder(
