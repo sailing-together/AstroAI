@@ -313,60 +313,90 @@ class _NatalChartPageState extends State<NatalChartPage> {
                                 ),
                               if (_history.isNotEmpty) const SizedBox(height: 20),
 
-                              // Birth Date
-                              Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade50,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: Colors.grey.shade300),
-                                ),
-                                child: ListTile(
-                                  contentPadding: EdgeInsets.zero,
-                                  title: Text('Birth Date', style: GoogleFonts.raleway(color: Colors.black87, fontWeight: FontWeight.w600)),
-                                  subtitle: Text('${_selectedDate.toLocal()}'.split(' ')[0], style: GoogleFonts.raleway(color: Colors.grey.shade600)),
-                                  trailing: Icon(Icons.calendar_today, color: Theme.of(context).palette.accent),
-                                  onTap: () => _selectDate(context),
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-
-                              // Birth Time
-                              Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade50,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: Colors.grey.shade300),
-                                ),
-                                child: ListTile(
-                                  contentPadding: EdgeInsets.zero,
-                                  title: Text('Birth Time', style: GoogleFonts.raleway(color: Colors.black87, fontWeight: FontWeight.w600)),
-                                  subtitle: Text(_selectedTime.format(context), style: GoogleFonts.raleway(color: Colors.grey.shade600)),
-                                  trailing: Icon(Icons.access_time, color: Theme.of(context).palette.accent),
-                                  onTap: () => _selectTime(context),
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-
-                              // Birth Location
-                              TextField(
-                                controller: _locationController,
-                                style: GoogleFonts.raleway(color: Colors.black87),
-                                decoration: InputDecoration(
-                                  labelText: 'Birth Location (City, Country)',
-                                  labelStyle: GoogleFonts.raleway(color: Colors.grey.shade600),
-                                  filled: true,
-                                  fillColor: Colors.grey.shade50,
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: Colors.grey.shade300),
+                              // Birth Information Row
+                              Row(
+                                children: [
+                                  // Birth Date
+                                  Expanded(
+                                    child: Container(
+                                      padding: const EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.shade50,
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(color: Colors.grey.shade300),
+                                      ),
+                                      child: InkWell(
+                                        onTap: () => _selectDate(context),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Icon(Icons.calendar_today, color: Theme.of(context).palette.accent, size: 20),
+                                                const SizedBox(width: 8),
+                                                Text('Birth Date', style: GoogleFonts.raleway(color: Colors.black87, fontWeight: FontWeight.w600, fontSize: 14)),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Text('${_selectedDate.toLocal()}'.split(' ')[0], style: GoogleFonts.raleway(color: Colors.grey.shade600, fontSize: 16)),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
                                   ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: Theme.of(context).palette.accent),
+                                  const SizedBox(width: 16),
+                                  // Birth Time
+                                  Expanded(
+                                    child: Container(
+                                      padding: const EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.shade50,
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(color: Colors.grey.shade300),
+                                      ),
+                                      child: InkWell(
+                                        onTap: () => _selectTime(context),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Icon(Icons.access_time, color: Theme.of(context).palette.accent, size: 20),
+                                                const SizedBox(width: 8),
+                                                Text('Birth Time', style: GoogleFonts.raleway(color: Colors.black87, fontWeight: FontWeight.w600, fontSize: 14)),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Text(_selectedTime.format(context), style: GoogleFonts.raleway(color: Colors.grey.shade600, fontSize: 16)),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
                                   ),
-                                ),
+                                  const SizedBox(width: 16),
+                                  // Birth Location
+                                  Expanded(
+                                    flex: 2,
+                                    child: TextField(
+                                      controller: _locationController,
+                                      style: GoogleFonts.raleway(color: Colors.black87),
+                                      decoration: InputDecoration(
+                                        labelText: 'Birth Location (City, Country)',
+                                        labelStyle: GoogleFonts.raleway(color: Colors.grey.shade600),
+                                        filled: true,
+                                        fillColor: Colors.grey.shade50,
+                                        enabledBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                          borderSide: BorderSide(color: Colors.grey.shade300),
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                          borderSide: BorderSide(color: Theme.of(context).palette.accent),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                               const SizedBox(height: 24),
 
