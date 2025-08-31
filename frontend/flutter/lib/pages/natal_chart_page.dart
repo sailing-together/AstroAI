@@ -203,14 +203,16 @@ class _NatalChartPageState extends State<NatalChartPage> {
                 constraints: BoxConstraints(
                   minHeight: MediaQuery.of(context).size.height - 89,
                 ),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      Color(0xFFFFF3F8),
-                      Color(0xFFF0F8FF),
+                      Theme.of(context).palette.lightPink.withValues(alpha: 0.3),
+                      Theme.of(context).palette.lightBlue.withValues(alpha: 0.3),
+                      Theme.of(context).palette.accent.withValues(alpha: 0.1),
                     ],
+                    stops: const [0.0, 0.6, 1.0],
                   ),
                 ),
                 child: Center(
@@ -227,11 +229,11 @@ class _NatalChartPageState extends State<NatalChartPage> {
                             color: Colors.white.withValues(alpha: 0.95),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.3),
+                              color: Theme.of(context).palette.lightBlue.withValues(alpha: 0.4),
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.1),
+                                color: Theme.of(context).palette.primary.withValues(alpha: 0.1),
                                 offset: const Offset(0, 8),
                                 blurRadius: 32,
                               ),
@@ -283,9 +285,9 @@ class _NatalChartPageState extends State<NatalChartPage> {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
                                   decoration: BoxDecoration(
-                                    color: Colors.grey.shade50,
+                                    color: Theme.of(context).palette.lightBlue.withValues(alpha: 0.15),
                                     borderRadius: BorderRadius.circular(8.0),
-                                    border: Border.all(color: Colors.grey.shade300),
+                                    border: Border.all(color: Theme.of(context).palette.lightBlue.withValues(alpha: 0.4)),
                                   ),
                                   child: DropdownButtonHideUnderline(
                                     child: DropdownButton<Map<String, dynamic>>(
@@ -321,9 +323,9 @@ class _NatalChartPageState extends State<NatalChartPage> {
                                     child: Container(
                                       padding: const EdgeInsets.all(16),
                                       decoration: BoxDecoration(
-                                        color: Colors.grey.shade50,
+                                        color: Theme.of(context).palette.primary.withValues(alpha: 0.1),
                                         borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(color: Colors.grey.shade300),
+                                        border: Border.all(color: Theme.of(context).palette.primary.withValues(alpha: 0.3)),
                                       ),
                                       child: InkWell(
                                         onTap: () => _selectDate(context),
@@ -350,9 +352,9 @@ class _NatalChartPageState extends State<NatalChartPage> {
                                     child: Container(
                                       padding: const EdgeInsets.all(16),
                                       decoration: BoxDecoration(
-                                        color: Colors.grey.shade50,
+                                        color: Theme.of(context).palette.secondary.withValues(alpha: 0.1),
                                         borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(color: Colors.grey.shade300),
+                                        border: Border.all(color: Theme.of(context).palette.secondary.withValues(alpha: 0.3)),
                                       ),
                                       child: InkWell(
                                         onTap: () => _selectTime(context),
@@ -384,10 +386,10 @@ class _NatalChartPageState extends State<NatalChartPage> {
                                         labelText: 'Birth Location (City, Country)',
                                         labelStyle: GoogleFonts.raleway(color: Colors.grey.shade600),
                                         filled: true,
-                                        fillColor: Colors.grey.shade50,
+                                        fillColor: Theme.of(context).palette.accent.withValues(alpha: 0.1),
                                         enabledBorder: OutlineInputBorder(
                                           borderRadius: BorderRadius.circular(12),
-                                          borderSide: BorderSide(color: Colors.grey.shade300),
+                                          borderSide: BorderSide(color: Theme.of(context).palette.accent.withValues(alpha: 0.3)),
                                         ),
                                         focusedBorder: OutlineInputBorder(
                                           borderRadius: BorderRadius.circular(12),
@@ -401,20 +403,38 @@ class _NatalChartPageState extends State<NatalChartPage> {
                               const SizedBox(height: 24),
 
                               // Generate Button
-                              ElevatedButton(
-                                onPressed: _isLoading ? null : _fetchNatalChart,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Theme.of(context).palette.primary,
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
+                              Container(
+                                width: double.infinity,
+                                height: 50,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Theme.of(context).palette.primary,
+                                      Theme.of(context).palette.secondary,
+                                    ],
                                   ),
-                                  elevation: 8,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Theme.of(context).palette.primary.withValues(alpha: 0.3),
+                                      offset: const Offset(0, 4),
+                                      blurRadius: 16,
+                                    ),
+                                  ],
                                 ),
-                                child: _isLoading
-                                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 3, color: Colors.white))
-                                    : Text('Generate Natal Chart', style: GoogleFonts.raleway(fontSize: 16, fontWeight: FontWeight.w600)),
+                                child: ElevatedButton(
+                                  onPressed: _isLoading ? null : _fetchNatalChart,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.transparent,
+                                    shadowColor: Colors.transparent,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: _isLoading
+                                      ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 3, color: Colors.white))
+                                      : Text('Generate Natal Chart', style: GoogleFonts.raleway(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
+                                ),
                               ),
                             ],
                           ),
