@@ -129,7 +129,7 @@ class HeroSection extends StatelessWidget {
                   'Discover your zodiac, daily horoscope, and cosmic insights with just your birthday. Simple, beautiful, and powered by AI.',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.raleway(
-                    fontSize: 18,
+                    fontSize: 20,
                     fontWeight: FontWeight.w400,
                     color: Colors.white,
                     letterSpacing: -0.32,
@@ -169,7 +169,7 @@ class HeroSection extends StatelessWidget {
                   child: Text(
                     'About Us',
                     style: GoogleFonts.inter(
-                      fontSize: 16,
+                      fontSize: 18,
                       fontWeight: FontWeight.w700,
                       color: const Color(0xFF4097FF),
                     ),
@@ -242,27 +242,16 @@ class ZodiacSection extends StatelessWidget {
                     offset: Offset(0, 30 * (1 - value)),
                     child: Opacity(
                       opacity: value,
-                      child: ShaderMask(
-                        shaderCallback: (bounds) => const LinearGradient(
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                          colors: [
-                            Color(0xFF4097FF),
-                            Color(0x80FF92A2),
-                            Color(0x40A5E5F9),
-                          ],
-                        ).createShader(bounds),
-                        child: Text(
-                          'Choose your zodiac sign',
-                          style: GoogleFonts.cinzel(
-                            fontSize: 50,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                            letterSpacing: -1,
-                            height: 1.3,
-                          ),
-                          textAlign: TextAlign.left,
+                      child: Text(
+                        'Choose your zodiac sign',
+                        style: GoogleFonts.cinzel(
+                          fontSize: 50,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF4097FF),
+                          letterSpacing: -1,
+                          height: 1.3,
                         ),
+                        textAlign: TextAlign.left,
                       ),
                     ),
                   );
@@ -452,7 +441,7 @@ class _ZodiacElementCardState extends State<ZodiacElementCard> with SingleTicker
               widget.zodiacData['name']!,
               style: GoogleFonts.cinzel(
                 color: Colors.white,
-                fontSize: 14,
+                fontSize: 16,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.0,
               ),
@@ -463,7 +452,7 @@ class _ZodiacElementCardState extends State<ZodiacElementCard> with SingleTicker
               widget.zodiacData['dates']!,
               style: GoogleFonts.raleway(
                 color: Colors.white.withOpacity(0.9),
-                fontSize: 10,
+                fontSize: 12,
                 fontWeight: FontWeight.w400,
               ),
               textAlign: TextAlign.center,
@@ -494,25 +483,12 @@ class _ZodiacElementCardState extends State<ZodiacElementCard> with SingleTicker
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.6),
-                  width: 2,
-                ),
-              ),
-              child: Center(
-                child: Text(
-                  widget.zodiacData['symbol']!,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+            Text(
+              widget.zodiacData['symbol']!,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 40,
+                fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 16),
@@ -520,7 +496,7 @@ class _ZodiacElementCardState extends State<ZodiacElementCard> with SingleTicker
               widget.zodiacData['name']!,
               style: GoogleFonts.cinzel(
                 color: Colors.white,
-                fontSize: 18,
+                fontSize: 20,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.5,
               ),
@@ -677,7 +653,7 @@ class _ZodiacCardState extends State<ZodiacCard> with SingleTickerProviderStateM
               zodiac['name']!,
               style: GoogleFonts.cinzel(
                 color: const Color(0xFFFF92A2),
-                fontSize: 12,
+                fontSize: 14,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1,
               ),
@@ -689,7 +665,7 @@ class _ZodiacCardState extends State<ZodiacCard> with SingleTickerProviderStateM
               zodiac['dates']!,
               style: GoogleFonts.raleway(
                 color: Colors.white.withOpacity(0.8),
-                fontSize: 9,
+                fontSize: 12,
                 fontWeight: FontWeight.w400,
               ),
               textAlign: TextAlign.center,
@@ -746,25 +722,12 @@ class _ZodiacCardState extends State<ZodiacCard> with SingleTickerProviderStateM
                 children: [
                   // Central circular design
                   Center(
-                    child: Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.3),
-                          width: 2,
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          zodiac['symbol']!,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                    child: Text(
+                      zodiac['symbol']!,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 48,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
@@ -949,7 +912,7 @@ class _PersonalisedSectionState extends State<PersonalisedSection> {
                       child: Text(
                         'Get detailed cosmic insights based on your birth date',
                         style: GoogleFonts.raleway(
-                          fontSize: 18,
+                          fontSize: 20,
                           fontWeight: FontWeight.w400,
                           color: const Color(0xFF8985CF),
                           letterSpacing: -0.32,
@@ -1071,7 +1034,7 @@ class _PersonalisedSectionState extends State<PersonalisedSection> {
                 : Text(
                     'Generate Insights',
                     style: GoogleFonts.inter(
-                      fontSize: 16,
+                      fontSize: 18,
                       fontWeight: FontWeight.w700,
                       color: _selectedDate != null 
                           ? Colors.white 
@@ -1130,7 +1093,7 @@ class _PersonalisedSectionState extends State<PersonalisedSection> {
                               Text(
                                 category['title'],
                                 style: GoogleFonts.cinzel(
-                                  fontSize: 12,
+                                  fontSize: 14,
                                   fontWeight: FontWeight.w700,
                                   color: category['color'],
                                 ),
@@ -1142,7 +1105,7 @@ class _PersonalisedSectionState extends State<PersonalisedSection> {
                               Text(
                                 category['description'],
                                 style: GoogleFonts.raleway(
-                                  fontSize: 12,
+                                  fontSize: 14,
                                   color: const Color(0xFF8985CF).withOpacity(0.7),
                                 ),
                                 textAlign: TextAlign.center,
@@ -1208,7 +1171,7 @@ class _PersonalisedSectionState extends State<PersonalisedSection> {
                             child: Text(
                               _responses[category['title']] ?? '',
                               style: GoogleFonts.raleway(
-                                fontSize: 14,
+                                fontSize: 16,
                                 color: Colors.black,
                                 height: 1.5,
                               ),
@@ -1274,7 +1237,7 @@ class _PersonalisedSectionState extends State<PersonalisedSection> {
                 child: Text(
                   'Sign Up',
                   style: GoogleFonts.inter(
-                    fontSize: 14,
+                    fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -1466,7 +1429,7 @@ class _PersonalisedSectionState extends State<PersonalisedSection> {
                     Text(
                       response,
                       style: GoogleFonts.raleway(
-                        fontSize: 13,
+                        fontSize: 16,
                         height: 1.5,
                         color: Colors.black.withOpacity(0.7),
                       ),
@@ -1938,7 +1901,7 @@ class FooterSection extends StatelessWidget {
                       child: Text(
                         'Get Started Free',
                         style: GoogleFonts.inter(
-                          fontSize: 16,
+                          fontSize: 18,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -2317,7 +2280,7 @@ class _TodaysEventsSectionState extends State<TodaysEventsSection> {
                       child: Text(
                         'Discover what the cosmos has in store for you today',
                         style: GoogleFonts.raleway(
-                          fontSize: 18,
+                          fontSize: 20,
                           fontWeight: FontWeight.w400,
                           color: Colors.black.withOpacity(0.7),
                           letterSpacing: -0.32,
@@ -2565,7 +2528,7 @@ class _TodaysEventsSectionState extends State<TodaysEventsSection> {
                 Text(
                   description,
                   style: GoogleFonts.raleway(
-                    fontSize: 14,
+                    fontSize: 16,
                     color: Colors.black.withOpacity(0.7),
                     height: 1.4,
                   ),
@@ -2575,7 +2538,7 @@ class _TodaysEventsSectionState extends State<TodaysEventsSection> {
                   Text(
                     'Date: $eventDate',
                     style: GoogleFonts.raleway(
-                      fontSize: 12,
+                      fontSize: 14,
                       color: Colors.black.withOpacity(0.5),
                       fontWeight: FontWeight.w500,
                     ),
