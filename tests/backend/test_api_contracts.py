@@ -38,3 +38,11 @@ def test_natal_chart_requires_authentication(monkeypatch):
     response = client.get("/api/v1/users/me/natal-chart")
 
     assert response.status_code == 401
+
+
+def test_chat_requires_authentication(monkeypatch):
+    client = TestClient(load_app(monkeypatch))
+
+    response = client.post("/api/v1/chat", json={"message": "hello"})
+
+    assert response.status_code == 401
