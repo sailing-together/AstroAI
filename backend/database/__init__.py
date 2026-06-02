@@ -1,13 +1,5 @@
-import os
-from backend.database.models import Base
-from backend.database.config import engine, DB_PATH
+from backend.database.base import Base
+from backend.database.models_natal_chart import NatalChart
+from backend.database.models_user import User
 
-print("Initializing database...")
-
-# Check if the database file exists at the correct path
-if not os.path.exists(DB_PATH):
-    print(f"Database file not found at {DB_PATH}. Creating tables...")
-    Base.metadata.create_all(bind=engine)
-    print("✅ Tables created.")
-else:
-    print(f"Database file found at {DB_PATH}. Tables should already exist.")
+__all__ = ["Base", "NatalChart", "User"]
