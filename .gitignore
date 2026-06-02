@@ -75,6 +75,8 @@ dmypy.json
 .env.*
 .venv
 *.env
+!.env.example
+!**/.env.example
 
 # Local git worktrees
 .worktrees/
