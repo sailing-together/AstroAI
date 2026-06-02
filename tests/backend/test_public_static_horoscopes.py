@@ -22,3 +22,82 @@ def test_sun_sign_utility_handles_capricorn_year_boundary(monkeypatch):
 
     assert response.status_code == 200
     assert response.json()["sun_sign"] == "Capricorn"
+
+
+def test_horoscope_bundle_is_public_static_content(monkeypatch):
+    client = TestClient(load_app(monkeypatch))
+
+    response = client.get("/api/v1/horoscope/bundle/gemini", params={"year": 2026})
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["sign"] == "Gemini"
+    assert payload["year"] == 2026
+    assert payload["source"] == "static"
+    assert payload["daily"][0]["period"] == "daily"
+    assert payload["daily"][0]["focus"] == "general"
+
+
+def test_daily_horoscope_returns_all_dimensions_when_focus_is_omitted(monkeypatch):
+    client = TestClient(load_app(monkeypatch))
+
+    response = client.get("/api/v1/horoscope/daily/gemini", params={"date": "2026-06-02"})
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["sign"] == "Gemini"
+    assert payload["period"] == "daily"
+    assert payload["date"] == "2026-06-02"
+    assert payload["source"] == "static"
+    assert set(payload["dimensions"].keys()) == {
+        "general",
+        "love",
+        "career",
+        "money",
+        "wellness",
+        "social",
+        "family",
+        "study",
+        "mood_energy",
+    }
+
+
+def test_daily_horoscope_can_return_a_single_focus(monkeypatch):
+    client = TestClient(load_app(monkeypatch))
+
+    response = client.get(
+        "/api/v1/horoscope/daily/gemini",
+        params={"date": "2026-06-02", "focus": "love"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["focus"] == "love"
+    assert response.json()["title"]
+
+
+def test_monthly_horoscope_accepts_year_month_query(monkeypatch):
+    client = TestClient(load_app(monkeypatch))
+
+    response = client.get("/api/v1/horoscope/monthly/gemini", params={"month": "2026-06"})
+
+    assert response.status_code == 200
+    assert response.json()["period"] == "monthly"
+    assert response.json()["date"] == "2026-06-01"
+
+
+def test_weekly_horoscope_accepts_iso_week_query(monkeypatch):
+    client = TestClient(load_app(monkeypatch))
+
+    response = client.get("/api/v1/horoscope/weekly/gemini", params={"week": "2026-W23"})
+
+    assert response.status_code == 200
+    assert response.json()["period"] == "weekly"
+    assert response.json()["date"] == "2026-06-01"
+
+
+def test_horoscope_rejects_unknown_sign(monkeypatch):
+    client = TestClient(load_app(monkeypatch))
+
+    response = client.get("/api/v1/horoscope/daily/notasign", params={"date": "2026-06-02"})
+
+    assert response.status_code == 422
