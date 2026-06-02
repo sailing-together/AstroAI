@@ -33,6 +33,46 @@ Differentiators:
 - Static SEO pages as the acquisition engine.
 - Shareable readings as the viral loop.
 
+## Product Access Layers
+
+### 1. Free Public Layer
+
+No registration required.
+
+Users can choose a zodiac sign manually, or enter a birth date to calculate their Sun sign. They can then view the selected sign's yearly, monthly, weekly, and daily horoscope bundle for the current year, plus public sign profiles and public sign-pair compatibility pages.
+
+Rules:
+
+- Public horoscope reads do not call Gemini.
+- Public horoscope reads use pre-generated PostgreSQL/Redis content.
+- Birth-date-to-Sun-sign calculation does not call Gemini.
+- The frontend should load a sign's current-year horoscope bundle with one backend API request.
+
+### 2. Registered Foundation Layer
+
+Registration required.
+
+Users can save their profile, enter birth date/time/place, generate and save a natal chart, and view a basic natal chart summary.
+
+Rules:
+
+- Natal chart calculation is deterministic and does not call Gemini.
+- Use `pyswisseph` for chart calculation.
+- AI-generated chart interpretation is separate from chart calculation.
+
+### 3. AI Personalized Layer
+
+Registration required. Pricing is not finalized.
+
+Features include AI Astrologer chat, AI natal chart interpretation, personalized predictions using natal chart/current transits/stored context, deeper compatibility analysis, tarot + astrology fusion, and memory/mood insights.
+
+Rules:
+
+- These features may call Gemini.
+- These features must be rate-limited.
+- Free registered users may receive limited AI usage.
+- Premium users may receive higher AI limits.
+
 ## MVP Scope
 
 Build first:
@@ -43,10 +83,12 @@ Build first:
 - Natal chart summary.
 - AI Astrologer chat.
 - Daily AI message limits.
-- Public daily horoscope pages.
+- Public horoscope bundle API for no-login users.
+- Birth-date-to-Sun-sign utility for no-login users.
+- Public yearly, monthly, weekly, and daily horoscope pages.
 - Public sign profile pages.
 - Public sign-pair compatibility pages.
-- Basic static content generation jobs.
+- Static horoscope generation jobs that store public content before users request it.
 
 Build after the core loop works:
 
@@ -141,36 +183,77 @@ Deliverables:
 - Redis-backed AI rate limiting.
 - AI Astrologer endpoint using stored chart context.
 
-### Phase 2: Next.js Web MVP
+### Phase 1.5: Public Static Horoscope Engine
 
-Goal: ship the web onboarding-to-reading loop.
+Goal: provide useful no-login astrology content without spending live AI calls on page views.
+
+Deliverables:
+
+- Static yearly horoscope generation for each sign, updated once per year.
+- Static monthly horoscope generation for each sign, updated once per month.
+- Static weekly horoscope generation for each sign, updated once per week.
+- Static daily horoscope generation for each sign, updated every day at 00:00.
+- Annual bulk generation that can preload the year's yearly, 12 monthly, all weekly, and all daily horoscope content for every sign.
+- Manual annual regeneration trigger for refreshing a year's public horoscope library when needed.
+- One generation call per sign and period that returns all horoscope dimensions together.
+- PostgreSQL persistence and Redis caching for generated horoscope content.
+- Public API reads that return stored content only.
+
+Supported public horoscope dimensions:
+
+- General
+- Love and relationships
+- Career and work
+- Wealth and money
+- Health and wellness
+- Social life
+- Family and home
+- Study and personal growth
+- Mood and energy
+
+### Phase 2: Next.js Public Web Entry
+
+Goal: ship the no-login public acquisition experience.
 
 Deliverables:
 
 - Next.js 14 App Router frontend.
 - Tailwind design tokens.
+- Public sign selection.
+- Birth-date-to-Sun-sign form.
+- One-request current-year horoscope bundle loading.
+- Public yearly, monthly, weekly, and daily horoscope views.
+- Public sign profile pages.
+- Public sign-pair compatibility pages.
+- SEO metadata, JSON-LD, sitemap, and canonical URLs.
+
+### Phase 3: Registered Natal Chart Experience
+
+Goal: ship the registered user's deterministic chart foundation.
+
+Deliverables:
+
 - Supabase auth screens.
 - Birth data onboarding.
 - Chart reveal.
 - Dashboard.
-- AI Astrologer chat.
+- Natal chart summary.
 - Typed API client.
 - Protected routes.
 
-### Phase 3: Static Content and SEO
+### Phase 4: AI Personalized Experience
 
-Goal: make acquisition pages indexable and cheap.
+Goal: add registered AI features after the public and deterministic foundations work.
 
 Deliverables:
 
-- Daily horoscope pages.
-- Sign profile pages.
-- 144 sign-pair compatibility pages.
-- Metadata, JSON-LD, sitemap, and canonical URLs.
-- Scheduled static content generation.
-- PostgreSQL persistence and Redis caching.
+- AI Astrologer chat.
+- AI natal chart interpretation.
+- Personalized predictions using natal chart and current transits.
+- AI usage limits.
+- Upgrade prompts when pricing is decided.
 
-### Phase 4: Memory and Retention
+### Phase 5: Memory and Retention
 
 Goal: make the AI Astrologer feel continuous.
 
@@ -182,7 +265,7 @@ Deliverables:
 - Mood logs.
 - Weekly mood/transit insights.
 
-### Phase 5: Monetization
+### Phase 6: Monetization
 
 Goal: add payment after users have a reason to pay.
 
@@ -194,7 +277,7 @@ Deliverables:
 - Subscription state mirrored to Supabase/PostgreSQL.
 - Premium limits and premium-only gates.
 
-### Phase 6: Growth
+### Phase 7: Growth
 
 Goal: expand after activation, retention, and monetization are measurable.
 
@@ -216,7 +299,7 @@ MVP is successful when:
 - The AI Astrologer answers with chart-specific context using Gemini 2.5 Flash.
 - Free users are limited to 3 AI messages/day.
 - Premium users are limited to 50 AI messages/day.
-- Public SEO pages exist for daily horoscopes, sign profiles, and sign-pair compatibility.
+- Public SEO pages exist for yearly, monthly, weekly, and daily horoscopes, sign profiles, and sign-pair compatibility.
+- Public horoscope page views read stored static content and do not trigger live Gemini calls.
 - No secrets are committed to source control.
 - API and frontend types match the documented contracts.
-

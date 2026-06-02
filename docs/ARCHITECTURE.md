@@ -50,6 +50,18 @@ The web MVP is the primary redevelopment target. The existing Flutter mobile app
 5. Use one canonical API contract between frontend and backend.
 6. Use `free` and `premium` as the only tier names.
 
+## Access and AI Boundaries
+
+| Capability | Auth | Gemini at request time | Notes |
+|---|---|---|---|
+| Choose sign and read horoscope bundle | No | No | Reads PostgreSQL/Redis static content |
+| Enter birth date and calculate Sun sign | No | No | Deterministic date-range calculation |
+| Calculate natal chart | Yes | No | Deterministic `pyswisseph` calculation |
+| Save natal chart | Yes | No | Stores chart in PostgreSQL |
+| AI natal chart interpretation | Yes | Yes | Separate from chart calculation |
+| Personalized predictions | Yes | Yes | Uses chart, transits, and user context |
+| AI Astrologer chat | Yes | Yes | Rate-limited |
+
 ## AI Routing
 
 | Workload | Model | Execution |
@@ -60,7 +72,10 @@ The web MVP is the primary redevelopment target. The existing Flutter mobile app
 | Compatibility synthesis | Gemini 2.5 Flash | Generated once per sign pair or synastry request |
 | Tarot fusion | Gemini 2.5 Flash | On demand |
 | Mood/transit insight | Gemini 2.5 Flash | Weekly batch |
-| Daily horoscope copy | Gemini 2.5 Flash-Lite | Scheduled static generation |
+| Yearly horoscope copy | Gemini 2.5 Flash-Lite | Scheduled static generation once per year |
+| Monthly horoscope copy | Gemini 2.5 Flash-Lite | Scheduled static generation once per month |
+| Weekly horoscope copy | Gemini 2.5 Flash-Lite | Scheduled static generation once per week |
+| Daily horoscope copy | Gemini 2.5 Flash-Lite | Scheduled static generation daily at 00:00 |
 | Sign profile copy | Gemini 2.5 Flash-Lite | Scheduled static generation |
 | Notification copy | Gemini 2.5 Flash-Lite | Scheduled or event-triggered |
 | Memory extraction | Gemini 2.5 Flash-Lite | Background task |
@@ -71,9 +86,10 @@ Do not use Gemini 2.0 Flash. Do not implement Claude/Sonnet in MVP.
 
 | Content | Source of truth | Cache |
 |---|---|---|
-| Daily horoscopes | `static_horoscopes` | Redis |
-| Weekly horoscopes | `static_horoscopes` | Redis |
+| Yearly horoscopes | `static_horoscopes` | Redis |
 | Monthly horoscopes | `static_horoscopes` | Redis |
+| Weekly horoscopes | `static_horoscopes` | Redis |
+| Daily horoscopes | `static_horoscopes` | Redis |
 | Sign profiles | `static_sign_profiles` | Redis |
 | Sign-pair compatibility | `static_compatibility` | Redis |
 | Cosmic events | `static_cosmic_events` | Redis |
@@ -82,6 +98,39 @@ Do not use Gemini 2.0 Flash. Do not implement Claude/Sonnet in MVP.
 | AI memories | `ai_memories` | PostgreSQL/pgvector |
 
 Redis is never the durable source of truth.
+
+Public horoscope pages must never call Gemini during user requests. Scheduled or manual generation jobs generate horoscope content ahead of time, store it in PostgreSQL, and refresh Redis. Each job should make one Gemini 2.5 Flash-Lite call per sign and period, returning all supported dimensions in a single structured response.
+
+The public web app should support a one-request bundle read for a sign and year. That bundle returns yearly, 12 monthly, all weekly, and all daily horoscope records for the selected sign. It is a read-only static-content API and must not call Gemini.
+
+Public horoscope dimensions:
+
+- `general`
+- `love`
+- `career`
+- `money`
+- `wellness`
+- `social`
+- `family`
+- `study`
+- `mood_energy`
+
+Static horoscope refresh cadence:
+
+| Period | Cadence |
+|---|---|
+| Yearly | Once per year, or during manual annual regeneration |
+| Monthly | Once per month, or preloaded for all 12 months during annual generation |
+| Weekly | Once per week, or preloaded for all weeks during annual generation |
+| Daily | Every day at 00:00, or preloaded for all dates during annual generation |
+
+Annual bulk generation mode:
+
+1. Operator starts generation for a target year.
+2. Backend generates horoscope content for all 12 signs.
+3. For each sign, backend creates yearly, 12 monthly, all weekly, and all daily records for the target year.
+4. Generated content is upserted into PostgreSQL and optionally warmed into Redis.
+5. Periodic daily/weekly/monthly jobs still run as補缺/refresh jobs if a row is missing, stale, or intentionally regenerated.
 
 ## Backend Modules
 
@@ -166,4 +215,3 @@ Premium is not unlimited for AI calls in MVP.
 - Enforce Redis rate limits before live Gemini calls.
 - Store birth data and memories only behind authenticated access.
 - Avoid logging birth details, user messages, payment secrets, or API keys.
-

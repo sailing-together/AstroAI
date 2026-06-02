@@ -19,6 +19,8 @@ The first screen after authentication should move the user into the product, not
 - Scannable daily guidance.
 - Public SEO pages for acquisition.
 
+The public first screen should work before authentication: users can choose a sign or enter a birth date, then load the selected sign's current-year horoscope bundle in one API request.
+
 ## Routes
 
 ### Public Routes
@@ -26,7 +28,11 @@ The first screen after authentication should move the user into the product, not
 | Route | Purpose |
 |---|---|
 | `/` | Public home or direct app entry depending auth state |
+| `/horoscope` | Sign picker and birth-date-to-Sun-sign entry |
 | `/horoscope/[sign]` | Daily horoscope page |
+| `/horoscope/[sign]/weekly` | Weekly horoscope page |
+| `/horoscope/[sign]/monthly` | Monthly horoscope page |
+| `/horoscope/[sign]/yearly` | Yearly horoscope page |
 | `/zodiac/[sign]` | Sign profile page |
 | `/compatibility/[signA]/[signB]` | Sign-pair compatibility page |
 | `/login` | Sign in |
@@ -96,6 +102,26 @@ export async function getDailyHoroscope(sign: Sign, params?: { date?: string; fo
   return api.get(`/horoscope/daily/${sign}`, { params });
 }
 
+export async function getHoroscopeBundle(sign: Sign, params?: { year?: number }) {
+  return api.get(`/horoscope/bundle/${sign}`, { params });
+}
+
+export async function getSunSignFromBirthDate(birthDate: string) {
+  return api.get("/utils/sun-sign", { params: { birth_date: birthDate } });
+}
+
+export async function getWeeklyHoroscope(sign: Sign, params?: { week?: string; focus?: string }) {
+  return api.get(`/horoscope/weekly/${sign}`, { params });
+}
+
+export async function getMonthlyHoroscope(sign: Sign, params?: { month?: string; focus?: string }) {
+  return api.get(`/horoscope/monthly/${sign}`, { params });
+}
+
+export async function getYearlyHoroscope(sign: Sign, params?: { year?: string; focus?: string }) {
+  return api.get(`/horoscope/yearly/${sign}`, { params });
+}
+
 export async function sendChatMessage(payload: { message: string; conversation_id?: string | null }) {
   return api.post("/chat", payload);
 }
@@ -108,6 +134,14 @@ export async function getCompatibility(signA: Sign, signB: Sign) {
 Do not use legacy routes such as `/natal-chart/calculate`, `/natal-chart/me`, `/natal-chart/save`, or `/compatibility?signA=...`.
 
 ## Onboarding Flow
+
+Public pre-onboarding flow:
+
+1. User chooses a sign manually, or enters a birth date.
+2. If the user enters a birth date, frontend calls `/utils/sun-sign`.
+3. Frontend calls `/horoscope/bundle/{sign}?year=currentYear`.
+4. Frontend displays yearly, monthly, weekly, and daily horoscope sections from the returned static bundle.
+5. Frontend prompts the user to register only when they want to save a natal chart or receive AI personalization.
 
 Required steps:
 
@@ -168,6 +202,9 @@ Public pages must be server-rendered or statically generated where possible.
 Required SEO pages:
 
 - 12 daily horoscope pages.
+- 12 weekly horoscope pages.
+- 12 monthly horoscope pages.
+- 12 yearly horoscope pages.
 - 12 sign profile pages.
 - 144 sign-pair compatibility pages.
 
@@ -180,6 +217,20 @@ Each public page should include:
 - Clear login/signup path into the personalized product.
 
 Public page views must not trigger live Gemini calls.
+
+Public horoscope bundle loading should use one backend request per selected sign/year. Client-side navigation between year, month, week, and day views should reuse the loaded bundle where practical instead of repeatedly fetching individual period endpoints.
+
+Public horoscope pages should display these dimensions when available:
+
+- General
+- Love and relationships
+- Career and work
+- Wealth and money
+- Health and wellness
+- Social life
+- Family and home
+- Study and personal growth
+- Mood and energy
 
 ## Design Direction
 
@@ -200,12 +251,13 @@ UI principles:
 
 1. Project scaffold.
 2. Design tokens and app shell.
-3. Supabase auth.
-4. Protected-route middleware.
-5. Onboarding.
-6. Natal chart reveal.
-7. Dashboard.
-8. AI Astrologer.
-9. Public SEO pages.
-10. Mood, tarot, and settings.
-
+3. Public sign picker and birth-date-to-Sun-sign flow.
+4. Public horoscope bundle view.
+5. Public SEO pages.
+6. Supabase auth.
+7. Protected-route middleware.
+8. Registered onboarding.
+9. Natal chart reveal.
+10. Dashboard.
+11. AI Astrologer.
+12. Mood, tarot, and settings.

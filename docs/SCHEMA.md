@@ -26,8 +26,18 @@ create type zodiac_sign as enum (
   'aries', 'taurus', 'gemini', 'cancer', 'leo', 'virgo',
   'libra', 'scorpio', 'sagittarius', 'capricorn', 'aquarius', 'pisces'
 );
-create type horoscope_period as enum ('daily', 'weekly', 'monthly');
-create type horoscope_focus as enum ('general', 'love', 'career', 'wellness', 'money', 'social');
+create type horoscope_period as enum ('daily', 'weekly', 'monthly', 'yearly');
+create type horoscope_focus as enum (
+  'general',
+  'love',
+  'career',
+  'money',
+  'wellness',
+  'social',
+  'family',
+  'study',
+  'mood_energy'
+);
 ```
 
 ## Core Tables
@@ -132,7 +142,7 @@ Unique index: `(user_id)`.
 |---|---|---|
 | `id` | uuid primary key | Content id |
 | `sign` | zodiac_sign not null | Zodiac sign |
-| `period` | horoscope_period not null | Daily, weekly, monthly |
+| `period` | horoscope_period not null | Daily, weekly, monthly, yearly |
 | `focus` | horoscope_focus not null | Focus area |
 | `content_date` | date not null | Date or period start |
 | `title` | text not null | SEO/display title |
@@ -144,6 +154,17 @@ Unique index: `(user_id)`.
 | `generated_at` | timestamptz | Defaults now |
 
 Unique index: `(sign, period, focus, content_date)`.
+
+Generation policy:
+
+- Daily rows refresh every day at 00:00.
+- Weekly rows refresh once per week.
+- Monthly rows refresh once per month.
+- Yearly rows refresh once per year.
+- Annual bulk generation may preload all yearly, monthly, weekly, and daily rows for a target year.
+- Manual annual regeneration may overwrite existing rows for a target year when explicitly requested.
+- Generation jobs should call Gemini once per sign and period, receive all dimensions, and write one row per dimension.
+- Public reads must use this table and must not call Gemini.
 
 ### static_sign_profiles
 
@@ -280,4 +301,3 @@ Migration order:
 8. Create feature and monetization tables.
 9. Enable RLS.
 10. Backfill static cosmic events from SQLite.
-

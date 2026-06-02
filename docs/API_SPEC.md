@@ -121,20 +121,67 @@ Natal chart response:
 
 When `unknown_time` is `true`, `moon_sign`, `ascendant_sign`, and houses may be `null` or omitted where calculation confidence is insufficient.
 
+Natal chart calculation is deterministic and must not call Gemini. AI natal chart interpretation is a separate registered-user feature.
+
+### Public Utility
+
+| Method | Path | Auth | Purpose |
+|---|---|---|---|
+| `GET` | `/utils/sun-sign` | No | Convert birth date to Sun sign |
+
+`GET /utils/sun-sign?birth_date=1994-06-14` response:
+
+```json
+{
+  "birth_date": "1994-06-14",
+  "sun_sign": "Gemini"
+}
+```
+
+This endpoint is deterministic and must not call Gemini.
+
 ### Horoscope
 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
-| `GET` | `/horoscope/daily/{sign}` | No | Daily horoscope |
-| `GET` | `/horoscope/weekly/{sign}` | No | Weekly horoscope |
+| `GET` | `/horoscope/bundle/{sign}` | No | Current-year or selected-year static horoscope bundle |
+| `GET` | `/horoscope/yearly/{sign}` | No | Yearly horoscope |
 | `GET` | `/horoscope/monthly/{sign}` | No | Monthly horoscope |
+| `GET` | `/horoscope/weekly/{sign}` | No | Weekly horoscope |
+| `GET` | `/horoscope/daily/{sign}` | No | Daily horoscope |
 
 Supported query parameters:
 
 | Parameter | Applies to | Notes |
 |---|---|---|
 | `date` | daily | ISO date, defaults to today |
-| `focus` | daily/weekly/monthly | `general`, `love`, `career`, `wellness`, `money`, `social` |
+| `week` | weekly | ISO week, defaults to current week |
+| `month` | monthly | `YYYY-MM`, defaults to current month |
+| `year` | yearly | Four-digit year, defaults to current year |
+| `focus` | all horoscope periods | `general`, `love`, `career`, `money`, `wellness`, `social`, `family`, `study`, `mood_energy` |
+
+`GET /horoscope/bundle/{sign}` query parameters:
+
+| Parameter | Notes |
+|---|---|
+| `year` | Four-digit year, defaults to current year |
+
+Bundle response:
+
+```json
+{
+  "sign": "Gemini",
+  "year": 2026,
+  "yearly": {},
+  "monthly": [],
+  "weekly": [],
+  "daily": [],
+  "source": "static",
+  "generated_at": "2026-01-01T00:00:00Z"
+}
+```
+
+The bundle endpoint must read stored PostgreSQL/Redis content only. It must not call Gemini.
 
 Horoscope response:
 
@@ -147,6 +194,30 @@ Horoscope response:
   "title": "A focused title",
   "summary": "Short scannable summary.",
   "body": "Full horoscope copy.",
+  "lucky_numbers": [3, 14, 22],
+  "lucky_color": "Yellow",
+  "generated_at": "2026-06-02T00:00:00Z"
+}
+```
+
+If `focus` is omitted, the response may return all dimensions in one object:
+
+```json
+{
+  "sign": "Gemini",
+  "period": "daily",
+  "date": "2026-06-02",
+  "dimensions": {
+    "general": { "title": "A focused title", "summary": "Short summary.", "body": "Full copy." },
+    "love": { "title": "Relationship rhythm", "summary": "Short summary.", "body": "Full copy." },
+    "career": { "title": "Work momentum", "summary": "Short summary.", "body": "Full copy." },
+    "money": { "title": "Money pattern", "summary": "Short summary.", "body": "Full copy." },
+    "wellness": { "title": "Body signal", "summary": "Short summary.", "body": "Full copy." },
+    "social": { "title": "Social current", "summary": "Short summary.", "body": "Full copy." },
+    "family": { "title": "Home atmosphere", "summary": "Short summary.", "body": "Full copy." },
+    "study": { "title": "Growth focus", "summary": "Short summary.", "body": "Full copy." },
+    "mood_energy": { "title": "Emotional weather", "summary": "Short summary.", "body": "Full copy." }
+  },
   "lucky_numbers": [3, 14, 22],
   "lucky_color": "Yellow",
   "generated_at": "2026-06-02T00:00:00Z"
@@ -263,9 +334,9 @@ Subscription response:
 
 ## Live AI Rules
 
-Only `/chat`, `/tarot/draw`, natal interpretation generation, and explicit personalized insight jobs may make live Gemini calls.
+Only `/chat`, `/tarot/draw`, AI natal interpretation generation, and explicit personalized insight jobs may make live Gemini calls.
 
-Public horoscope, sign profile, compatibility, cosmic event, and tarot card pages must use persisted static content.
+Public horoscope, sign profile, compatibility, cosmic event, and tarot card pages must use persisted static content. Public horoscope reads must not call Gemini. Scheduled generation jobs call Gemini once per sign and period, store all dimensions, then serve reads from PostgreSQL/Redis.
 
 ## API Implementation Order
 
@@ -278,4 +349,3 @@ Public horoscope, sign profile, compatibility, cosmic event, and tarot card page
 7. Mood.
 8. Tarot.
 9. Subscription.
-
