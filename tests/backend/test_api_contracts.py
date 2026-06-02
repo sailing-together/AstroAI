@@ -22,3 +22,19 @@ def test_health_endpoint_uses_api_v1_prefix(monkeypatch):
 
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
+
+
+def test_users_me_requires_authentication(monkeypatch):
+    client = TestClient(load_app(monkeypatch))
+
+    response = client.get("/api/v1/users/me")
+
+    assert response.status_code == 401
+
+
+def test_natal_chart_requires_authentication(monkeypatch):
+    client = TestClient(load_app(monkeypatch))
+
+    response = client.get("/api/v1/users/me/natal-chart")
+
+    assert response.status_code == 401
