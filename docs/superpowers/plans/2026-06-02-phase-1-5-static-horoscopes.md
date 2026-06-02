@@ -4,7 +4,7 @@
 
 **Goal:** Add the public no-login static horoscope backend foundation without live Gemini calls during user reads.
 
-**Architecture:** Keep FastAPI `/api/v1` routing. Add deterministic Sun-sign utility, static horoscope database model, Pydantic response schemas, an in-memory repository boundary for the first API contract, and public read routes. Generation jobs get a service boundary but no scheduler yet.
+**Architecture:** Keep FastAPI `/api/v1` routing. Add deterministic Sun-sign utility, static horoscope database model, Pydantic response schemas, an in-memory repository boundary for the first API contract, and public read routes. In development, first loading a sign/year may generate a full-year Codex-authored static seed in memory, marked as `codex-dev`; production generation remains a separate Gemini Flash-Lite job boundary.
 
 **Tech Stack:** FastAPI, Pydantic, SQLAlchemy 2.x, pytest.
 
@@ -56,6 +56,20 @@
 - [ ] Register the horoscope router.
 - [ ] Run public horoscope tests and verify they pass.
 - [ ] Commit with `feat: add public static horoscope API`.
+
+## Task 3.5: Codex Dev First-Load Full-Year Seed
+
+**Files:**
+- Create: `backend/services/codex_dev_horoscope_seed.py`
+- Modify: `backend/services/static_horoscope_repository.py`
+- Test: `tests/backend/test_codex_dev_horoscope_seed.py`
+
+- [ ] Write failing tests proving a first-load seed generates yearly, 12 monthly periods, all year weekdays, and all year days for 9 focuses.
+- [ ] Run tests and verify missing module failure.
+- [ ] Implement a deterministic Codex-authored seed generator marked with `generation_model="codex-dev"`.
+- [ ] Wire `StaticHoroscopeRepository` through `get_or_create_year(sign, year)`.
+- [ ] Run tests and verify they pass.
+- [ ] Commit with `feat: add Codex dev horoscope seed generation`.
 
 ## Task 4: Generation Boundary
 
