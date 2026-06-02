@@ -2,12 +2,10 @@
 import google.generativeai as genai
 from datetime import datetime
 import random
-
-#can be set as an environment variable for security later on
-APIkey="AIzaSyDjy5BEaq3hpJjaxc5HrD4Nufikr6Nvjfo"
+from core.config import settings
 
 # Setup Gemini API
-genai.configure(api_key=APIkey)
+genai.configure(api_key=settings.gemini_api_key)
 
 # Get current date
 current_date = datetime.now().date()
