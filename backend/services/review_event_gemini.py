@@ -1,12 +1,8 @@
 import google.generativeai as genai
-
-
-
-#can be set as an environment variable for security later on
-APIkey="AIzaSyDjy5BEaq3hpJjaxc5HrD4Nufikr6Nvjfo"
+from core.config import settings
 
 # Setup Gemini API
-genai.configure(api_key=APIkey)
+genai.configure(api_key=settings.gemini_api_key)
 
 model = genai.GenerativeModel('gemini-1.5-flash')
 
