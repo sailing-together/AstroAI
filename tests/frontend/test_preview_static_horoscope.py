@@ -16,12 +16,18 @@ def test_preview_entrypoint_exists():
 def test_preview_uses_public_static_horoscope_api():
     html = (PREVIEW_DIR / "index.html").read_text(encoding="utf-8")
     js = (PREVIEW_DIR / "app.js").read_text(encoding="utf-8")
+    css = (PREVIEW_DIR / "styles.css").read_text(encoding="utf-8")
 
     assert "AstroAI Preview" in html
+    assert "Your 2026 Gemini Horoscope" in html
+    assert "Static horoscope tester" not in html
     assert "/api/v1/utils/sun-sign" in js
     assert "/api/v1/horoscope/bundle/" in js
     assert "GeminiClient" not in js
     assert 'document.addEventListener("DOMContentLoaded", loadBundle)' in js
+    assert "#4097ff" in css.lower()
+    assert "#ff92a2" in css.lower()
+    assert "#fff3f8" in css.lower()
 
 
 def test_preview_has_first_screen_controls():

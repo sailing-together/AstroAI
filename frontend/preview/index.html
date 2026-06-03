@@ -7,17 +7,41 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
+    <header class="top-nav">
+      <div class="nav-inner">
+        <div class="brand-lockup" aria-label="AstroAI">
+          <div class="brand-mark">A</div>
+          <span>AstroAI</span>
+        </div>
+        <nav aria-label="Preview navigation">
+          <a href="#today">Today</a>
+          <a href="#year">Year</a>
+          <a href="#months">Months</a>
+          <a href="#weeks">Weeks</a>
+        </nav>
+      </div>
+    </header>
+
     <main class="app-shell">
-      <section class="control-band" aria-labelledby="pageTitle">
-        <div class="brand-row">
-          <div>
-            <p class="eyebrow">AstroAI Preview</p>
-            <h1 id="pageTitle">Static horoscope tester</h1>
-          </div>
-          <div class="status-pill" id="apiStatus">Ready</div>
+      <section class="hero-panel" aria-labelledby="pageTitle">
+        <div class="hero-copy">
+          <p class="eyebrow">AstroAI Preview</p>
+          <h1 id="pageTitle">Your 2026 Gemini Horoscope</h1>
+          <p class="hero-text">
+            Choose a sign or enter a birthday to explore a full-year static horoscope bundle.
+          </p>
         </div>
 
-        <div class="controls" aria-label="Horoscope controls">
+        <div class="lookup-card" aria-label="Horoscope controls">
+          <div class="lookup-header">
+            <div>
+              <p class="eyebrow">Start here</p>
+              <h2>Find your sign</h2>
+            </div>
+            <div class="status-pill" id="apiStatus">Ready</div>
+          </div>
+
+          <div class="controls">
           <label>
             <span>Sign</span>
             <select id="signSelect">
@@ -53,6 +77,7 @@
 
           <button id="birthDateButton" type="button">Use Birth Date</button>
           <button id="loadButton" type="button">Load Bundle</button>
+          </div>
         </div>
       </section>
 
@@ -63,7 +88,7 @@
           <div class="focus-tabs" id="focusTabs" role="tablist" aria-label="Focus areas"></div>
         </aside>
 
-        <section class="reading-panel">
+        <section class="reading-panel" id="today">
           <div class="reading-header">
             <div>
               <p class="eyebrow" id="dailyDate">Daily</p>
@@ -78,17 +103,17 @@
           <p class="body-copy" id="dailyBody"></p>
         </section>
 
-        <section class="period-section" aria-labelledby="yearlyTitle">
+        <section class="period-section" id="year" aria-labelledby="yearlyTitle">
           <h2 id="yearlyTitle">Year</h2>
           <div id="yearlyList" class="period-list"></div>
         </section>
 
-        <section class="period-section" aria-labelledby="monthlyTitle">
+        <section class="period-section" id="months" aria-labelledby="monthlyTitle">
           <h2 id="monthlyTitle">Months</h2>
           <div id="monthlyList" class="period-list compact"></div>
         </section>
 
-        <section class="period-section" aria-labelledby="weeklyTitle">
+        <section class="period-section" id="weeks" aria-labelledby="weeklyTitle">
           <h2 id="weeklyTitle">Weeks</h2>
           <div id="weeklyList" class="period-list compact scroll-list"></div>
         </section>
