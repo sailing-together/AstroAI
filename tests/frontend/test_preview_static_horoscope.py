@@ -21,6 +21,7 @@ def test_preview_uses_public_static_horoscope_api():
     assert "/api/v1/utils/sun-sign" in js
     assert "/api/v1/horoscope/bundle/" in js
     assert "GeminiClient" not in js
+    assert 'document.addEventListener("DOMContentLoaded", loadBundle)' in js
 
 
 def test_preview_has_first_screen_controls():

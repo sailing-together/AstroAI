@@ -160,3 +160,4 @@ function renderList(container, entries, limit) {
 els.birthDateButton.addEventListener("click", useBirthDate);
 els.loadButton.addEventListener("click", loadBundle);
 renderFocusTabs();
+document.addEventListener("DOMContentLoaded", loadBundle);
