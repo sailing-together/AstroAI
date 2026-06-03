@@ -1,7 +1,7 @@
 # AstroAI Product Source of Truth
 
 > Status: Canonical product direction for the AstroAI redevelopment.
-> Last updated: 2026-06-02
+> Last updated: 2026-06-03
 
 ## Product Thesis
 
@@ -32,6 +32,8 @@ Differentiators:
 - Memory layer as the retention moat.
 - Static SEO pages as the acquisition engine.
 - Shareable readings as the viral loop.
+
+See `COMPETITIVE_RESEARCH.md` for the working competitor map. Current positioning should emphasize AstroAI as a practical, chart-grounded AI companion with a generous static free layer and transparent separation between static content, deterministic chart calculation, and paid/on-demand AI personalization.
 
 ## Product Access Layers
 
