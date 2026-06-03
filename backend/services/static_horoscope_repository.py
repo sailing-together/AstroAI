@@ -10,6 +10,7 @@ from backend.services.codex_dev_horoscope_seed import (
     CodexDevHoroscopeSeedGenerator,
     CodexDevHoroscopeYearSeed,
 )
+from backend.services.codex_static_seed_loader import load_codex_static_seed
 from backend.services.zodiac import sign_label
 
 
@@ -25,7 +26,10 @@ class StaticHoroscopeRepository:
     def get_or_create_year(self, sign: str, year: int) -> CodexDevHoroscopeYearSeed:
         key = (sign, year)
         if key not in self._year_cache:
-            self._year_cache[key] = self._seed_generator.generate_year(sign, year)
+            self._year_cache[key] = _merge_year_seed(
+                generated=self._seed_generator.generate_year(sign, year),
+                authored=load_codex_static_seed(sign, year),
+            )
         return self._year_cache[key]
 
     def build_entry(self, sign: str, period: str, focus: str, content_date: date) -> HoroscopeEntryResponse:
@@ -96,3 +100,27 @@ def _to_entry_response(entry: CodexDevHoroscopeSeedEntry) -> HoroscopeEntryRespo
         lucky_color=entry.lucky_color,
         generated_at=entry.generated_at,
     )
+
+
+def _merge_year_seed(
+    generated: CodexDevHoroscopeYearSeed,
+    authored: CodexDevHoroscopeYearSeed | None,
+) -> CodexDevHoroscopeYearSeed:
+    if authored is None:
+        return generated
+    return CodexDevHoroscopeYearSeed(
+        sign=generated.sign,
+        year=generated.year,
+        yearly=_merge_entries(generated.yearly, authored.yearly),
+        monthly=_merge_entries(generated.monthly, authored.monthly),
+        weekly=_merge_entries(generated.weekly, authored.weekly),
+        daily=_merge_entries(generated.daily, authored.daily),
+    )
+
+
+def _merge_entries(
+    generated: list[CodexDevHoroscopeSeedEntry],
+    authored: list[CodexDevHoroscopeSeedEntry],
+) -> list[CodexDevHoroscopeSeedEntry]:
+    authored_by_key = {(entry.content_date, entry.focus): entry for entry in authored}
+    return [authored_by_key.get((entry.content_date, entry.focus), entry) for entry in generated]

@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AstroAI Preview</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="top-nav">
+      <div class="nav-inner">
+        <div class="brand-lockup" aria-label="AstroAI">
+          <div class="brand-mark">A</div>
+          <span>AstroAI</span>
+        </div>
+        <nav aria-label="Preview navigation">
+          <a href="#today">Today</a>
+          <a href="#year">Year</a>
+          <a href="#months">Months</a>
+          <a href="#weeks">Weeks</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="app-shell">
+      <section class="hero-panel" aria-labelledby="pageTitle">
+        <div class="hero-copy">
+          <p class="eyebrow">AstroAI Preview</p>
+          <h1 id="pageTitle">Your 2026 Gemini Horoscope</h1>
+          <p class="hero-text">
+            Choose a sign or enter a birthday to explore a full-year static horoscope bundle.
+          </p>
+        </div>
+
+        <div class="lookup-card" aria-label="Horoscope controls">
+          <div class="lookup-header">
+            <div>
+              <p class="eyebrow">Start here</p>
+              <h2>Find your sign</h2>
+            </div>
+            <div class="status-pill" id="apiStatus">Ready</div>
+          </div>
+
+          <div class="controls">
+          <label>
+            <span>Sign</span>
+            <select id="signSelect">
+              <option value="aries">Aries</option>
+              <option value="taurus">Taurus</option>
+              <option value="gemini" selected>Gemini</option>
+              <option value="cancer">Cancer</option>
+              <option value="leo">Leo</option>
+              <option value="virgo">Virgo</option>
+              <option value="libra">Libra</option>
+              <option value="scorpio">Scorpio</option>
+              <option value="sagittarius">Sagittarius</option>
+              <option value="capricorn">Capricorn</option>
+              <option value="aquarius">Aquarius</option>
+              <option value="pisces">Pisces</option>
+            </select>
+          </label>
+
+          <label>
+            <span>Birth date</span>
+            <input id="birthDate" type="date" value="1994-06-14" />
+          </label>
+
+          <label>
+            <span>Year</span>
+            <input id="yearInput" type="number" min="1900" max="2100" value="2026" />
+          </label>
+
+          <label class="api-field">
+            <span>API base</span>
+            <input id="apiBase" type="url" value="http://localhost:8000/api/v1" />
+          </label>
+
+          <button id="birthDateButton" type="button">Use Birth Date</button>
+          <button id="loadButton" type="button">Load Bundle</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="content-grid" aria-live="polite">
+        <aside class="side-panel">
+          <h2 id="selectedSign">Gemini</h2>
+          <p id="bundleMeta">2026 static bundle</p>
+          <div class="focus-tabs" id="focusTabs" role="tablist" aria-label="Focus areas"></div>
+        </aside>
+
+        <section class="reading-panel" id="today">
+          <div class="reading-header">
+            <div>
+              <p class="eyebrow" id="dailyDate">Daily</p>
+              <h2 id="dailyTitle">Load a bundle to start</h2>
+            </div>
+            <div class="lucky-strip">
+              <span id="luckyColor">Color</span>
+              <span id="luckyNumbers">Numbers</span>
+            </div>
+          </div>
+          <p class="summary" id="dailySummary">Static horoscope content will appear here.</p>
+          <p class="body-copy" id="dailyBody"></p>
+        </section>
+
+        <section class="period-section" id="year" aria-labelledby="yearlyTitle">
+          <h2 id="yearlyTitle">Year</h2>
+          <div id="yearlyList" class="period-list"></div>
+        </section>
+
+        <section class="period-section" id="months" aria-labelledby="monthlyTitle">
+          <h2 id="monthlyTitle">Months</h2>
+          <div id="monthlyList" class="period-list compact"></div>
+        </section>
+
+        <section class="period-section" id="weeks" aria-labelledby="weeklyTitle">
+          <h2 id="weeklyTitle">Weeks</h2>
+          <div id="weeklyList" class="period-list compact scroll-list"></div>
+        </section>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
