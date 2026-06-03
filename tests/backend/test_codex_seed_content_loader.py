@@ -33,3 +33,15 @@ def test_static_repository_prefers_codex_static_seed_copy():
     assert yearly.title == "Gemini 2026: A Year of Clearer Signals"
     assert "Codex dev seed" not in yearly.summary
     assert daily.title == "Gemini Daily Reset"
+
+
+def test_static_repository_fallback_copy_is_reader_facing():
+    repository = StaticHoroscopeRepository()
+    year_seed = repository.get_or_create_year("gemini", 2026)
+
+    entries = [*year_seed.monthly, *year_seed.weekly, *year_seed.daily]
+    assert entries
+    for entry in entries:
+        text = f"{entry.title} {entry.summary} {entry.body}"
+        assert "Codex dev seed" not in text
+        assert "development seed" not in text
