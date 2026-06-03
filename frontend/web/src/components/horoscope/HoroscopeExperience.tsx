@@ -24,6 +24,7 @@ const signs = [
 ];
 
 const defaultDate = "2026-01-01";
+const apiBaseLabel = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api/v1";
 
 export function HoroscopeExperience() {
   const [sign, setSign] = useState("gemini");
@@ -32,12 +33,22 @@ export function HoroscopeExperience() {
   const [focus, setFocus] = useState<HoroscopeFocus>("general");
   const [bundle, setBundle] = useState<HoroscopeBundle | null>(null);
   const [message, setMessage] = useState("Free static horoscope guidance");
+  const [connectionError, setConnectionError] = useState(false);
 
   const year = Number(viewDate.slice(0, 4));
 
   useEffect(() => {
     let isMounted = true;
+    retryLoadBundle({ isMounted });
+    return () => {
+      isMounted = false;
+    };
+  }, [sign, year]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function retryLoadBundle(options?: { isMounted?: boolean }) {
+    const isMounted = options?.isMounted ?? true;
     setMessage("Loading guidance");
+    setConnectionError(false);
     getHoroscopeBundle(sign, year)
       .then((payload) => {
         if (!isMounted) return;
@@ -47,12 +58,10 @@ export function HoroscopeExperience() {
       .catch(() => {
         if (!isMounted) return;
         setBundle(null);
-        setMessage("Guidance is temporarily unavailable");
+        setConnectionError(true);
+        setMessage("Backend connection needed");
       });
-    return () => {
-      isMounted = false;
-    };
-  }, [sign, year]);
+  }
 
   const dailyEntry = useMemo(() => {
     if (!bundle) return undefined;
@@ -78,15 +87,16 @@ export function HoroscopeExperience() {
       setSign(nextSign);
       setMessage(`${titleCaseSign(nextSign)} selected`);
     } catch {
-      setMessage("Birth date lookup is temporarily unavailable");
+      setConnectionError(true);
+      setMessage("Backend connection needed");
     }
   }
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-6xl px-5 py-8 sm:px-8">
-      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-blue-100 pb-5">
+    <main className="min-h-screen">
+      <header className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-5 sm:px-8">
         <div className="flex items-center gap-3">
-          <div className="grid h-11 w-11 place-items-center rounded-lg bg-gradient-to-br from-astro-blue to-astro-pink font-black text-white">
+          <div className="grid h-11 w-11 place-items-center rounded-lg bg-gradient-to-br from-astro-blue to-astro-pink font-black text-white shadow-lg shadow-blue-100">
             A
           </div>
           <div>
@@ -99,7 +109,8 @@ export function HoroscopeExperience() {
         </a>
       </header>
 
-      <section className="grid gap-8 py-10 lg:grid-cols-[1.05fr_0.95fr]">
+      <section className="border-y border-blue-100 bg-white/65">
+        <div className="mx-auto grid w-full max-w-6xl gap-8 px-5 py-10 sm:px-8 lg:grid-cols-[1.2fr_0.8fr]">
         <div>
           <p className="text-sm font-black uppercase tracking-wide text-astro-purple">Free static guidance</p>
           <h1 className="mt-4 max-w-3xl font-display text-5xl leading-tight text-astro-ink">
@@ -110,9 +121,24 @@ export function HoroscopeExperience() {
             and year from one pre-generated static bundle.
           </p>
           <p className="mt-4 font-bold text-astro-blue">{message}</p>
+          {connectionError ? (
+            <div className="mt-6 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm leading-7 text-rose-900">
+              <p className="font-black">Backend connection needed</p>
+              <p>
+                Start the FastAPI backend at <strong>{apiBaseLabel}</strong>, then retry this page.
+              </p>
+              <button
+                className="mt-3 rounded-lg bg-rose-600 px-4 py-2 font-black text-white"
+                onClick={() => retryLoadBundle()}
+                type="button"
+              >
+                Retry connection
+              </button>
+            </div>
+          ) : null}
         </div>
 
-        <form className="grid gap-4 rounded-xl border border-blue-100 bg-white/85 p-5 shadow-sm">
+        <form className="grid gap-4 rounded-xl border border-blue-100 bg-white/90 p-5 shadow-xl shadow-blue-100/40">
           <label className="grid gap-2 text-sm font-bold text-slate-700">
             Sign
             <select
@@ -156,10 +182,13 @@ export function HoroscopeExperience() {
             Use birth date
           </button>
         </form>
+        </div>
       </section>
 
-      <section className="grid gap-5">
-        <FocusTabs onChange={setFocus} selectedFocus={focus} />
+      <section className="mx-auto grid w-full max-w-6xl gap-5 px-5 py-8 sm:px-8">
+        <div className="rounded-xl border border-blue-100 bg-white/80 p-4">
+          <FocusTabs onChange={setFocus} selectedFocus={focus} />
+        </div>
         <div className="grid gap-5 lg:grid-cols-2">
           <ReadingPanel entry={dailyEntry} eyebrow={`Daily - ${viewDate}`} />
           <ReadingPanel entry={weeklyEntry} eyebrow="This week" />
@@ -167,7 +196,7 @@ export function HoroscopeExperience() {
         <ReadingPanel entry={yearlyEntry} eyebrow={`${year} overview`} />
       </section>
 
-      <section className="py-10">
+      <section className="mx-auto w-full max-w-6xl px-5 py-10 sm:px-8">
         <h2 className="text-3xl font-black text-astro-ink">Months</h2>
         <div className="mt-5 grid gap-4 md:grid-cols-2">
           {monthlyEntries.map((entry) => (
