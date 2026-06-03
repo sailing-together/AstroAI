@@ -1,13 +1,16 @@
-from calendar import monthrange
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timezone
 
 from backend.schemas.horoscope import SUPPORTED_HOROSCOPE_FOCUSES
+from backend.services.static_horoscope_calendar import period_dates_for_year, period_end_date
 from backend.services.zodiac import sign_label
 
 
+CODEX_DEV_SOURCE = "codex-dev"
 CODEX_DEV_GENERATION_MODEL = "codex-dev"
 CODEX_DEV_GENERATED_AT = datetime(2026, 1, 1, tzinfo=timezone.utc)
+CODEX_DEV_PROMPT_VERSION = "dev-static-v1"
+CODEX_DEV_KNOWLEDGE_VERSION = "astroai-dev-v1"
 
 FOCUS_COPY = {
     "general": (
@@ -71,15 +74,22 @@ COLORS = (
 @dataclass(frozen=True)
 class CodexDevHoroscopeSeedEntry:
     sign: str
+    target_year: int
     period: str
     focus: str
     content_date: date
+    period_end_date: date
     title: str
     summary: str
     body: str
     lucky_numbers: list[int]
     lucky_color: str
+    source: str
     generation_model: str
+    prompt_version: str
+    knowledge_version: str
+    content_version: int
+    is_active: bool
     generated_at: datetime
 
 
@@ -110,19 +120,21 @@ class CodexDevHoroscopeSeedGenerator:
         period: str,
         focus: str,
         content_date: date,
+        target_year: int | None = None,
     ) -> CodexDevHoroscopeSeedEntry:
-        return self._build_entry(sign, period, focus, content_date)
+        return self._build_entry(sign, target_year or content_date.year, period, focus, content_date)
 
     def _build_entries(self, sign: str, year: int, period: str) -> list[CodexDevHoroscopeSeedEntry]:
         return [
-            self._build_entry(sign, period, focus, content_date)
-            for content_date in _period_dates_for_year(year, period)
+            self._build_entry(sign, year, period, focus, content_date)
+            for content_date in period_dates_for_year(year, period)
             for focus in SUPPORTED_HOROSCOPE_FOCUSES
         ]
 
     def _build_entry(
         self,
         sign: str,
+        target_year: int,
         period: str,
         focus: str,
         content_date: date,
@@ -134,44 +146,28 @@ class CodexDevHoroscopeSeedGenerator:
         cadence = _period_cadence(period, content_date)
         return CodexDevHoroscopeSeedEntry(
             sign=sign,
+            target_year=target_year,
             period=period,
             focus=focus,
             content_date=content_date,
+            period_end_date=period_end_date(content_date, period),
             title=f"{label} {period_label} {focus_label} Forecast",
             summary=summary,
             body=(
                 f"{label}, {cadence} highlights your {focus_label.lower()} rhythm. "
-                f"{focus_body} This is static guidance prepared for the yearly bundle, "
-                "so you can browse without extra AI calls."
+                f"{focus_body} This guidance is prepared ahead of time, "
+                "so you can browse it freely without waiting for a live prediction."
             ),
             lucky_numbers=_lucky_numbers(sign, period, focus, content_date),
             lucky_color=COLORS[SUPPORTED_HOROSCOPE_FOCUSES.index(focus) % len(COLORS)],
+            source=CODEX_DEV_SOURCE,
             generation_model=CODEX_DEV_GENERATION_MODEL,
+            prompt_version=CODEX_DEV_PROMPT_VERSION,
+            knowledge_version=CODEX_DEV_KNOWLEDGE_VERSION,
+            content_version=1,
+            is_active=True,
             generated_at=CODEX_DEV_GENERATED_AT,
         )
-
-
-def _period_dates_for_year(year: int, period: str) -> list[date]:
-    if period == "yearly":
-        return [date(year, 1, 1)]
-    if period == "monthly":
-        return [date(year, month, 1) for month in range(1, 13)]
-    if period == "weekly":
-        first = date(year, 1, 1)
-        first_monday = first + timedelta(days=(7 - first.weekday()) % 7)
-        dates = []
-        current = first_monday
-        while current.year == year:
-            dates.append(current)
-            current += timedelta(days=7)
-        return dates
-    if period == "daily":
-        return [
-            date(year, month, day)
-            for month in range(1, 13)
-            for day in range(1, monthrange(year, month)[1] + 1)
-        ]
-    raise ValueError(f"Unsupported horoscope period: {period}")
 
 
 def _period_cadence(period: str, content_date: date) -> str:

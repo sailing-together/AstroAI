@@ -9,9 +9,17 @@ def test_codex_dev_seed_generates_full_year_static_content():
     assert seed.year == 2026
     assert len(seed.yearly) == len(SUPPORTED_HOROSCOPE_FOCUSES)
     assert len(seed.monthly) == 12 * len(SUPPORTED_HOROSCOPE_FOCUSES)
-    assert len(seed.weekly) == 52 * len(SUPPORTED_HOROSCOPE_FOCUSES)
+    assert len(seed.weekly) == 53 * len(SUPPORTED_HOROSCOPE_FOCUSES)
     assert len(seed.daily) == 365 * len(SUPPORTED_HOROSCOPE_FOCUSES)
+    assert seed.weekly[0].content_date.isoformat() == "2025-12-29"
+    assert seed.weekly[0].period_end_date.isoformat() == "2026-01-04"
+    assert seed.weekly[0].target_year == 2026
     assert seed.daily[0].generation_model == "codex-dev"
+    assert seed.daily[0].source == "codex-dev"
+    assert seed.daily[0].prompt_version == "dev-static-v1"
+    assert seed.daily[0].knowledge_version == "astroai-dev-v1"
+    assert seed.daily[0].content_version == 1
+    assert seed.daily[0].is_active is True
 
 
 def test_codex_dev_seed_is_deterministic_for_same_sign_and_year():
