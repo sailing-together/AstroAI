@@ -12,7 +12,8 @@ AstroAI is being redeveloped around the canonical source-of-truth docs in `docs/
 
 - `backend/` contains the FastAPI redevelopment base plus legacy demo routes.
 - `frontend/flutter/` is the existing legacy/demo frontend.
-- `frontend/nextjs/` does not exist yet and is not part of Phase 1.
+- `frontend/web/` is the production-facing Next.js public web app.
+- `frontend/preview/` is a developer/API tester for static horoscope backend validation, not production UI.
 
 ## Current Development Focus
 
@@ -31,4 +32,27 @@ Phase 1.5 will add the public static horoscope engine:
 - Scheduled and manual static content generation.
 - Stored PostgreSQL/Redis reads that do not call Gemini at request time.
 
-The existing Flutter app remains useful as a demo/reference, but the redevelopment target is a Next.js public web entry after the backend foundation is stable.
+The existing Flutter app remains useful as a demo/reference, but the redevelopment target is the Next.js public web app in `frontend/web`.
+
+## Public Web App
+
+The production-facing web app lives in `frontend/web`.
+
+```bash
+cd frontend/web
+npm install
+npm run dev
+```
+
+The first public route is `/horoscope`. It should hide API/debug controls and use the static horoscope bundle API through `NEXT_PUBLIC_API_BASE_URL`.
+
+## Developer Preview
+
+The developer API tester remains in `frontend/preview`.
+
+```bash
+cd frontend/preview
+bash start-preview.sh
+```
+
+Use the preview page only to validate backend API behavior and static bundle data.
