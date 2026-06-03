@@ -1,6 +1,8 @@
 import type { HoroscopeBundle } from "./types.ts";
 
 const defaultApiBase = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api/v1";
+const localFallbackTimeoutMs = 900;
+const singleApiTimeoutMs = 8_000;
 
 export function normalizeApiBase(apiBase = defaultApiBase) {
   return apiBase.replace(/\/$/, "");
@@ -48,9 +50,12 @@ export async function getSunSignFromBirthDate(birthDate: string, apiBase = defau
 
 async function fetchWithApiBaseFallback(apiBase: string, buildUrl: (apiBase: string) => string, label: string) {
   let lastError: unknown;
-  for (const candidate of buildLocalApiBaseCandidates(apiBase)) {
+  const candidates = buildLocalApiBaseCandidates(apiBase);
+  const timeoutMs = candidates.length > 1 ? localFallbackTimeoutMs : singleApiTimeoutMs;
+
+  for (const candidate of candidates) {
     try {
-      const response = await fetch(buildUrl(candidate));
+      const response = await fetch(buildUrl(candidate), { signal: AbortSignal.timeout(timeoutMs) });
       if (response.ok) return response;
       lastError = new Error(`${response.status}`);
     } catch (error) {
