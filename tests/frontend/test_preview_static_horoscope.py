@@ -10,6 +10,7 @@ def test_preview_entrypoint_exists():
     assert (PREVIEW_DIR / "styles.css").exists()
     assert (PREVIEW_DIR / "app.js").exists()
     assert (PREVIEW_DIR / "start-preview.ps1").exists()
+    assert (PREVIEW_DIR / "start-preview.sh").exists()
 
 
 def test_preview_uses_public_static_horoscope_api():
@@ -30,3 +31,11 @@ def test_preview_has_first_screen_controls():
     assert 'id="yearInput"' in html
     assert 'id="loadButton"' in html
     assert 'id="focusTabs"' in html
+
+
+def test_preview_has_wsl_start_script():
+    script = (PREVIEW_DIR / "start-preview.sh").read_text(encoding="utf-8")
+
+    assert "uvicorn backend.main:app" in script
+    assert "http.server 3000" in script
+    assert "BACKEND_CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000" in script
