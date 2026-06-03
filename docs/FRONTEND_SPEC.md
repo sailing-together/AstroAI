@@ -247,6 +247,40 @@ UI principles:
 - No single-hue purple-only palette.
 - Accessible contrast and keyboard states.
 
+### Legacy Flutter Design Decisions
+
+The existing Flutter frontend is a legacy/demo implementation, but its visual direction is useful input for the redeveloped web experience.
+
+Keep these design assets and patterns:
+
+- The AstroAI brand palette: blue `#4097FF`, pink `#FF92A2`, light blue `#A5E5F9`, purple `#8985CF`, and light pink `#FFF3F8`.
+- The white fixed header pattern with AstroAI branding on the left and simple navigation on the right.
+- The blue-to-pink gradient brand mark direction.
+- Cinzel-style display headings for brand moments and page titles.
+- Inter/Raleway-style readable body text.
+- Friendly rounded cards for horoscope dimensions, zodiac choices, daily insights, and chart summaries.
+- Zodiac grouping by element as a useful public browsing pattern.
+- The daily-insights information structure: greeting/date/sign context, guidance cards, lucky numbers, and lucky colors.
+- The natal-chart wheel/visual reveal direction for later registered-user features.
+
+Change these parts during redevelopment:
+
+- Do not keep legacy API routes. New frontend code must use `/api/v1` contracts only.
+- Do not make the public horoscope first screen a marketing-only hero. It must be usable immediately: choose sign or enter birth date, then load the static horoscope bundle.
+- Use gradients as brand accents or contained header bands, not as the default surface for every page.
+- Reduce feature sprawl in MVP. ASMR, celebrity matching, and other legacy demo features stay parked until core public horoscope, auth, natal chart, and AI Astrologer flows work.
+- Fix corrupted zodiac symbols or emoji output before reusing those assets in production UI.
+- Simplify typography where needed: decorative display type for key moments, practical sans-serif text for dense horoscope content.
+
+The public horoscope preview and future Next.js public pages should keep the Flutter brand skin but rebuild the user flow around the new static horoscope product:
+
+1. AstroAI header.
+2. Sign and birth-date controls.
+3. Today's selected-sign guidance.
+4. Focus tabs.
+5. Year, month, week, and day sections loaded from one static bundle.
+6. Clear path to registration only when users want saved charts or AI personalization.
+
 ## Frontend Build Order
 
 1. Project scaffold.
