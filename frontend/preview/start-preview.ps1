@@ -1,5 +1,7 @@
 param(
-    [string]$PythonPath = ""
+    [string]$PythonPath = "",
+    [int]$BackendPort = 0,
+    [int]$PreviewPort = 0
 )
 
 $PreviewRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -15,19 +17,50 @@ if (-not $PythonPath) {
 }
 
 $EnvPath = Join-Path $RepoRoot ".env"
-if (-not (Test-Path $EnvPath)) {
-    @(
-        "ENVIRONMENT=development",
-        "BACKEND_CORS_ORIGINS=http://localhost:3000",
-        "GEMINI_API_KEY=test",
-        "SUPABASE_URL=https://example.supabase.co",
-        "SUPABASE_ANON_KEY=anon",
-        "SUPABASE_SERVICE_ROLE_KEY=service",
-        "SUPABASE_JWT_SECRET=secret",
-        "DATABASE_URL=postgresql+asyncpg://user:pass@localhost:5432/db",
-        "REDIS_URL=redis://localhost:6379/0"
-    ) | Set-Content -Encoding utf8 $EnvPath
+
+function Find-FreePort {
+    param([int]$StartPort)
+
+    $Port = $StartPort
+    while ($true) {
+        $Listener = $null
+        try {
+            $Listener = New-Object System.Net.Sockets.TcpListener([System.Net.IPAddress]::Parse("127.0.0.1"), $Port)
+            $Listener.Start()
+            return $Port
+        } catch {
+            $Port += 1
+        } finally {
+            if ($Listener) {
+                $Listener.Stop()
+            }
+        }
+    }
 }
+
+if ($BackendPort -eq 0) {
+    $BackendPort = Find-FreePort 8000
+}
+
+if ($PreviewPort -eq 0) {
+    $PreviewPort = Find-FreePort 3000
+}
+
+$ApiBase = "http://127.0.0.1:$BackendPort/api/v1"
+
+@(
+    "ENVIRONMENT=development",
+    "BACKEND_CORS_ORIGINS=http://localhost:$PreviewPort,http://127.0.0.1:$PreviewPort",
+    "GEMINI_API_KEY=test",
+    "SUPABASE_URL=https://example.supabase.co",
+    "SUPABASE_ANON_KEY=anon",
+    "SUPABASE_SERVICE_ROLE_KEY=service",
+    "SUPABASE_JWT_SECRET=secret",
+    "DATABASE_URL=postgresql+asyncpg://user:pass@localhost:5432/db",
+    "REDIS_URL=redis://localhost:6379/0"
+) | Set-Content -Encoding utf8 $EnvPath
+
+"window.ASTROAI_API_BASE = `"$ApiBase`";" | Set-Content -Encoding utf8 (Join-Path $PreviewRoot "runtime-config.js")
 
 Start-Process -WindowStyle Hidden -FilePath $PythonPath -ArgumentList @(
     "-m",
@@ -36,14 +69,14 @@ Start-Process -WindowStyle Hidden -FilePath $PythonPath -ArgumentList @(
     "--host",
     "127.0.0.1",
     "--port",
-    "8000"
+    "$BackendPort"
 ) -WorkingDirectory $RepoRoot
 
 Start-Process -WindowStyle Hidden -FilePath $PythonPath -ArgumentList @(
     "-m",
     "http.server",
-    "3000"
+    "$PreviewPort"
 ) -WorkingDirectory $PreviewRoot
 
-Write-Host "AstroAI backend: http://127.0.0.1:8000/api/v1/health"
-Write-Host "AstroAI preview: http://127.0.0.1:3000/"
+Write-Host "AstroAI backend: http://127.0.0.1:$BackendPort/api/v1/health"
+Write-Host "AstroAI preview: http://127.0.0.1:$PreviewPort/"

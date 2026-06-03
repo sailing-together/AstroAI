@@ -24,6 +24,8 @@ def test_preview_uses_public_static_horoscope_api():
     assert "/api/v1/utils/sun-sign" in js
     assert "/api/v1/horoscope/bundle/" in js
     assert "GeminiClient" not in js
+    assert "window.ASTROAI_API_BASE" in js
+    assert '<script src="./runtime-config.js"></script>' in html
     assert 'document.addEventListener("DOMContentLoaded", loadBundle)' in js
     assert "#4097ff" in css.lower()
     assert "#ff92a2" in css.lower()
@@ -44,5 +46,6 @@ def test_preview_has_wsl_start_script():
     script = (PREVIEW_DIR / "start-preview.sh").read_text(encoding="utf-8")
 
     assert "uvicorn backend.main:app" in script
-    assert "http.server 3000" in script
-    assert "BACKEND_CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000" in script
+    assert "find_free_port" in script
+    assert "runtime-config.js" in script
+    assert "BACKEND_CORS_ORIGINS" in script

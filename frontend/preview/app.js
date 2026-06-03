@@ -40,6 +40,10 @@ const els = {
   weeklyList: document.getElementById("weeklyList")
 };
 
+if (window.ASTROAI_API_BASE) {
+  els.apiBase.value = window.ASTROAI_API_BASE;
+}
+
 function apiBase() {
   return els.apiBase.value.replace(/\/$/, "");
 }
