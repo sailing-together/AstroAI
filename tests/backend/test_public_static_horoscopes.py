@@ -101,3 +101,33 @@ def test_horoscope_rejects_unknown_sign(monkeypatch):
     response = client.get("/api/v1/horoscope/daily/notasign", params={"date": "2026-06-02"})
 
     assert response.status_code == 422
+
+
+def test_bundle_contains_full_2026_static_coverage(monkeypatch):
+    client = TestClient(load_app(monkeypatch))
+
+    response = client.get("/api/v1/horoscope/bundle/gemini", params={"year": 2026})
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert len(payload["yearly"]) == 9
+    assert len(payload["monthly"]) == 108
+    assert len(payload["weekly"]) == 477
+    assert len(payload["daily"]) == 3285
+    assert payload["weekly"][0]["date"] == "2025-12-29"
+    assert payload["weekly"][0]["period_end_date"] == "2026-01-04"
+
+
+def test_weekly_horoscope_maps_selected_date_to_intersecting_week(monkeypatch):
+    client = TestClient(load_app(monkeypatch))
+
+    response = client.get(
+        "/api/v1/horoscope/weekly/gemini",
+        params={"week": "2026-01-01"},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["period"] == "weekly"
+    assert payload["date"] == "2025-12-29"
+    assert payload["period_end_date"] == "2026-01-04"

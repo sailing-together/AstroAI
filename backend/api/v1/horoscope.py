@@ -50,7 +50,7 @@ async def get_weekly_horoscope(
     week: str | None = None,
     focus: str | None = None,
 ):
-    return _get_horoscope_period(sign, "weekly", _parse_week(week), focus)
+    return _get_horoscope_period(sign, "weekly", _parse_week_or_date(week), focus, selected_date_mode=True)
 
 
 @router.get("/monthly/{sign}", response_model=HoroscopeEntryResponse | HoroscopePeriodResponse)
@@ -77,11 +77,16 @@ def _get_horoscope_period(
     period: str,
     content_date: date,
     focus: str | None,
+    selected_date_mode: bool = False,
 ) -> HoroscopeEntryResponse | HoroscopePeriodResponse:
     canonical_sign = _validate_sign(sign)
     if focus is not None:
         canonical_focus = _validate_focus(focus)
+        if selected_date_mode:
+            return repository.build_entry_for_selected_date(canonical_sign, period, canonical_focus, content_date)
         return repository.build_entry(canonical_sign, period, canonical_focus, content_date)
+    if selected_date_mode:
+        return repository.build_period_for_selected_date(canonical_sign, period, content_date)
     return repository.build_period(canonical_sign, period, content_date)
 
 
@@ -109,9 +114,14 @@ def _parse_month(month: str | None) -> date:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Invalid month format") from exc
 
 
-def _parse_week(week: str | None) -> date:
+def _parse_week_or_date(week: str | None) -> date:
     if week is None:
         return date.today()
+    if "-W" not in week:
+        try:
+            return date.fromisoformat(week)
+        except ValueError as exc:
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Invalid week format") from exc
     try:
         year_text, week_text = week.split("-W", 1)
         return date.fromisocalendar(int(year_text), int(week_text), 1)
