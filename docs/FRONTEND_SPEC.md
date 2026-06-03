@@ -1,7 +1,7 @@
 # AstroAI Frontend Specification Source of Truth
 
 > Status: Canonical frontend specification for redevelopment.
-> Last updated: 2026-06-02
+> Last updated: 2026-06-03
 
 ## Frontend Target
 
@@ -20,6 +20,8 @@ The first screen after authentication should move the user into the product, not
 - Public SEO pages for acquisition.
 
 The public first screen should work before authentication: users can choose a sign or enter a birth date, then load the selected sign's current-year horoscope bundle in one API request.
+
+`frontend/preview/` is a developer/API validation page only. It may expose controls such as API base URL, manual bundle loading, and raw static bundle inspection. It is not the final public product UI and must not be used as the visual or interaction model for production horoscope pages.
 
 ## Routes
 
@@ -220,6 +222,8 @@ Public page views must not trigger live Gemini calls.
 
 Public horoscope bundle loading should use one backend request per selected sign/year. Client-side navigation between year, month, week, and day views should reuse the loaded bundle where practical instead of repeatedly fetching individual period endpoints.
 
+For the production public horoscope experience, weekly content should be date-driven rather than shown as a long list. The user chooses or lands on a date, the page shows that date's daily horoscope, and the frontend derives the corresponding weekly horoscope from the loaded bundle. Month and year content can remain browsable because they are compact and useful for planning.
+
 Public horoscope pages should display these dimensions when available:
 
 - General
@@ -272,14 +276,23 @@ Change these parts during redevelopment:
 - Fix corrupted zodiac symbols or emoji output before reusing those assets in production UI.
 - Simplify typography where needed: decorative display type for key moments, practical sans-serif text for dense horoscope content.
 
-The public horoscope preview and future Next.js public pages should keep the Flutter brand skin but rebuild the user flow around the new static horoscope product:
+Future Next.js public pages should keep the Flutter brand skin but rebuild the user flow around the new static horoscope product. The developer preview can borrow brand colors for readability, but it remains a backend/API tester.
 
 1. AstroAI header.
-2. Sign and birth-date controls.
-3. Today's selected-sign guidance.
+2. Simple sign or birth-date entry, without API/debug controls.
+3. Today's selected-sign guidance as the main content.
 4. Focus tabs.
-5. Year, month, week, and day sections loaded from one static bundle.
-6. Clear path to registration only when users want saved charts or AI personalization.
+5. Date selector that changes daily guidance and the matching weekly guidance.
+6. Month and year sections loaded from the same static bundle.
+7. Clear path to registration only when users want saved charts or AI personalization.
+
+Production public pages must avoid these preview-only patterns:
+
+- Visible API base URL fields.
+- Manual "Load Bundle" developer controls.
+- Debug/status language that exposes implementation details.
+- Long weekly lists as the default browsing pattern.
+- Page titles that make the experience look like a single-sign test page.
 
 ## Frontend Build Order
 
