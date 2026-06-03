@@ -10,8 +10,9 @@ SEED_DIR = ROOT / "backend" / "static" / "seed" / "horoscopes" / "2026"
 
 
 def test_codex_static_seed_file_uses_zodiac_name_not_provider_name():
-    assert (SEED_DIR / "zodiac-gemini.json").exists()
+    assert (SEED_DIR / "sign-gemini.json").exists()
     assert not (SEED_DIR / "gemini.json").exists()
+    assert not (SEED_DIR / "zodiac-gemini.json").exists()
 
 
 def test_codex_static_seed_file_loads_preview_copy():

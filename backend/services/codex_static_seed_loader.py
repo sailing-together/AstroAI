@@ -14,7 +14,7 @@ SEED_ROOT = Path(__file__).resolve().parents[1] / "static" / "seed" / "horoscope
 
 
 def load_codex_static_seed(sign: str, year: int) -> CodexDevHoroscopeYearSeed | None:
-    seed_path = SEED_ROOT / str(year) / f"zodiac-{sign}.json"
+    seed_path = SEED_ROOT / str(year) / f"sign-{sign}.json"
     if not seed_path.exists():
         return None
 
