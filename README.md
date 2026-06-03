@@ -38,6 +38,15 @@ The existing Flutter app remains useful as a demo/reference, but the redevelopme
 
 The production-facing web app lives in `frontend/web`.
 
+Start the backend first so the public page can read `http://localhost:8000/api/v1`:
+
+```bash
+cd /mnt/d/Projects/AstroAI/AstroAI
+bash frontend/preview/start-preview.sh
+```
+
+Then start the web app:
+
 ```bash
 cd frontend/web
 npm install

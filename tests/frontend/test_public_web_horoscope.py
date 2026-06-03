@@ -34,3 +34,22 @@ def test_public_web_horoscope_is_date_driven():
     assert "findDailyEntry" in component
     assert "findWeeklyEntry" in component
     assert "This week" in component
+
+
+def test_public_web_horoscope_explains_backend_connection_failures():
+    component = (WEB_DIR / "src" / "components" / "horoscope" / "HoroscopeExperience.tsx").read_text(
+        encoding="utf-8"
+    )
+
+    assert "Backend connection needed" in component
+    assert "Start the FastAPI backend" in component
+    assert "http://localhost:8000/api/v1" in component
+    assert "retryLoadBundle" in component
+
+
+def test_readme_explains_full_local_web_startup():
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "Start the backend first" in readme
+    assert "cd frontend/web" in readme
+    assert "npm run dev" in readme
