@@ -24,6 +24,8 @@ def test_preview_uses_public_static_horoscope_api():
     assert "/api/v1/utils/sun-sign" in js
     assert "/api/v1/horoscope/bundle/" in js
     assert "GeminiClient" not in js
+    assert "window.ASTROAI_API_BASE" in js
+    assert '<script src="./runtime-config.js"></script>' in html
     assert 'document.addEventListener("DOMContentLoaded", loadBundle)' in js
     assert "#4097ff" in css.lower()
     assert "#ff92a2" in css.lower()
@@ -35,14 +37,30 @@ def test_preview_has_first_screen_controls():
 
     assert 'id="signSelect"' in html
     assert 'id="birthDate"' in html
+    assert 'id="viewDate"' in html
     assert 'id="yearInput"' in html
     assert 'id="loadButton"' in html
     assert 'id="focusTabs"' in html
+
+
+def test_preview_uses_date_driven_daily_and_weekly_panels():
+    html = (PREVIEW_DIR / "index.html").read_text(encoding="utf-8")
+    js = (PREVIEW_DIR / "app.js").read_text(encoding="utf-8")
+
+    assert "This Week" in html
+    assert 'id="weeklyTitle"' in html
+    assert 'id="weeklySummary"' in html
+    assert 'id="weeklyBody"' in html
+    assert 'id="weeklyList"' not in html
+    assert "findDailyEntryForSelectedDate" in js
+    assert "findWeeklyEntryForSelectedDate" in js
+    assert 'els.viewDate.addEventListener("change", renderBundle)' in js
 
 
 def test_preview_has_wsl_start_script():
     script = (PREVIEW_DIR / "start-preview.sh").read_text(encoding="utf-8")
 
     assert "uvicorn backend.main:app" in script
-    assert "http.server 3000" in script
-    assert "BACKEND_CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000" in script
+    assert "find_free_port" in script
+    assert "runtime-config.js" in script
+    assert "BACKEND_CORS_ORIGINS" in script

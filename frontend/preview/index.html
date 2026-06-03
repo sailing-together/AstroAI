@@ -15,9 +15,9 @@
         </div>
         <nav aria-label="Preview navigation">
           <a href="#today">Today</a>
+          <a href="#thisWeek">This Week</a>
           <a href="#year">Year</a>
           <a href="#months">Months</a>
-          <a href="#weeks">Weeks</a>
         </nav>
       </div>
     </header>
@@ -70,6 +70,11 @@
             <input id="yearInput" type="number" min="1900" max="2100" value="2026" />
           </label>
 
+          <label>
+            <span>View date</span>
+            <input id="viewDate" type="date" value="2026-01-01" />
+          </label>
+
           <label class="api-field">
             <span>API base</span>
             <input id="apiBase" type="url" value="http://localhost:8000/api/v1" />
@@ -103,6 +108,17 @@
           <p class="body-copy" id="dailyBody"></p>
         </section>
 
+        <section class="reading-panel weekly-panel" id="thisWeek" aria-labelledby="weeklyTitle">
+          <div class="reading-header">
+            <div>
+              <p class="eyebrow" id="weeklyDate">This Week</p>
+              <h2 id="weeklyTitle">Weekly guidance appears here</h2>
+            </div>
+          </div>
+          <p class="summary" id="weeklySummary">Choose a date to see the week it belongs to.</p>
+          <p class="body-copy" id="weeklyBody"></p>
+        </section>
+
         <section class="period-section" id="year" aria-labelledby="yearlyTitle">
           <h2 id="yearlyTitle">Year</h2>
           <div id="yearlyList" class="period-list"></div>
@@ -112,14 +128,10 @@
           <h2 id="monthlyTitle">Months</h2>
           <div id="monthlyList" class="period-list compact"></div>
         </section>
-
-        <section class="period-section" id="weeks" aria-labelledby="weeklyTitle">
-          <h2 id="weeklyTitle">Weeks</h2>
-          <div id="weeklyList" class="period-list compact scroll-list"></div>
-        </section>
       </section>
     </main>
 
+    <script src="./runtime-config.js"></script>
     <script src="./app.js"></script>
   </body>
 </html>

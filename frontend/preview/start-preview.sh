@@ -26,6 +26,28 @@ if ! "$PYTHON_BIN" -m pip --version >/dev/null 2>&1; then
   PIP_FLAGS=(--user)
 fi
 
+find_free_port() {
+  "$PYTHON_BIN" - "$1" <<'PY'
+import socket
+import sys
+
+port = int(sys.argv[1])
+while True:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        try:
+            sock.bind(("127.0.0.1", port))
+        except OSError:
+            port += 1
+            continue
+    print(port)
+    break
+PY
+}
+
+BACKEND_PORT="${BACKEND_PORT:-$(find_free_port 8000)}"
+PREVIEW_PORT="${PREVIEW_PORT:-$(find_free_port 3000)}"
+API_BASE="http://127.0.0.1:$BACKEND_PORT/api/v1"
+
 "$PYTHON_BIN" -m pip install "${PIP_FLAGS[@]}" \
   fastapi==0.115.13 \
   pydantic==2.11.7 \
@@ -35,9 +57,9 @@ fi
   "python-jose[cryptography]==3.3.0" \
   uvicorn==0.29.0 >/dev/null
 
-cat > "$REPO_ROOT/.env" <<'EOF'
+cat > "$REPO_ROOT/.env" <<EOF
 ENVIRONMENT=development
-BACKEND_CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+BACKEND_CORS_ORIGINS=http://localhost:$PREVIEW_PORT,http://127.0.0.1:$PREVIEW_PORT
 GEMINI_API_KEY=test
 SUPABASE_URL=https://example.supabase.co
 SUPABASE_ANON_KEY=anon
@@ -47,18 +69,22 @@ DATABASE_URL=postgresql+asyncpg://user:pass@localhost:5432/db
 REDIS_URL=redis://localhost:6379/0
 EOF
 
+cat > "$SCRIPT_DIR/runtime-config.js" <<EOF
+window.ASTROAI_API_BASE = "$API_BASE";
+EOF
+
 echo "Using Python: $PYTHON_BIN"
-echo "Starting AstroAI backend at http://127.0.0.1:8000"
+echo "Starting AstroAI backend at http://127.0.0.1:$BACKEND_PORT"
 (
   cd "$REPO_ROOT"
-  "$PYTHON_BIN" -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
+  "$PYTHON_BIN" -m uvicorn backend.main:app --host 127.0.0.1 --port "$BACKEND_PORT"
 ) &
 BACKEND_PID=$!
 
-echo "Starting AstroAI preview at http://127.0.0.1:3000"
+echo "Starting AstroAI preview at http://127.0.0.1:$PREVIEW_PORT"
 (
   cd "$SCRIPT_DIR"
-  "$PYTHON_BIN" -m http.server 3000
+  "$PYTHON_BIN" -m http.server "$PREVIEW_PORT"
 ) &
 PREVIEW_PID=$!
 
@@ -68,6 +94,6 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 echo
-echo "Open http://127.0.0.1:3000/"
+echo "Open http://127.0.0.1:$PREVIEW_PORT/"
 echo "Press Ctrl+C to stop both servers."
 wait

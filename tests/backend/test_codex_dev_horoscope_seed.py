@@ -21,4 +21,15 @@ def test_codex_dev_seed_is_deterministic_for_same_sign_and_year():
     second = generator.generate_year(sign="gemini", year=2026)
 
     assert first.daily[0] == second.daily[0]
-    assert first.monthly[0].title == "Gemini General Monthly Guidance"
+    assert first.monthly[0].title == "Gemini Monthly General Forecast"
+
+
+def test_codex_dev_seed_uses_reader_facing_copy():
+    seed = CodexDevHoroscopeSeedGenerator().generate_year(sign="gemini", year=2026)
+    samples = [seed.monthly[1], seed.weekly[1], seed.daily[1]]
+
+    for entry in samples:
+        text = f"{entry.title} {entry.summary} {entry.body}"
+        assert "Codex dev seed" not in text
+        assert "development seed" not in text
+        assert "Gemini" in entry.title

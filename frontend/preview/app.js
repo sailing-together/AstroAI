@@ -22,6 +22,7 @@ const els = {
   apiStatus: document.getElementById("apiStatus"),
   signSelect: document.getElementById("signSelect"),
   birthDate: document.getElementById("birthDate"),
+  viewDate: document.getElementById("viewDate"),
   yearInput: document.getElementById("yearInput"),
   apiBase: document.getElementById("apiBase"),
   birthDateButton: document.getElementById("birthDateButton"),
@@ -35,10 +36,17 @@ const els = {
   dailyBody: document.getElementById("dailyBody"),
   luckyColor: document.getElementById("luckyColor"),
   luckyNumbers: document.getElementById("luckyNumbers"),
+  weeklyDate: document.getElementById("weeklyDate"),
+  weeklyTitle: document.getElementById("weeklyTitle"),
+  weeklySummary: document.getElementById("weeklySummary"),
+  weeklyBody: document.getElementById("weeklyBody"),
   yearlyList: document.getElementById("yearlyList"),
-  monthlyList: document.getElementById("monthlyList"),
-  weeklyList: document.getElementById("weeklyList")
+  monthlyList: document.getElementById("monthlyList")
 };
+
+if (window.ASTROAI_API_BASE) {
+  els.apiBase.value = window.ASTROAI_API_BASE;
+}
 
 function apiBase() {
   return els.apiBase.value.replace(/\/$/, "");
@@ -79,6 +87,7 @@ async function useBirthDate() {
 async function loadBundle() {
   const sign = els.signSelect.value;
   const year = Number(els.yearInput.value || new Date().getFullYear());
+  syncViewDateToYear(year);
   setStatus("Loading");
   setBusy(true);
   try {
@@ -120,10 +129,12 @@ function renderBundle() {
   els.bundleMeta.textContent = `${state.bundle.year} ${state.bundle.source} bundle`;
 
   const dailyEntry = findEntryForFocus(state.bundle.daily, state.focus) || state.bundle.daily[0];
-  renderDaily(dailyEntry);
+  const selectedDailyEntry = findDailyEntryForSelectedDate() || dailyEntry;
+  const weeklyEntry = findWeeklyEntryForSelectedDate() || findEntryForFocus(state.bundle.weekly, state.focus);
+  renderDaily(selectedDailyEntry);
+  renderWeekly(weeklyEntry);
   renderList(els.yearlyList, entriesForFocus(state.bundle.yearly), 1);
   renderList(els.monthlyList, entriesForFocus(state.bundle.monthly), 12);
-  renderList(els.weeklyList, entriesForFocus(state.bundle.weekly), 12);
 }
 
 function entriesForFocus(entries) {
@@ -134,6 +145,21 @@ function findEntryForFocus(entries, focus) {
   return entries.find((entry) => entry.focus === focus);
 }
 
+function findDailyEntryForSelectedDate() {
+  if (!state.bundle) return null;
+  return state.bundle.daily.find((entry) => entry.focus === state.focus && entry.date === els.viewDate.value);
+}
+
+function findWeeklyEntryForSelectedDate() {
+  if (!state.bundle) return null;
+  const selectedDate = parseDate(els.viewDate.value);
+  return state.bundle.weekly.find((entry) => {
+    const weekStart = parseDate(entry.date);
+    const weekEnd = addDays(weekStart, 6);
+    return entry.focus === state.focus && selectedDate >= weekStart && selectedDate <= weekEnd;
+  });
+}
+
 function renderDaily(entry) {
   if (!entry) return;
   els.dailyDate.textContent = `${entry.period} - ${entry.date}`;
@@ -142,6 +168,30 @@ function renderDaily(entry) {
   els.dailyBody.textContent = entry.body;
   els.luckyColor.textContent = entry.lucky_color || "No color";
   els.luckyNumbers.textContent = (entry.lucky_numbers || []).join(", ") || "No numbers";
+}
+
+function renderWeekly(entry) {
+  if (!entry) return;
+  els.weeklyDate.textContent = `${entry.period} - week of ${entry.date}`;
+  els.weeklyTitle.textContent = entry.title;
+  els.weeklySummary.textContent = entry.summary;
+  els.weeklyBody.textContent = entry.body;
+}
+
+function parseDate(value) {
+  return new Date(`${value}T00:00:00`);
+}
+
+function addDays(value, days) {
+  const result = new Date(value);
+  result.setDate(result.getDate() + days);
+  return result;
+}
+
+function syncViewDateToYear(year) {
+  if (!els.viewDate.value || !els.viewDate.value.startsWith(`${year}-`)) {
+    els.viewDate.value = `${year}-01-01`;
+  }
 }
 
 function renderList(container, entries, limit) {
@@ -159,5 +209,6 @@ function renderList(container, entries, limit) {
 
 els.birthDateButton.addEventListener("click", useBirthDate);
 els.loadButton.addEventListener("click", loadBundle);
+els.viewDate.addEventListener("change", renderBundle);
 renderFocusTabs();
 document.addEventListener("DOMContentLoaded", loadBundle);
