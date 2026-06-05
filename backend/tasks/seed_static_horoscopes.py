@@ -21,6 +21,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Seed source. The current command supports deterministic development rows only.",
     )
     parser.add_argument("--dry-run", action="store_true", help="Generate and validate rows without persisting them.")
+    parser.add_argument("--write-db", action="store_true", help="Persist rows to the configured PostgreSQL database.")
     return parser
 
 
@@ -40,8 +41,15 @@ async def run_seed(argv: Sequence[str] | None = None, writer: StaticHoroscopeSee
         )
         return 0
 
+    if not args.write_db:
+        raise RuntimeError("Use --dry-run to validate rows or --write-db to persist them.")
+
     if writer is None:
-        raise RuntimeError("A static horoscope seed writer is required unless --dry-run is used.")
+        from backend.database.session import AsyncSessionLocal
+        from backend.services.static_horoscope_seed_writer import StaticHoroscopePostgresSeedWriter
+
+        async with AsyncSessionLocal() as session:
+            writer = StaticHoroscopePostgresSeedWriter(session=session)
 
     result = await service.seed(writer=writer, year=args.year, signs=signs)
     _print_summary(

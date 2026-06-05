@@ -35,4 +35,10 @@ Generate one sign for a smaller local check:
 python -m backend.tasks.seed_static_horoscopes --year 2026 --sign gemini --dry-run
 ```
 
-The command currently supports deterministic `codex-dev` seed rows and dry-run validation. A database writer will be added before using it to populate Supabase/PostgreSQL.
+Write rows to the configured PostgreSQL database only when the backend environment variables are set:
+
+```bash
+python -m backend.tasks.seed_static_horoscopes --year 2026 --sign gemini --write-db
+```
+
+The command currently supports deterministic `codex-dev` seed rows. Use `--dry-run` first before any real database write.
