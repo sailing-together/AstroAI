@@ -3,6 +3,7 @@ from datetime import date, datetime, timezone
 
 from backend.database.models_static_horoscope import StaticHoroscope
 from backend.schemas.horoscope import (
+    SUPPORTED_HOROSCOPE_FOCUSES,
     HoroscopeDimension,
     HoroscopeEntryResponse,
     HoroscopePeriodResponse,
@@ -19,6 +20,7 @@ from backend.services.zodiac import sign_label
 
 SUPPORTED_PERIODS = ("daily", "weekly", "monthly", "yearly")
 STATIC_GENERATED_AT = datetime(2026, 1, 1, tzinfo=timezone.utc)
+FOCUS_ORDER = {focus: index for index, focus in enumerate(SUPPORTED_HOROSCOPE_FOCUSES)}
 
 
 class StaticHoroscopeRepository:
@@ -258,5 +260,5 @@ def _persisted_row_to_seed_entry(row: StaticHoroscope) -> CodexDevHoroscopeSeedE
     )
 
 
-def _entry_sort_key(entry: CodexDevHoroscopeSeedEntry) -> tuple[date, str]:
-    return (entry.content_date, entry.focus)
+def _entry_sort_key(entry: CodexDevHoroscopeSeedEntry) -> tuple[date, int, str]:
+    return (entry.content_date, FOCUS_ORDER.get(entry.focus, len(FOCUS_ORDER)), entry.focus)
