@@ -1,28 +1,43 @@
 from datetime import date, datetime, timezone
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from backend.database.session import get_db_session
 from backend.schemas.horoscope import (
     SUPPORTED_HOROSCOPE_FOCUSES,
     HoroscopeBundleResponse,
     HoroscopeEntryResponse,
     HoroscopePeriodResponse,
 )
+from backend.services.static_horoscope_db_store import StaticHoroscopeDbStore
 from backend.services.static_horoscope_repository import StaticHoroscopeRepository
 from backend.services.zodiac import VALID_SIGNS
 
 router = APIRouter(prefix="/horoscope", tags=["horoscope"])
 repository = StaticHoroscopeRepository()
+static_horoscope_store = StaticHoroscopeDbStore()
+
+
+def get_static_horoscope_store() -> StaticHoroscopeDbStore:
+    return static_horoscope_store
 
 
 @router.get("/bundle/{sign}", response_model=HoroscopeBundleResponse)
-async def get_horoscope_bundle(sign: str, year: int | None = None) -> HoroscopeBundleResponse:
+async def get_horoscope_bundle(
+    sign: str,
+    year: int | None = None,
+    session: AsyncSession = Depends(get_db_session),
+    store: StaticHoroscopeDbStore = Depends(get_static_horoscope_store),
+) -> HoroscopeBundleResponse:
     canonical_sign = _validate_sign(sign)
     target_year = year or datetime.now(timezone.utc).year
-    yearly = repository.build_year_entries(canonical_sign, target_year, "yearly")
-    monthly = repository.build_year_entries(canonical_sign, target_year, "monthly")
-    weekly = repository.build_year_entries(canonical_sign, target_year, "weekly")
-    daily = repository.build_year_entries(canonical_sign, target_year, "daily")
+    active_repository = await _repository_for_year(session, store, canonical_sign, target_year)
+    yearly = active_repository.build_year_entries(canonical_sign, target_year, "yearly")
+    monthly = active_repository.build_year_entries(canonical_sign, target_year, "monthly")
+    weekly = active_repository.build_year_entries(canonical_sign, target_year, "weekly")
+    daily = active_repository.build_year_entries(canonical_sign, target_year, "daily")
     generated_at = max(entry.generated_at for entry in yearly + monthly + weekly + daily)
     return HoroscopeBundleResponse(
         sign=yearly[0].sign,
@@ -88,6 +103,21 @@ def _get_horoscope_period(
     if selected_date_mode:
         return repository.build_period_for_selected_date(canonical_sign, period, content_date)
     return repository.build_period(canonical_sign, period, content_date)
+
+
+async def _repository_for_year(
+    session: AsyncSession,
+    store: StaticHoroscopeDbStore,
+    sign: str,
+    target_year: int,
+) -> StaticHoroscopeRepository:
+    try:
+        rows = await store.fetch_year_rows(session, sign, target_year)
+    except (OSError, SQLAlchemyError):
+        rows = []
+    if not rows:
+        return repository
+    return StaticHoroscopeRepository(persisted_rows=rows)
 
 
 def _validate_sign(sign: str) -> str:

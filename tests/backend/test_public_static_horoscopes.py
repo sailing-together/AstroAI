@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 
+from backend.services.static_horoscope_dev_importer import build_static_horoscope_rows
 from tests.backend.test_api_contracts import load_app
 
 
@@ -36,6 +37,42 @@ def test_horoscope_bundle_is_public_static_content(monkeypatch):
     assert payload["source"] == "static"
     assert payload["daily"][0]["period"] == "daily"
     assert payload["daily"][0]["focus"] == "general"
+
+
+def test_horoscope_bundle_reads_persisted_rows_when_available(monkeypatch):
+    app = load_app(monkeypatch)
+    from backend.api.v1 import horoscope as horoscope_api
+    from backend.database.session import get_db_session
+
+    rows = build_static_horoscope_rows(signs=["gemini"], year=2026)
+    rows[0].title = "Persisted yearly guidance"
+    rows[9 + 108 + 477].title = "Persisted daily guidance"
+
+    class FakeStore:
+        def __init__(self) -> None:
+            self.calls: list[tuple[object, str, int]] = []
+
+        async def fetch_year_rows(self, session: object, sign: str, target_year: int):
+            self.calls.append((session, sign, target_year))
+            return rows
+
+    fake_session = object()
+    fake_store = FakeStore()
+
+    async def override_session():
+        yield fake_session
+
+    app.dependency_overrides[get_db_session] = override_session
+    app.dependency_overrides[horoscope_api.get_static_horoscope_store] = lambda: fake_store
+    client = TestClient(app)
+
+    response = client.get("/api/v1/horoscope/bundle/gemini", params={"year": 2026})
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert fake_store.calls == [(fake_session, "gemini", 2026)]
+    assert payload["yearly"][0]["title"] == "Persisted yearly guidance"
+    assert payload["daily"][0]["title"] == "Persisted daily guidance"
 
 
 def test_daily_horoscope_returns_all_dimensions_when_focus_is_omitted(monkeypatch):
