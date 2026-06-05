@@ -82,6 +82,21 @@ At the beginning of each work session, report:
 
 ## In Progress
 
+### Public Horoscope UX Shell
+
+Current state:
+
+- `/horoscope` is being moved from a tester-style interface toward the production public horoscope surface.
+- The selected view date drives the daily reading, matching week, matching month, and year overview.
+- Development-only wording such as backend connection details, API base labels, and static bundle language is being removed from the user-facing page.
+- The page prioritizes the daily reading in the first viewport, with sign, birth date, and view date controls as supporting tools.
+
+Next plan:
+
+- Continue applying `docs/superpowers/specs/2026-06-05-public-web-ux-design.md`.
+- Add visual QA once browser tooling is available for the current worktree page.
+- Follow with richer visual polish, zodiac education, and conversion paths after the static data/API flow is stable.
+
 ### Static Horoscope DB Persistence
 
 Current state:
@@ -113,7 +128,7 @@ Next plan:
 2. Add a local/dev seed command for 2026 all-sign static horoscope rows.
 3. Wire public horoscope API reads to database rows in development and production-shaped tests.
 4. Add a data-not-ready response for production when static rows are missing.
-5. Build the production public horoscope UI from `docs/superpowers/specs/2026-06-05-public-web-ux-design.md`.
+5. Continue the production public horoscope UI from `docs/superpowers/specs/2026-06-05-public-web-ux-design.md`.
 6. Add sign profile and sign-pair compatibility static content after horoscope data is stable.
 7. Return to registered-user foundation: Supabase auth screens, birth data onboarding, natal chart persistence, and chart reveal.
 
