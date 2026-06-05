@@ -23,6 +23,12 @@ Do not commit real `.env` files or secrets.
 
 ## Static Horoscope Seed Command
 
+Apply the static horoscope table migration to the configured Supabase/PostgreSQL database before writing rows:
+
+```bash
+psql "$DATABASE_URL" -f backend/database/migrations/20260605_create_static_horoscopes.sql
+```
+
 Generate and validate deterministic 2026 static horoscope rows without writing to a database:
 
 ```bash

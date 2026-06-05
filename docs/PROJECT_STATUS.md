@@ -113,11 +113,11 @@ Current state:
 - Weekly DB-first reads preserve the selected target year for cross-year weeks such as `2026-W01` starting on `2025-12-29`.
 - Local development still falls back to deterministic dev content if the configured database is unavailable or has no rows.
 - Production returns `503 static_horoscope_not_ready` when static rows are missing or the configured database cannot be read.
+- Static horoscope table SQL migration exists at `backend/database/migrations/20260605_create_static_horoscopes.sql`.
 
 Missing:
 
 - The operator seed command can write through PostgreSQL, but it still needs real environment variables and database/migration setup before live use.
-- There is no migration or DDL workflow checked in for the `static_horoscopes` table.
 - Redis caching is documented but not implemented.
 
 Next plan:
@@ -126,12 +126,11 @@ Next plan:
 
 ## Next Recommended Work
 
-1. Add migration/DDL workflow for the `static_horoscopes` table.
-2. Validate the seed command against a real configured PostgreSQL/Supabase environment.
-3. Add Redis caching after PostgreSQL read correctness is stable.
-4. Continue the production public horoscope UI from `docs/superpowers/specs/2026-06-05-public-web-ux-design.md`.
-5. Add sign profile and sign-pair compatibility static content after horoscope data is stable.
-6. Return to registered-user foundation: Supabase auth screens, birth data onboarding, natal chart persistence, and chart reveal.
+1. Validate the seed command against a real configured PostgreSQL/Supabase environment.
+2. Add Redis caching after PostgreSQL read correctness is stable.
+3. Continue the production public horoscope UI from `docs/superpowers/specs/2026-06-05-public-web-ux-design.md`.
+4. Add sign profile and sign-pair compatibility static content after horoscope data is stable.
+5. Return to registered-user foundation: Supabase auth screens, birth data onboarding, natal chart persistence, and chart reveal.
 
 ## Known Technical Debt
 
