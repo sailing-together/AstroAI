@@ -1,7 +1,9 @@
 # AstroAI Product Source of Truth
 
 > Status: Canonical product direction for the AstroAI redevelopment.
-> Last updated: 2026-06-03
+> Last updated: 2026-06-05
+
+For daily development status, completed PR slices, current work, and the next recommended implementation step, use `PROJECT_STATUS.md`.
 
 ## Product Thesis
 

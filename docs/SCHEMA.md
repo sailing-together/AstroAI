@@ -1,7 +1,7 @@
 # AstroAI Schema Source of Truth
 
 > Status: Canonical database schema for redevelopment.
-> Last updated: 2026-06-02
+> Last updated: 2026-06-05
 
 ## Database
 
@@ -142,18 +142,35 @@ Unique index: `(user_id)`.
 |---|---|---|
 | `id` | uuid primary key | Content id |
 | `sign` | zodiac_sign not null | Zodiac sign |
+| `target_year` | integer not null | Bundle year, e.g. `2026` |
 | `period` | horoscope_period not null | Daily, weekly, monthly, yearly |
 | `focus` | horoscope_focus not null | Focus area |
 | `content_date` | date not null | Date or period start |
+| `period_end_date` | date | Optional period end; required for weekly/monthly lookup clarity |
 | `title` | text not null | SEO/display title |
 | `summary` | text not null | Short summary |
 | `body` | text not null | Full copy |
 | `lucky_numbers` | integer[] | Optional |
 | `lucky_color` | text | Optional |
-| `generation_model` | text | `gemini-2.5-flash-lite` |
+| `source` | text not null | `codex-dev`, `ai-batch`, `manual`, or `imported` |
+| `generation_model` | text not null | `codex-dev`, `gemini-2.5-flash-lite`, etc. |
+| `prompt_version` | text | Generation prompt version |
+| `knowledge_version` | text | Knowledge/reference version |
+| `content_version` | integer not null | Incremented when regenerated |
+| `is_active` | boolean not null | Active row served by public reads |
 | `generated_at` | timestamptz | Defaults now |
+| `created_at` | timestamptz | Defaults now |
+| `updated_at` | timestamptz | Defaults now |
 
-Unique index: `(sign, period, focus, content_date)`.
+Unique index: `(sign, target_year, period, focus, content_date, content_version)`.
+
+Recommended active-row guard:
+
+```sql
+create unique index uq_static_horoscope_active_identity
+on static_horoscopes (sign, target_year, period, focus, content_date)
+where is_active = true;
+```
 
 Generation policy:
 
@@ -165,6 +182,8 @@ Generation policy:
 - Manual annual regeneration may overwrite existing rows for a target year when explicitly requested.
 - Generation jobs should call Gemini once per sign and period, receive all dimensions, and write one row per dimension.
 - Public reads must use this table and must not call Gemini.
+- Development seed rows may use `source = 'codex-dev'` and `generation_model = 'codex-dev'`.
+- Public reads should select only `is_active = true` rows unless an explicit version fallback is requested.
 
 ### static_sign_profiles
 

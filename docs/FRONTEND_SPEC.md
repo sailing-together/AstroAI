@@ -1,7 +1,7 @@
 # AstroAI Frontend Specification Source of Truth
 
 > Status: Canonical frontend specification for redevelopment.
-> Last updated: 2026-06-03
+> Last updated: 2026-06-05
 
 ## Frontend Target
 
@@ -293,6 +293,37 @@ Production public pages must avoid these preview-only patterns:
 - Debug/status language that exposes implementation details.
 - Long weekly lists as the default browsing pattern.
 - Page titles that make the experience look like a single-sign test page.
+
+### Production Horoscope Page Layout
+
+The `/horoscope` and `/horoscope/[sign]` production experience should be an immediately usable reading surface, not a developer console and not a marketing-only landing page.
+
+Required first screen:
+
+1. Fixed or stable AstroAI header with brand mark and simple navigation.
+2. Compact sign selector and birth-date input.
+3. Date selector defaulting to today, constrained to the loaded bundle year when browsing static annual data.
+4. Main reading area showing the selected date's daily reading for the active focus.
+5. Matching weekly reading derived from the selected date and `period_end_date`.
+6. Clear month and year summary sections from the same loaded bundle.
+7. Register/sign-in prompt only for saved natal charts, AI personalization, and history.
+
+Required interaction:
+
+- Choosing a sign loads one bundle for that sign/year.
+- Entering a birth date calls `/utils/sun-sign`, sets the sign, then loads the bundle.
+- Changing the view date must not refetch individual daily/weekly/monthly endpoints when the bundle is already loaded.
+- Focus tabs switch the active dimension across daily, weekly, monthly, and yearly readings.
+- Weekly content is never displayed as the default long list.
+- The page must handle loading, API unavailable, missing data, and invalid date states with user-facing copy that does not mention implementation details.
+
+Visual acceptance:
+
+- Use the Flutter-derived AstroAI palette as accents, not as a full-page purple-only treatment.
+- Use cards for individual repeated readings only; avoid cards inside cards.
+- Keep content readable on mobile without overlap or clipped button text.
+- Avoid visible API base URL fields, manual load controls, debug labels, provider names, or raw JSON.
+- The public page should feel like a polished horoscope product even before authentication.
 
 ## Frontend Build Order
 
