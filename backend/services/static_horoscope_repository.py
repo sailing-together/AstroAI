@@ -1,5 +1,7 @@
+from collections.abc import Iterable
 from datetime import date, datetime, timezone
 
+from backend.database.models_static_horoscope import StaticHoroscope
 from backend.schemas.horoscope import (
     HoroscopeDimension,
     HoroscopeEntryResponse,
@@ -20,17 +22,22 @@ STATIC_GENERATED_AT = datetime(2026, 1, 1, tzinfo=timezone.utc)
 
 
 class StaticHoroscopeRepository:
-    def __init__(self) -> None:
+    def __init__(self, persisted_rows: Iterable[StaticHoroscope] | None = None) -> None:
         self._seed_generator = CodexDevHoroscopeSeedGenerator()
         self._year_cache: dict[tuple[str, int], CodexDevHoroscopeYearSeed] = {}
+        self._persisted_years = _persisted_rows_to_year_seeds(persisted_rows or [])
 
     def get_or_create_year(self, sign: str, year: int) -> CodexDevHoroscopeYearSeed:
         key = (sign, year)
         if key not in self._year_cache:
-            self._year_cache[key] = _merge_year_seed(
-                generated=self._seed_generator.generate_year(sign, year),
-                authored=load_codex_static_seed(sign, year),
-            )
+            persisted_year = self._persisted_years.get(key)
+            if persisted_year is not None:
+                self._year_cache[key] = persisted_year
+            else:
+                self._year_cache[key] = _merge_year_seed(
+                    generated=self._seed_generator.generate_year(sign, year),
+                    authored=load_codex_static_seed(sign, year),
+                )
         return self._year_cache[key]
 
     def build_entry(self, sign: str, period: str, focus: str, content_date: date) -> HoroscopeEntryResponse:
@@ -201,3 +208,55 @@ def _merge_entries(
 ) -> list[CodexDevHoroscopeSeedEntry]:
     authored_by_key = {(entry.content_date, entry.focus): entry for entry in authored}
     return [authored_by_key.get((entry.content_date, entry.focus), entry) for entry in generated]
+
+
+def _persisted_rows_to_year_seeds(
+    rows: Iterable[StaticHoroscope],
+) -> dict[tuple[str, int], CodexDevHoroscopeYearSeed]:
+    grouped_entries: dict[tuple[str, int], dict[str, list[CodexDevHoroscopeSeedEntry]]] = {}
+    for row in rows:
+        if not row.is_active:
+            continue
+        key = (row.sign, row.target_year)
+        grouped_entries.setdefault(key, {period: [] for period in SUPPORTED_PERIODS})[row.period].append(
+            _persisted_row_to_seed_entry(row)
+        )
+
+    return {
+        key: CodexDevHoroscopeYearSeed(
+            sign=key[0],
+            year=key[1],
+            yearly=sorted(entries["yearly"], key=_entry_sort_key),
+            monthly=sorted(entries["monthly"], key=_entry_sort_key),
+            weekly=sorted(entries["weekly"], key=_entry_sort_key),
+            daily=sorted(entries["daily"], key=_entry_sort_key),
+        )
+        for key, entries in grouped_entries.items()
+    }
+
+
+def _persisted_row_to_seed_entry(row: StaticHoroscope) -> CodexDevHoroscopeSeedEntry:
+    return CodexDevHoroscopeSeedEntry(
+        sign=row.sign,
+        target_year=row.target_year,
+        period=row.period,
+        focus=row.focus,
+        content_date=row.content_date,
+        period_end_date=row.period_end_date,
+        title=row.title,
+        summary=row.summary,
+        body=row.body,
+        lucky_numbers=list(row.lucky_numbers or []),
+        lucky_color=row.lucky_color,
+        source=row.source,
+        generation_model=row.generation_model,
+        prompt_version=row.prompt_version,
+        knowledge_version=row.knowledge_version,
+        content_version=row.content_version,
+        is_active=row.is_active,
+        generated_at=row.generated_at,
+    )
+
+
+def _entry_sort_key(entry: CodexDevHoroscopeSeedEntry) -> tuple[date, str]:
+    return (entry.content_date, entry.focus)
