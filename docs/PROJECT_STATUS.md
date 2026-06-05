@@ -109,11 +109,12 @@ Current state:
 - Operator seed command exists for deterministic dry-run generation and injected-writer execution.
 - PostgreSQL seed writer boundary exists for versioned static horoscope upserts.
 - Public bundle route now has a database-first read path when active persisted rows are available.
+- Public daily, weekly, monthly, and yearly routes now have database-first read paths when active persisted rows are available.
+- Weekly DB-first reads preserve the selected target year for cross-year weeks such as `2026-W01` starting on `2025-12-29`.
 - Local development still falls back to deterministic dev content if the configured database is unavailable or has no rows.
 
 Missing:
 
-- Daily, weekly, monthly, and yearly single-period public routes still use the process-level repository.
 - The operator seed command can write through PostgreSQL, but it still needs real environment variables and database/migration setup before live use.
 - There is no migration or DDL workflow checked in for the `static_horoscopes` table.
 - Redis caching is documented but not implemented.
