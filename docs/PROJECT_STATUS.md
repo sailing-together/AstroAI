@@ -90,12 +90,13 @@ Current state:
 - Repository can read persisted rows when rows are passed in.
 - Database store boundary exists for active-row query construction and repository hydration.
 - Seed service boundary exists for deterministic row generation, versioned identity validation, and injected persistence writers.
+- Operator seed command exists for deterministic dry-run generation and injected-writer execution.
 
 Missing:
 
 - Public API still uses a process-level repository with generated/dev seed fallback.
 - Public API does not yet query Supabase/PostgreSQL through `AsyncSession`.
-- There is no operator command for writing the 2026 static rows to a configured database.
+- The operator seed command does not yet include a real Supabase/PostgreSQL writer.
 - There is no migration or DDL workflow checked in for the `static_horoscopes` table.
 - Redis caching is documented but not implemented.
 - Production missing-data behavior is not enforced yet.
