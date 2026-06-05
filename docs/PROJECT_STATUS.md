@@ -78,6 +78,7 @@ At the beginning of each work session, report:
 - Public web calls canonical `/api/v1` backend routes.
 - Public web has runtime feedback for loading and local API fallback states.
 - `frontend/preview` remains a developer/API tester only.
+- Public web UX consolidation spec exists at `docs/superpowers/specs/2026-06-05-public-web-ux-design.md`.
 
 ## In Progress
 
@@ -112,7 +113,7 @@ Next plan:
 2. Add a local/dev seed command for 2026 all-sign static horoscope rows.
 3. Wire public horoscope API reads to database rows in development and production-shaped tests.
 4. Add a data-not-ready response for production when static rows are missing.
-5. Build the production public horoscope UI to replace the current rough page.
+5. Build the production public horoscope UI from `docs/superpowers/specs/2026-06-05-public-web-ux-design.md`.
 6. Add sign profile and sign-pair compatibility static content after horoscope data is stable.
 7. Return to registered-user foundation: Supabase auth screens, birth data onboarding, natal chart persistence, and chart reveal.
 

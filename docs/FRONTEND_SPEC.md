@@ -3,6 +3,8 @@
 > Status: Canonical frontend specification for redevelopment.
 > Last updated: 2026-06-05
 
+For the public web page-level UX consolidation, use `docs/superpowers/specs/2026-06-05-public-web-ux-design.md`.
+
 ## Frontend Target
 
 The web MVP uses Next.js 14 App Router, TypeScript, Tailwind CSS, and Supabase Auth.
@@ -260,8 +262,8 @@ Keep these design assets and patterns:
 - The AstroAI brand palette: blue `#4097FF`, pink `#FF92A2`, light blue `#A5E5F9`, purple `#8985CF`, and light pink `#FFF3F8`.
 - The white fixed header pattern with AstroAI branding on the left and simple navigation on the right.
 - The blue-to-pink gradient brand mark direction.
-- Cinzel-style display headings for brand moments and page titles.
-- Inter/Raleway-style readable body text.
+- Poppins/Inter-style readable typography from the current Flutter theme.
+- Optional decorative display headings for brand moments and page titles.
 - Friendly rounded cards for horoscope dimensions, zodiac choices, daily insights, and chart summaries.
 - Zodiac grouping by element as a useful public browsing pattern.
 - The daily-insights information structure: greeting/date/sign context, guidance cards, lucky numbers, and lucky colors.
