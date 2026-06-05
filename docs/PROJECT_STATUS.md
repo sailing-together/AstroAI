@@ -114,6 +114,8 @@ Current state:
 - Local development still falls back to deterministic dev content if the configured database is unavailable or has no rows.
 - Production returns `503 static_horoscope_not_ready` when static rows are missing or the configured database cannot be read.
 - Static horoscope table SQL migration exists at `backend/database/migrations/20260605_create_static_horoscopes.sql`.
+- Static horoscope coverage validation exists for expected period/focus/date counts.
+- The seed command dry-run reports expected row count and coverage completeness.
 
 Missing:
 

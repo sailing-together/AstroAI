@@ -27,6 +27,8 @@ def test_seed_command_dry_run_generates_without_persisting(capsys):
     assert "year=2026" in output
     assert "signs=gemini" in output
     assert "rows=3879" in output
+    assert "expected=3879" in output
+    assert "coverage=complete" in output
     assert "persisted=0" in output
     assert "dry_run=true" in output
 
@@ -38,6 +40,8 @@ def test_seed_command_dry_run_defaults_to_all_signs(capsys):
     assert exit_code == 0
     assert "signs=all" in output
     assert "rows=46548" in output
+    assert "expected=46548" in output
+    assert "coverage=complete" in output
 
 
 def test_seed_command_persists_through_injected_writer(capsys):
