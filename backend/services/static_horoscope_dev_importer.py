@@ -2,6 +2,11 @@ from collections.abc import Iterable
 
 from backend.database.models_static_horoscope import StaticHoroscope
 from backend.services.codex_dev_horoscope_seed import CodexDevHoroscopeSeedGenerator
+from backend.services.zodiac import VALID_SIGNS
+
+
+def build_all_static_horoscope_rows(year: int) -> list[StaticHoroscope]:
+    return build_static_horoscope_rows(signs=VALID_SIGNS, year=year)
 
 
 def build_static_horoscope_rows(signs: Iterable[str], year: int) -> list[StaticHoroscope]:
