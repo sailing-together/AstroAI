@@ -88,6 +88,7 @@ Current state:
 - SQLAlchemy model shape exists.
 - Dev row importer exists.
 - Repository can read persisted rows when rows are passed in.
+- Database store boundary exists for active-row query construction and repository hydration.
 
 Missing:
 
