@@ -112,13 +112,13 @@ Current state:
 - Public daily, weekly, monthly, and yearly routes now have database-first read paths when active persisted rows are available.
 - Weekly DB-first reads preserve the selected target year for cross-year weeks such as `2026-W01` starting on `2025-12-29`.
 - Local development still falls back to deterministic dev content if the configured database is unavailable or has no rows.
+- Production returns `503 static_horoscope_not_ready` when static rows are missing or the configured database cannot be read.
 
 Missing:
 
 - The operator seed command can write through PostgreSQL, but it still needs real environment variables and database/migration setup before live use.
 - There is no migration or DDL workflow checked in for the `static_horoscopes` table.
 - Redis caching is documented but not implemented.
-- Production missing-data behavior is not enforced yet.
 
 Next plan:
 
@@ -126,13 +126,12 @@ Next plan:
 
 ## Next Recommended Work
 
-1. Finish static horoscope DB persistence.
-2. Add a local/dev seed command for 2026 all-sign static horoscope rows.
-3. Wire public horoscope API reads to database rows in development and production-shaped tests.
-4. Add a data-not-ready response for production when static rows are missing.
-5. Continue the production public horoscope UI from `docs/superpowers/specs/2026-06-05-public-web-ux-design.md`.
-6. Add sign profile and sign-pair compatibility static content after horoscope data is stable.
-7. Return to registered-user foundation: Supabase auth screens, birth data onboarding, natal chart persistence, and chart reveal.
+1. Add migration/DDL workflow for the `static_horoscopes` table.
+2. Validate the seed command against a real configured PostgreSQL/Supabase environment.
+3. Add Redis caching after PostgreSQL read correctness is stable.
+4. Continue the production public horoscope UI from `docs/superpowers/specs/2026-06-05-public-web-ux-design.md`.
+5. Add sign profile and sign-pair compatibility static content after horoscope data is stable.
+6. Return to registered-user foundation: Supabase auth screens, birth data onboarding, natal chart persistence, and chart reveal.
 
 ## Known Technical Debt
 

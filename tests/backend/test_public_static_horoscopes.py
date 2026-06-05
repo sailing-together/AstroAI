@@ -80,6 +80,36 @@ def test_horoscope_bundle_reads_persisted_rows_when_available(monkeypatch):
     assert payload["daily"][0]["title"] == "Persisted daily guidance"
 
 
+def test_horoscope_bundle_returns_not_ready_when_production_rows_are_missing(monkeypatch):
+    monkeypatch.setenv("ENVIRONMENT", "production")
+    client, fake_store, fake_session = client_with_static_horoscope_store(monkeypatch, [])
+
+    response = client.get("/api/v1/horoscope/bundle/gemini", params={"year": 2026})
+
+    assert response.status_code == 503
+    assert fake_store.calls == [(fake_session, "gemini", 2026)]
+    assert response.json()["detail"] == {
+        "code": "static_horoscope_not_ready",
+        "message": "Static horoscope data is not ready for this sign and year.",
+        "sign": "gemini",
+        "year": 2026,
+    }
+
+
+def test_daily_horoscope_returns_not_ready_when_production_rows_are_missing(monkeypatch):
+    monkeypatch.setenv("ENVIRONMENT", "production")
+    client, fake_store, fake_session = client_with_static_horoscope_store(monkeypatch, [])
+
+    response = client.get(
+        "/api/v1/horoscope/daily/gemini",
+        params={"date": "2026-06-02", "focus": "general"},
+    )
+
+    assert response.status_code == 503
+    assert fake_store.calls == [(fake_session, "gemini", 2026)]
+    assert response.json()["detail"]["code"] == "static_horoscope_not_ready"
+
+
 def test_daily_horoscope_reads_persisted_single_focus_when_available(monkeypatch):
     rows = build_static_horoscope_rows(signs=["gemini"], year=2026)
     persisted_row = next(

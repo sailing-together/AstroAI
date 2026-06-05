@@ -1,3 +1,4 @@
+import os
 from datetime import date, datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -147,11 +148,31 @@ async def _repository_for_year(
 ) -> StaticHoroscopeRepository:
     try:
         rows = await store.fetch_year_rows(session, sign, target_year)
-    except (OSError, SQLAlchemyError):
+    except (OSError, SQLAlchemyError) as exc:
+        if _is_production():
+            raise _static_horoscope_not_ready(sign, target_year) from exc
         rows = []
     if not rows:
+        if _is_production():
+            raise _static_horoscope_not_ready(sign, target_year)
         return repository
     return StaticHoroscopeRepository(persisted_rows=rows)
+
+
+def _is_production() -> bool:
+    return os.getenv("ENVIRONMENT", "development").lower() == "production"
+
+
+def _static_horoscope_not_ready(sign: str, target_year: int) -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        detail={
+            "code": "static_horoscope_not_ready",
+            "message": "Static horoscope data is not ready for this sign and year.",
+            "sign": sign,
+            "year": target_year,
+        },
+    )
 
 
 def _validate_sign(sign: str) -> str:
