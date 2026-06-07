@@ -41,15 +41,16 @@ def test_public_web_horoscope_explains_backend_connection_failures():
         encoding="utf-8"
     )
 
-    assert "Backend connection needed" in component
-    assert "Start the FastAPI backend" in component
-    assert "http://localhost:8000/api/v1" in component
+    assert "Guidance is temporarily unavailable" in component
+    assert "guidance is being prepared" in component
+    assert "StaticHoroscopeNotReadyError" in component
     assert "retryLoadBundle" in component
 
 
 def test_readme_explains_full_local_web_startup():
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
 
-    assert "Start the backend first" in readme
-    assert "cd frontend/web" in readme
-    assert "npm run dev" in readme
+    assert "bash frontend/web/start-web.sh" in readme
+    assert "NEXT_PUBLIC_API_BASE_URL" in readme
+    assert "cd frontend/preview" in readme
+    assert "bash start-preview.sh" in readme
