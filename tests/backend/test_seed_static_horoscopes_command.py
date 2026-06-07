@@ -27,6 +27,8 @@ def test_seed_command_dry_run_generates_without_persisting(capsys):
     assert "year=2026" in output
     assert "signs=gemini" in output
     assert "rows=3879" in output
+    assert "expected=3879" in output
+    assert "coverage=complete" in output
     assert "persisted=0" in output
     assert "dry_run=true" in output
 
@@ -38,6 +40,8 @@ def test_seed_command_dry_run_defaults_to_all_signs(capsys):
     assert exit_code == 0
     assert "signs=all" in output
     assert "rows=46548" in output
+    assert "expected=46548" in output
+    assert "coverage=complete" in output
 
 
 def test_seed_command_persists_through_injected_writer(capsys):
@@ -48,8 +52,25 @@ def test_seed_command_persists_through_injected_writer(capsys):
     output = capsys.readouterr().out
     assert exit_code == 0
     assert len(writer.rows) == 3879
+    assert "expected=3879" in output
+    assert "coverage=complete" in output
     assert "persisted=3879" in output
+    assert "write=complete" in output
     assert "dry_run=false" in output
+
+
+def test_seed_command_reports_incomplete_write(capsys):
+    writer = RecordingWriter(persisted_count=3878)
+
+    exit_code = asyncio.run(run_seed(["--year", "2026", "--sign", "gemini", "--write-db"], writer=writer))
+
+    output = capsys.readouterr().out
+    assert exit_code == 0
+    assert "rows=3879" in output
+    assert "expected=3879" in output
+    assert "coverage=complete" in output
+    assert "persisted=3878" in output
+    assert "write=incomplete" in output
 
 
 def test_seed_command_requires_explicit_write_db_for_persistence():
@@ -64,9 +85,10 @@ def test_seed_command_requires_explicit_write_db_for_persistence():
 
 
 class RecordingWriter:
-    def __init__(self) -> None:
+    def __init__(self, persisted_count: int | None = None) -> None:
         self.rows = []
+        self.persisted_count = persisted_count
 
     async def upsert_rows(self, rows):
         self.rows = list(rows)
-        return len(self.rows)
+        return self.persisted_count if self.persisted_count is not None else len(self.rows)

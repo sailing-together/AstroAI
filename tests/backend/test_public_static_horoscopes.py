@@ -4,6 +4,32 @@ from backend.services.static_horoscope_dev_importer import build_static_horoscop
 from tests.backend.test_api_contracts import load_app
 
 
+class FakeStaticHoroscopeStore:
+    def __init__(self, rows) -> None:
+        self.rows = rows
+        self.calls: list[tuple[object, str, int]] = []
+
+    async def fetch_year_rows(self, session: object, sign: str, target_year: int):
+        self.calls.append((session, sign, target_year))
+        return self.rows
+
+
+def client_with_static_horoscope_store(monkeypatch, rows):
+    app = load_app(monkeypatch)
+    from backend.api.v1 import horoscope as horoscope_api
+    from backend.database.session import get_db_session
+
+    fake_session = object()
+    fake_store = FakeStaticHoroscopeStore(rows)
+
+    async def override_session():
+        yield fake_session
+
+    app.dependency_overrides[get_db_session] = override_session
+    app.dependency_overrides[horoscope_api.get_static_horoscope_store] = lambda: fake_store
+    return TestClient(app), fake_store, fake_session
+
+
 def test_sun_sign_utility_is_public_and_deterministic(monkeypatch):
     client = TestClient(load_app(monkeypatch))
 
@@ -40,31 +66,10 @@ def test_horoscope_bundle_is_public_static_content(monkeypatch):
 
 
 def test_horoscope_bundle_reads_persisted_rows_when_available(monkeypatch):
-    app = load_app(monkeypatch)
-    from backend.api.v1 import horoscope as horoscope_api
-    from backend.database.session import get_db_session
-
     rows = build_static_horoscope_rows(signs=["gemini"], year=2026)
     rows[0].title = "Persisted yearly guidance"
     rows[9 + 108 + 477].title = "Persisted daily guidance"
-
-    class FakeStore:
-        def __init__(self) -> None:
-            self.calls: list[tuple[object, str, int]] = []
-
-        async def fetch_year_rows(self, session: object, sign: str, target_year: int):
-            self.calls.append((session, sign, target_year))
-            return rows
-
-    fake_session = object()
-    fake_store = FakeStore()
-
-    async def override_session():
-        yield fake_session
-
-    app.dependency_overrides[get_db_session] = override_session
-    app.dependency_overrides[horoscope_api.get_static_horoscope_store] = lambda: fake_store
-    client = TestClient(app)
+    client, fake_store, fake_session = client_with_static_horoscope_store(monkeypatch, rows)
 
     response = client.get("/api/v1/horoscope/bundle/gemini", params={"year": 2026})
 
@@ -73,6 +78,149 @@ def test_horoscope_bundle_reads_persisted_rows_when_available(monkeypatch):
     assert fake_store.calls == [(fake_session, "gemini", 2026)]
     assert payload["yearly"][0]["title"] == "Persisted yearly guidance"
     assert payload["daily"][0]["title"] == "Persisted daily guidance"
+
+
+def test_horoscope_bundle_returns_not_ready_when_production_rows_are_missing(monkeypatch):
+    monkeypatch.setenv("ENVIRONMENT", "production")
+    client, fake_store, fake_session = client_with_static_horoscope_store(monkeypatch, [])
+
+    response = client.get("/api/v1/horoscope/bundle/gemini", params={"year": 2026})
+
+    assert response.status_code == 503
+    assert fake_store.calls == [(fake_session, "gemini", 2026)]
+    assert response.json()["detail"] == {
+        "code": "static_horoscope_not_ready",
+        "message": "Static horoscope data is not ready for this sign and year.",
+        "sign": "gemini",
+        "year": 2026,
+    }
+
+
+def test_daily_horoscope_returns_not_ready_when_production_rows_are_missing(monkeypatch):
+    monkeypatch.setenv("ENVIRONMENT", "production")
+    client, fake_store, fake_session = client_with_static_horoscope_store(monkeypatch, [])
+
+    response = client.get(
+        "/api/v1/horoscope/daily/gemini",
+        params={"date": "2026-06-02", "focus": "general"},
+    )
+
+    assert response.status_code == 503
+    assert fake_store.calls == [(fake_session, "gemini", 2026)]
+    assert response.json()["detail"]["code"] == "static_horoscope_not_ready"
+
+
+def test_daily_horoscope_reads_persisted_single_focus_when_available(monkeypatch):
+    rows = build_static_horoscope_rows(signs=["gemini"], year=2026)
+    persisted_row = next(
+        row for row in rows if row.period == "daily" and row.focus == "love" and row.content_date.isoformat() == "2026-06-02"
+    )
+    persisted_row.title = "Persisted daily love guidance"
+    client, fake_store, fake_session = client_with_static_horoscope_store(monkeypatch, rows)
+
+    response = client.get(
+        "/api/v1/horoscope/daily/gemini",
+        params={"date": "2026-06-02", "focus": "love"},
+    )
+
+    assert response.status_code == 200
+    assert fake_store.calls == [(fake_session, "gemini", 2026)]
+    assert response.json()["title"] == "Persisted daily love guidance"
+
+
+def test_daily_horoscope_reads_persisted_dimensions_when_focus_is_omitted(monkeypatch):
+    rows = build_static_horoscope_rows(signs=["gemini"], year=2026)
+    persisted_row = next(
+        row
+        for row in rows
+        if row.period == "daily" and row.focus == "general" and row.content_date.isoformat() == "2026-06-02"
+    )
+    persisted_row.title = "Persisted daily general guidance"
+    client, fake_store, fake_session = client_with_static_horoscope_store(monkeypatch, rows)
+
+    response = client.get("/api/v1/horoscope/daily/gemini", params={"date": "2026-06-02"})
+
+    assert response.status_code == 200
+    assert fake_store.calls == [(fake_session, "gemini", 2026)]
+    assert response.json()["dimensions"]["general"]["title"] == "Persisted daily general guidance"
+
+
+def test_weekly_horoscope_reads_persisted_intersecting_week(monkeypatch):
+    rows = build_static_horoscope_rows(signs=["gemini"], year=2026)
+    persisted_row = next(
+        row
+        for row in rows
+        if row.period == "weekly" and row.focus == "general" and row.content_date.isoformat() == "2025-12-29"
+    )
+    persisted_row.title = "Persisted opening week guidance"
+    client, fake_store, fake_session = client_with_static_horoscope_store(monkeypatch, rows)
+
+    response = client.get(
+        "/api/v1/horoscope/weekly/gemini",
+        params={"week": "2026-01-01", "focus": "general"},
+    )
+
+    assert response.status_code == 200
+    assert fake_store.calls == [(fake_session, "gemini", 2026)]
+    payload = response.json()
+    assert payload["date"] == "2025-12-29"
+    assert payload["title"] == "Persisted opening week guidance"
+
+
+def test_weekly_horoscope_uses_iso_week_year_for_persisted_rows(monkeypatch):
+    rows = build_static_horoscope_rows(signs=["gemini"], year=2026)
+    persisted_row = next(
+        row
+        for row in rows
+        if row.period == "weekly" and row.focus == "general" and row.content_date.isoformat() == "2025-12-29"
+    )
+    persisted_row.title = "Persisted ISO week one guidance"
+    client, fake_store, fake_session = client_with_static_horoscope_store(monkeypatch, rows)
+
+    response = client.get(
+        "/api/v1/horoscope/weekly/gemini",
+        params={"week": "2026-W01", "focus": "general"},
+    )
+
+    assert response.status_code == 200
+    assert fake_store.calls == [(fake_session, "gemini", 2026)]
+    assert response.json()["title"] == "Persisted ISO week one guidance"
+
+
+def test_monthly_horoscope_reads_persisted_rows_when_available(monkeypatch):
+    rows = build_static_horoscope_rows(signs=["gemini"], year=2026)
+    persisted_row = next(
+        row
+        for row in rows
+        if row.period == "monthly" and row.focus == "career" and row.content_date.isoformat() == "2026-06-01"
+    )
+    persisted_row.title = "Persisted June career guidance"
+    client, fake_store, fake_session = client_with_static_horoscope_store(monkeypatch, rows)
+
+    response = client.get(
+        "/api/v1/horoscope/monthly/gemini",
+        params={"month": "2026-06", "focus": "career"},
+    )
+
+    assert response.status_code == 200
+    assert fake_store.calls == [(fake_session, "gemini", 2026)]
+    assert response.json()["title"] == "Persisted June career guidance"
+
+
+def test_yearly_horoscope_reads_persisted_rows_when_available(monkeypatch):
+    rows = build_static_horoscope_rows(signs=["gemini"], year=2026)
+    persisted_row = next(row for row in rows if row.period == "yearly" and row.focus == "general")
+    persisted_row.title = "Persisted 2026 general guidance"
+    client, fake_store, fake_session = client_with_static_horoscope_store(monkeypatch, rows)
+
+    response = client.get(
+        "/api/v1/horoscope/yearly/gemini",
+        params={"year": 2026, "focus": "general"},
+    )
+
+    assert response.status_code == 200
+    assert fake_store.calls == [(fake_session, "gemini", 2026)]
+    assert response.json()["title"] == "Persisted 2026 general guidance"
 
 
 def test_daily_horoscope_returns_all_dimensions_when_focus_is_omitted(monkeypatch):

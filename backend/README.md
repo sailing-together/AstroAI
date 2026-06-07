@@ -23,11 +23,20 @@ Do not commit real `.env` files or secrets.
 
 ## Static Horoscope Seed Command
 
+Apply the static horoscope table migration to the configured Supabase/PostgreSQL database before writing rows:
+
+```bash
+psql "$DATABASE_URL" -f backend/database/migrations/20260605_create_static_horoscopes.sql
+```
+
 Generate and validate deterministic 2026 static horoscope rows without writing to a database:
 
 ```bash
 python -m backend.tasks.seed_static_horoscopes --year 2026 --dry-run
 ```
+
+Dry-run output includes generated row count, expected row count, coverage status, and write status.
+For `--write-db`, `write=complete` means the writer reported the same persisted count as the generated row count.
 
 Generate one sign for a smaller local check:
 

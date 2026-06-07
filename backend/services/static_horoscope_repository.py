@@ -66,9 +66,10 @@ class StaticHoroscopeRepository:
         sign: str,
         period: str,
         selected_date: date,
+        target_year: int | None = None,
     ) -> HoroscopePeriodResponse:
         content_date = period_start_for_selected_date(selected_date, period)
-        year_seed = self.get_or_create_year(sign, selected_date.year)
+        year_seed = self.get_or_create_year(sign, target_year or selected_date.year)
         return _to_period_response(sign, period, content_date, _matching_entries(year_seed, period, content_date))
 
     def build_entry_for_selected_date(
@@ -77,9 +78,11 @@ class StaticHoroscopeRepository:
         period: str,
         focus: str,
         selected_date: date,
+        target_year: int | None = None,
     ) -> HoroscopeEntryResponse:
         content_date = period_start_for_selected_date(selected_date, period)
-        year_seed = self.get_or_create_year(sign, selected_date.year)
+        entry_target_year = target_year or selected_date.year
+        year_seed = self.get_or_create_year(sign, entry_target_year)
         found_entry = _find_entry(year_seed, period, focus, content_date)
         if found_entry is not None:
             return _to_entry_response(found_entry)
@@ -89,7 +92,7 @@ class StaticHoroscopeRepository:
                 period=period,
                 focus=focus,
                 content_date=content_date,
-                target_year=selected_date.year,
+                target_year=entry_target_year,
             )
         )
 

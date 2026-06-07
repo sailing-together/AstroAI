@@ -181,7 +181,23 @@ Bundle response:
 }
 ```
 
-The bundle endpoint must read stored PostgreSQL/Redis content only. It must not call Gemini.
+The bundle and period endpoints must read stored PostgreSQL/Redis content only in production. They must not call Gemini.
+In local development, deterministic fixture fallback is allowed only when the configured database is unavailable or has no active rows.
+
+Production missing-data response:
+
+```json
+{
+  "detail": {
+    "code": "static_horoscope_not_ready",
+    "message": "Static horoscope data is not ready for this sign and year.",
+    "sign": "gemini",
+    "year": 2026
+  }
+}
+```
+
+Status code: `503 Service Unavailable`.
 
 Horoscope response:
 

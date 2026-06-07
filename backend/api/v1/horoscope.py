@@ -1,3 +1,4 @@
+import os
 from datetime import date, datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -55,8 +56,10 @@ async def get_daily_horoscope(
     sign: str,
     content_date: date | None = Query(default=None, alias="date"),
     focus: str | None = None,
+    session: AsyncSession = Depends(get_db_session),
+    store: StaticHoroscopeDbStore = Depends(get_static_horoscope_store),
 ):
-    return _get_horoscope_period(sign, "daily", content_date or date.today(), focus)
+    return await _get_horoscope_period(sign, "daily", content_date or date.today(), focus, session, store)
 
 
 @router.get("/weekly/{sign}", response_model=HoroscopeEntryResponse | HoroscopePeriodResponse)
@@ -64,8 +67,20 @@ async def get_weekly_horoscope(
     sign: str,
     week: str | None = None,
     focus: str | None = None,
+    session: AsyncSession = Depends(get_db_session),
+    store: StaticHoroscopeDbStore = Depends(get_static_horoscope_store),
 ):
-    return _get_horoscope_period(sign, "weekly", _parse_week_or_date(week), focus, selected_date_mode=True)
+    target_date = _parse_week_or_date(week)
+    return await _get_horoscope_period(
+        sign,
+        "weekly",
+        target_date,
+        focus,
+        session,
+        store,
+        selected_date_mode=True,
+        target_year=_parse_week_target_year(week, target_date),
+    )
 
 
 @router.get("/monthly/{sign}", response_model=HoroscopeEntryResponse | HoroscopePeriodResponse)
@@ -73,8 +88,10 @@ async def get_monthly_horoscope(
     sign: str,
     month: str | None = None,
     focus: str | None = None,
+    session: AsyncSession = Depends(get_db_session),
+    store: StaticHoroscopeDbStore = Depends(get_static_horoscope_store),
 ):
-    return _get_horoscope_period(sign, "monthly", _parse_month(month), focus)
+    return await _get_horoscope_period(sign, "monthly", _parse_month(month), focus, session, store)
 
 
 @router.get("/yearly/{sign}", response_model=HoroscopeEntryResponse | HoroscopePeriodResponse)
@@ -82,27 +99,45 @@ async def get_yearly_horoscope(
     sign: str,
     year: int | None = None,
     focus: str | None = None,
+    session: AsyncSession = Depends(get_db_session),
+    store: StaticHoroscopeDbStore = Depends(get_static_horoscope_store),
 ):
     target_date = date(year or datetime.now(timezone.utc).year, 1, 1)
-    return _get_horoscope_period(sign, "yearly", target_date, focus)
+    return await _get_horoscope_period(sign, "yearly", target_date, focus, session, store)
 
 
-def _get_horoscope_period(
+async def _get_horoscope_period(
     sign: str,
     period: str,
     content_date: date,
     focus: str | None,
+    session: AsyncSession,
+    store: StaticHoroscopeDbStore,
     selected_date_mode: bool = False,
+    target_year: int | None = None,
 ) -> HoroscopeEntryResponse | HoroscopePeriodResponse:
     canonical_sign = _validate_sign(sign)
+    repository_year = target_year or content_date.year
+    active_repository = await _repository_for_year(session, store, canonical_sign, repository_year)
     if focus is not None:
         canonical_focus = _validate_focus(focus)
         if selected_date_mode:
-            return repository.build_entry_for_selected_date(canonical_sign, period, canonical_focus, content_date)
-        return repository.build_entry(canonical_sign, period, canonical_focus, content_date)
+            return active_repository.build_entry_for_selected_date(
+                canonical_sign,
+                period,
+                canonical_focus,
+                content_date,
+                target_year=repository_year,
+            )
+        return active_repository.build_entry(canonical_sign, period, canonical_focus, content_date)
     if selected_date_mode:
-        return repository.build_period_for_selected_date(canonical_sign, period, content_date)
-    return repository.build_period(canonical_sign, period, content_date)
+        return active_repository.build_period_for_selected_date(
+            canonical_sign,
+            period,
+            content_date,
+            target_year=repository_year,
+        )
+    return active_repository.build_period(canonical_sign, period, content_date)
 
 
 async def _repository_for_year(
@@ -113,11 +148,31 @@ async def _repository_for_year(
 ) -> StaticHoroscopeRepository:
     try:
         rows = await store.fetch_year_rows(session, sign, target_year)
-    except (OSError, SQLAlchemyError):
+    except (OSError, SQLAlchemyError) as exc:
+        if _is_production():
+            raise _static_horoscope_not_ready(sign, target_year) from exc
         rows = []
     if not rows:
+        if _is_production():
+            raise _static_horoscope_not_ready(sign, target_year)
         return repository
     return StaticHoroscopeRepository(persisted_rows=rows)
+
+
+def _is_production() -> bool:
+    return os.getenv("ENVIRONMENT", "development").lower() == "production"
+
+
+def _static_horoscope_not_ready(sign: str, target_year: int) -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        detail={
+            "code": "static_horoscope_not_ready",
+            "message": "Static horoscope data is not ready for this sign and year.",
+            "sign": sign,
+            "year": target_year,
+        },
+    )
 
 
 def _validate_sign(sign: str) -> str:
@@ -155,5 +210,15 @@ def _parse_week_or_date(week: str | None) -> date:
     try:
         year_text, week_text = week.split("-W", 1)
         return date.fromisocalendar(int(year_text), int(week_text), 1)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Invalid week format") from exc
+
+
+def _parse_week_target_year(week: str | None, parsed_date: date) -> int:
+    if week is None or "-W" not in week:
+        return parsed_date.year
+    try:
+        year_text, _ = week.split("-W", 1)
+        return int(year_text)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Invalid week format") from exc
