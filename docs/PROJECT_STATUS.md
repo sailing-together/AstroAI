@@ -78,6 +78,7 @@ At the beginning of each work session, report:
 - Public web calls canonical `/api/v1` backend routes.
 - Public web has runtime feedback for loading and local API fallback states.
 - Public web has a dedicated WSL runner at `frontend/web/start-web.sh` that starts FastAPI and Next.js together.
+- Public web dependency security is being upgraded from Next.js 14 to Next.js 16 with a PostCSS override to clear npm audit findings.
 - `frontend/preview` remains a developer/API tester only.
 - Public web UX consolidation spec exists at `docs/superpowers/specs/2026-06-05-public-web-ux-design.md`.
 
