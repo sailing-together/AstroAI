@@ -47,6 +47,7 @@ export function HoroscopeExperience() {
   const signLabel = titleCaseSign(sign);
   const viewDateLabel = formatDisplayDate(viewDate);
   const monthLabel = formatMonthLabel(viewDate);
+  const isReadingUnavailable = connectionError || notReadyError;
 
   useEffect(() => {
     let isMounted = true;
@@ -141,11 +142,11 @@ export function HoroscopeExperience() {
         </div>
       </header>
 
-      <section className="border-b border-blue-100 bg-white/70">
-        <div className="mx-auto grid w-full max-w-6xl gap-8 px-5 py-8 sm:px-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:py-12">
+      <section className="border-b border-blue-100 bg-white/75">
+        <div className="mx-auto grid w-full max-w-6xl gap-8 px-5 py-8 sm:px-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:py-10">
           <div className="space-y-6">
             <div>
-              <p className="text-sm font-black uppercase tracking-wide text-astro-purple">Free horoscope</p>
+              <p className="text-sm font-black uppercase tracking-wide text-astro-purple">Free horoscope reading</p>
               <h1 className="mt-4 max-w-3xl font-display text-4xl leading-tight text-astro-ink sm:text-5xl">
                 {signLabel} guidance for {viewDateLabel}
               </h1>
@@ -153,7 +154,9 @@ export function HoroscopeExperience() {
                 Choose a sign or enter a birthday, then read the selected day with its matching week, month,
                 and year outlook.
               </p>
-              <p className="mt-4 font-bold text-astro-blue">{message}</p>
+              <p className="mt-4 inline-flex rounded-full bg-blue-50 px-4 py-2 text-sm font-black text-astro-blue">
+                {message}
+              </p>
             </div>
 
             {connectionError ? (
@@ -177,11 +180,20 @@ export function HoroscopeExperience() {
               </div>
             ) : null}
 
-            <ReadingPanel entry={dailyEntry} eyebrow={`Daily reading - ${viewDateLabel}`} variant="primary" />
+            <ReadingPanel
+              entry={dailyEntry}
+              eyebrow={`Daily reading - ${viewDateLabel}`}
+              isUnavailable={isReadingUnavailable}
+              variant="primary"
+            />
           </div>
 
           <aside className="space-y-4">
             <form className="grid gap-4 rounded-xl border border-blue-100 bg-white p-5 shadow-xl shadow-blue-100/40">
+              <div>
+                <p className="text-xs font-black uppercase tracking-wide text-astro-purple">Your sky</p>
+                <h2 className="mt-1 text-xl font-black text-astro-ink">Set the reading</h2>
+              </div>
               <label className="grid gap-2 text-sm font-bold text-slate-700">
                 Sign
                 <select
@@ -248,10 +260,11 @@ export function HoroscopeExperience() {
           <ReadingPanel
             entry={weeklyEntry}
             eyebrow={weeklyEntry ? `Week of ${formatWeekRange(weeklyEntry)}` : "This week"}
+            isUnavailable={isReadingUnavailable}
           />
-          <ReadingPanel entry={monthlyEntry} eyebrow={`${monthLabel} outlook`} />
+          <ReadingPanel entry={monthlyEntry} eyebrow={`${monthLabel} outlook`} isUnavailable={isReadingUnavailable} />
         </div>
-        <ReadingPanel entry={yearlyEntry} eyebrow={`${year} overview`} />
+        <ReadingPanel entry={yearlyEntry} eyebrow={`${year} overview`} isUnavailable={isReadingUnavailable} />
       </section>
     </main>
   );
