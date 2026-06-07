@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import { getHoroscopeBundle, getSunSignFromBirthDate } from "../../lib/api";
+import { StaticHoroscopeNotReadyError, getHoroscopeBundle, getSunSignFromBirthDate } from "../../lib/api";
 import {
   findDailyEntry,
   findMonthlyEntry,
@@ -41,6 +41,7 @@ export function HoroscopeExperience() {
   const [bundle, setBundle] = useState<HoroscopeBundle | null>(null);
   const [message, setMessage] = useState("Free daily guidance");
   const [connectionError, setConnectionError] = useState(false);
+  const [notReadyError, setNotReadyError] = useState(false);
 
   const year = Number(viewDate.slice(0, 4));
   const signLabel = titleCaseSign(sign);
@@ -59,17 +60,23 @@ export function HoroscopeExperience() {
     const isMounted = options?.isMounted ?? true;
     setMessage("Preparing your reading");
     setConnectionError(false);
+    setNotReadyError(false);
     getHoroscopeBundle(sign, year)
       .then((payload) => {
         if (!isMounted) return;
         setBundle(payload);
         setMessage(`${payload.sign} ${payload.year} guidance is ready`);
       })
-      .catch(() => {
+      .catch((error) => {
         if (!isMounted) return;
         setBundle(null);
-        setConnectionError(true);
-        setMessage("Guidance is temporarily unavailable");
+        if (error instanceof StaticHoroscopeNotReadyError) {
+          setNotReadyError(true);
+          setMessage(`${titleCaseSign(error.sign)} ${error.year} guidance is being prepared`);
+        } else {
+          setConnectionError(true);
+          setMessage("Guidance is temporarily unavailable");
+        }
       });
   }
 
@@ -97,6 +104,7 @@ export function HoroscopeExperience() {
       setSign(nextSign);
       setMessage(`${titleCaseSign(nextSign)} selected`);
     } catch {
+      setNotReadyError(false);
       setConnectionError(true);
       setMessage("We could not read that birth date yet");
     }
@@ -112,7 +120,7 @@ export function HoroscopeExperience() {
             </div>
             <div>
               <p className="text-xs font-black uppercase tracking-wide text-astro-blue">AstroAI</p>
-              <p className="font-bold text-slate-600">Public horoscope</p>
+              <p className="font-bold text-slate-600">Daily guidance</p>
             </div>
           </a>
           <nav className="hidden items-center gap-5 text-sm font-bold text-slate-600 md:flex">
@@ -159,6 +167,13 @@ export function HoroscopeExperience() {
                 >
                   Try again
                 </button>
+              </div>
+            ) : null}
+
+            {notReadyError ? (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-7 text-amber-950">
+                <p className="font-black">This year&apos;s guidance is being prepared</p>
+                <p>Try another sign or date, or check back once the annual readings have finished loading.</p>
               </div>
             ) : null}
 
@@ -215,9 +230,9 @@ export function HoroscopeExperience() {
 
             <div className="rounded-xl border border-blue-100 bg-white/85 p-5">
               <p className="text-xs font-black uppercase tracking-wide text-astro-purple">Next</p>
-              <h2 className="mt-2 text-xl font-black text-astro-ink">Personal chart readings</h2>
+              <h2 className="mt-2 text-xl font-black text-astro-ink">Go beyond your Sun sign</h2>
               <p className="mt-3 leading-7 text-slate-600">
-                Birth time, birth place, and personalized prediction flows will sit behind sign-in.
+                Create a natal chart later for birth-time, birth-place, and personalized forecast layers.
               </p>
             </div>
           </aside>

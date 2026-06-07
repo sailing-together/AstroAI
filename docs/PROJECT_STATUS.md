@@ -90,6 +90,7 @@ Current state:
 - The selected view date drives the daily reading, matching week, matching month, and year overview.
 - Development-only wording such as backend connection details, API base labels, and static bundle language is being removed from the user-facing page.
 - The page prioritizes the daily reading in the first viewport, with sign, birth date, and view date controls as supporting tools.
+- The public web API client can distinguish production static-data-not-ready responses from connection failures.
 
 Next plan:
 
