@@ -116,6 +116,7 @@ Current state:
 - Static horoscope table SQL migration exists at `backend/database/migrations/20260605_create_static_horoscopes.sql`.
 - Static horoscope coverage validation exists for expected period/focus/date counts.
 - The seed command dry-run reports expected row count and coverage completeness.
+- The seed command write path reports whether the writer persisted the complete generated row count.
 
 Missing:
 

@@ -35,7 +35,8 @@ Generate and validate deterministic 2026 static horoscope rows without writing t
 python -m backend.tasks.seed_static_horoscopes --year 2026 --dry-run
 ```
 
-Dry-run output includes generated row count, expected row count, and coverage status.
+Dry-run output includes generated row count, expected row count, coverage status, and write status.
+For `--write-db`, `write=complete` means the writer reported the same persisted count as the generated row count.
 
 Generate one sign for a smaller local check:
 

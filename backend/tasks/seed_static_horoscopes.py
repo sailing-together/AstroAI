@@ -46,6 +46,7 @@ async def run_seed(argv: Sequence[str] | None = None, writer: StaticHoroscopeSee
             dry_run=True,
             expected_count=coverage.expected_total,
             coverage_complete=coverage.is_complete,
+            write_complete=True,
         )
         return 0
 
@@ -68,6 +69,7 @@ async def run_seed(argv: Sequence[str] | None = None, writer: StaticHoroscopeSee
         dry_run=False,
         expected_count=result.row_count,
         coverage_complete=True,
+        write_complete=result.persisted_count == result.row_count,
     )
     return 0
 
@@ -84,9 +86,11 @@ def _print_summary(
     dry_run: bool,
     expected_count: int,
     coverage_complete: bool,
+    write_complete: bool,
 ) -> None:
     sign_text = "all" if signs is None else ",".join(signs)
     coverage_text = "complete" if coverage_complete else "incomplete"
+    write_text = "complete" if write_complete else "incomplete"
     print(
         "Static horoscope seed "
         f"year={year} "
@@ -95,6 +99,7 @@ def _print_summary(
         f"expected={expected_count} "
         f"coverage={coverage_text} "
         f"persisted={persisted_count} "
+        f"write={write_text} "
         f"dry_run={str(dry_run).lower()}"
     )
 
