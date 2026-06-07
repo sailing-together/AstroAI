@@ -38,22 +38,18 @@ The existing Flutter app remains useful as a demo/reference, but the redevelopme
 
 The production-facing web app lives in `frontend/web`.
 
-Start the backend first so the public page can read `http://localhost:8000/api/v1`:
+From WSL, start the FastAPI backend and Next.js public web app together:
 
 ```bash
 cd /mnt/d/Projects/AstroAI/AstroAI
-bash frontend/preview/start-preview.sh
+bash frontend/web/start-web.sh
 ```
 
-Then start the web app:
+The script chooses free local ports, writes ignored local development env files, and sets
+`NEXT_PUBLIC_API_BASE_URL` so the web app calls the matching backend instance.
 
-```bash
-cd frontend/web
-npm install
-npm run dev
-```
-
-The first public route is `/horoscope`. It should hide API/debug controls and use the static horoscope bundle API through `NEXT_PUBLIC_API_BASE_URL`.
+Open the printed `/horoscope` URL. The page should hide API/debug controls and use the
+static horoscope bundle API through `NEXT_PUBLIC_API_BASE_URL`.
 
 ## Developer Preview
 

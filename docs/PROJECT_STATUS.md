@@ -77,6 +77,7 @@ At the beginning of each work session, report:
 - Public `/horoscope` experience exists as the first production-facing web entry.
 - Public web calls canonical `/api/v1` backend routes.
 - Public web has runtime feedback for loading and local API fallback states.
+- Public web has a dedicated WSL runner at `frontend/web/start-web.sh` that starts FastAPI and Next.js together.
 - `frontend/preview` remains a developer/API tester only.
 - Public web UX consolidation spec exists at `docs/superpowers/specs/2026-06-05-public-web-ux-design.md`.
 
