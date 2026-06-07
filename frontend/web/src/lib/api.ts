@@ -4,6 +4,18 @@ const defaultApiBase = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost
 const localFallbackTimeoutMs = 900;
 const singleApiTimeoutMs = 8_000;
 
+export class StaticHoroscopeNotReadyError extends Error {
+  readonly sign: string;
+  readonly year: number;
+
+  constructor(message: string, sign: string, year: number) {
+    super(message);
+    this.name = "StaticHoroscopeNotReadyError";
+    this.sign = sign;
+    this.year = year;
+  }
+}
+
 export function normalizeApiBase(apiBase = defaultApiBase) {
   return apiBase.replace(/\/$/, "");
 }
@@ -57,10 +69,28 @@ async function fetchWithApiBaseFallback(apiBase: string, buildUrl: (apiBase: str
     try {
       const response = await fetch(buildUrl(candidate), { signal: AbortSignal.timeout(timeoutMs) });
       if (response.ok) return response;
+      const notReadyError = await parseStaticHoroscopeNotReady(response);
+      if (notReadyError) throw notReadyError;
       lastError = new Error(`${response.status}`);
     } catch (error) {
+      if (error instanceof StaticHoroscopeNotReadyError) throw error;
       lastError = error;
     }
   }
   throw new Error(`Failed to load ${label}: ${String(lastError)}`);
+}
+
+async function parseStaticHoroscopeNotReady(response: Response) {
+  if (response.status !== 503) return null;
+  try {
+    const payload = await response.clone().json();
+    if (payload?.detail?.code !== "static_horoscope_not_ready") return null;
+    return new StaticHoroscopeNotReadyError(
+      String(payload.detail.message),
+      String(payload.detail.sign),
+      Number(payload.detail.year),
+    );
+  } catch {
+    return null;
+  }
 }

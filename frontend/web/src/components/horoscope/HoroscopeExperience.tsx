@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import { getHoroscopeBundle, getSunSignFromBirthDate } from "../../lib/api";
+import { StaticHoroscopeNotReadyError, getHoroscopeBundle, getSunSignFromBirthDate } from "../../lib/api";
 import {
   findDailyEntry,
   findMonthlyEntry,
@@ -41,11 +41,13 @@ export function HoroscopeExperience() {
   const [bundle, setBundle] = useState<HoroscopeBundle | null>(null);
   const [message, setMessage] = useState("Free daily guidance");
   const [connectionError, setConnectionError] = useState(false);
+  const [notReadyError, setNotReadyError] = useState(false);
 
   const year = Number(viewDate.slice(0, 4));
   const signLabel = titleCaseSign(sign);
   const viewDateLabel = formatDisplayDate(viewDate);
   const monthLabel = formatMonthLabel(viewDate);
+  const isReadingUnavailable = connectionError || notReadyError;
 
   useEffect(() => {
     let isMounted = true;
@@ -59,17 +61,23 @@ export function HoroscopeExperience() {
     const isMounted = options?.isMounted ?? true;
     setMessage("Preparing your reading");
     setConnectionError(false);
+    setNotReadyError(false);
     getHoroscopeBundle(sign, year)
       .then((payload) => {
         if (!isMounted) return;
         setBundle(payload);
         setMessage(`${payload.sign} ${payload.year} guidance is ready`);
       })
-      .catch(() => {
+      .catch((error) => {
         if (!isMounted) return;
         setBundle(null);
-        setConnectionError(true);
-        setMessage("Guidance is temporarily unavailable");
+        if (error instanceof StaticHoroscopeNotReadyError) {
+          setNotReadyError(true);
+          setMessage(`${titleCaseSign(error.sign)} ${error.year} guidance is being prepared`);
+        } else {
+          setConnectionError(true);
+          setMessage("Guidance is temporarily unavailable");
+        }
       });
   }
 
@@ -97,6 +105,7 @@ export function HoroscopeExperience() {
       setSign(nextSign);
       setMessage(`${titleCaseSign(nextSign)} selected`);
     } catch {
+      setNotReadyError(false);
       setConnectionError(true);
       setMessage("We could not read that birth date yet");
     }
@@ -112,7 +121,7 @@ export function HoroscopeExperience() {
             </div>
             <div>
               <p className="text-xs font-black uppercase tracking-wide text-astro-blue">AstroAI</p>
-              <p className="font-bold text-slate-600">Public horoscope</p>
+              <p className="font-bold text-slate-600">Daily guidance</p>
             </div>
           </a>
           <nav className="hidden items-center gap-5 text-sm font-bold text-slate-600 md:flex">
@@ -133,11 +142,11 @@ export function HoroscopeExperience() {
         </div>
       </header>
 
-      <section className="border-b border-blue-100 bg-white/70">
-        <div className="mx-auto grid w-full max-w-6xl gap-8 px-5 py-8 sm:px-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:py-12">
+      <section className="border-b border-blue-100 bg-white/75">
+        <div className="mx-auto grid w-full max-w-6xl gap-8 px-5 py-8 sm:px-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:py-10">
           <div className="space-y-6">
             <div>
-              <p className="text-sm font-black uppercase tracking-wide text-astro-purple">Free horoscope</p>
+              <p className="text-sm font-black uppercase tracking-wide text-astro-purple">Free horoscope reading</p>
               <h1 className="mt-4 max-w-3xl font-display text-4xl leading-tight text-astro-ink sm:text-5xl">
                 {signLabel} guidance for {viewDateLabel}
               </h1>
@@ -145,7 +154,9 @@ export function HoroscopeExperience() {
                 Choose a sign or enter a birthday, then read the selected day with its matching week, month,
                 and year outlook.
               </p>
-              <p className="mt-4 font-bold text-astro-blue">{message}</p>
+              <p className="mt-4 inline-flex rounded-full bg-blue-50 px-4 py-2 text-sm font-black text-astro-blue">
+                {message}
+              </p>
             </div>
 
             {connectionError ? (
@@ -162,11 +173,27 @@ export function HoroscopeExperience() {
               </div>
             ) : null}
 
-            <ReadingPanel entry={dailyEntry} eyebrow={`Daily reading - ${viewDateLabel}`} variant="primary" />
+            {notReadyError ? (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-7 text-amber-950">
+                <p className="font-black">This year&apos;s guidance is being prepared</p>
+                <p>Try another sign or date, or check back once the annual readings have finished loading.</p>
+              </div>
+            ) : null}
+
+            <ReadingPanel
+              entry={dailyEntry}
+              eyebrow={`Daily reading - ${viewDateLabel}`}
+              isUnavailable={isReadingUnavailable}
+              variant="primary"
+            />
           </div>
 
           <aside className="space-y-4">
             <form className="grid gap-4 rounded-xl border border-blue-100 bg-white p-5 shadow-xl shadow-blue-100/40">
+              <div>
+                <p className="text-xs font-black uppercase tracking-wide text-astro-purple">Your sky</p>
+                <h2 className="mt-1 text-xl font-black text-astro-ink">Set the reading</h2>
+              </div>
               <label className="grid gap-2 text-sm font-bold text-slate-700">
                 Sign
                 <select
@@ -215,9 +242,9 @@ export function HoroscopeExperience() {
 
             <div className="rounded-xl border border-blue-100 bg-white/85 p-5">
               <p className="text-xs font-black uppercase tracking-wide text-astro-purple">Next</p>
-              <h2 className="mt-2 text-xl font-black text-astro-ink">Personal chart readings</h2>
+              <h2 className="mt-2 text-xl font-black text-astro-ink">Go beyond your Sun sign</h2>
               <p className="mt-3 leading-7 text-slate-600">
-                Birth time, birth place, and personalized prediction flows will sit behind sign-in.
+                Create a natal chart later for birth-time, birth-place, and personalized forecast layers.
               </p>
             </div>
           </aside>
@@ -233,10 +260,11 @@ export function HoroscopeExperience() {
           <ReadingPanel
             entry={weeklyEntry}
             eyebrow={weeklyEntry ? `Week of ${formatWeekRange(weeklyEntry)}` : "This week"}
+            isUnavailable={isReadingUnavailable}
           />
-          <ReadingPanel entry={monthlyEntry} eyebrow={`${monthLabel} outlook`} />
+          <ReadingPanel entry={monthlyEntry} eyebrow={`${monthLabel} outlook`} isUnavailable={isReadingUnavailable} />
         </div>
-        <ReadingPanel entry={yearlyEntry} eyebrow={`${year} overview`} />
+        <ReadingPanel entry={yearlyEntry} eyebrow={`${year} overview`} isUnavailable={isReadingUnavailable} />
       </section>
     </main>
   );

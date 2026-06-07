@@ -4,7 +4,9 @@ import assert from "node:assert/strict";
 import {
   buildHoroscopeBundleUrl,
   buildLocalApiBaseCandidates,
+  getHoroscopeBundle,
   buildSunSignUrl,
+  StaticHoroscopeNotReadyError,
   getSunSignFromBirthDate,
 } from "../lib/api.ts";
 
@@ -50,4 +52,33 @@ test("local API fallback requests include an abort signal", async () => {
 
   assert.equal(seenSignals.length, 1);
   assert.ok(seenSignals[0] instanceof AbortSignal);
+});
+
+test("getHoroscopeBundle raises typed static-data-not-ready errors", async () => {
+  const originalFetch = globalThis.fetch;
+
+  globalThis.fetch = (async () =>
+    new Response(
+      JSON.stringify({
+        detail: {
+          code: "static_horoscope_not_ready",
+          message: "Static horoscope data is not ready for this sign and year.",
+          sign: "gemini",
+          year: 2026
+        }
+      }),
+      { status: 503 }
+    )) as typeof fetch;
+
+  try {
+    await assert.rejects(
+      () => getHoroscopeBundle("gemini", 2026, "https://api.example.com/api/v1"),
+      (error) =>
+        error instanceof StaticHoroscopeNotReadyError &&
+        error.sign === "gemini" &&
+        error.year === 2026
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });
