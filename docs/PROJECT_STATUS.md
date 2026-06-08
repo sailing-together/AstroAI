@@ -121,6 +121,7 @@ Current state:
 - The seed command dry-run reports expected row count and coverage completeness.
 - The seed command write path reports whether the writer persisted the complete generated row count.
 - The seed command can export generated rows to local NDJSON or gzip-compressed NDJSON for review/import handoff.
+- Static horoscope NDJSON exports can be reloaded and validated before database import/write handoff.
 
 Missing:
 

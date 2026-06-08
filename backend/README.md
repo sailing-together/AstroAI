@@ -50,6 +50,15 @@ python -m backend.tasks.seed_static_horoscopes \
 If the export path ends in `.gz`, the command writes gzip-compressed NDJSON. The summary file includes row count,
 expected count, coverage status, export size, period counts, sign counts, and focus counts.
 
+Validate an existing export before handing it to a database import/write step:
+
+```bash
+python -m backend.tasks.seed_static_horoscopes \
+  --year 2026 \
+  --validate-ndjson downloads/static-horoscopes-2026.ndjson.gz \
+  --summary-json downloads/static-horoscopes-2026.validate-summary.json
+```
+
 Generate one sign for a smaller local check:
 
 ```bash
