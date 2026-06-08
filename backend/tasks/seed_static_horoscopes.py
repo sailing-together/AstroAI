@@ -2,8 +2,9 @@ import argparse
 import asyncio
 import gzip
 import json
-from pathlib import Path
+from collections import Counter
 from collections.abc import Sequence
+from pathlib import Path
 
 from backend.database.models_static_horoscope import StaticHoroscope
 from backend.services.static_horoscope_coverage import validate_static_horoscope_coverage
@@ -31,6 +32,10 @@ def build_parser() -> argparse.ArgumentParser:
         "--export-ndjson",
         help="Write generated rows to an NDJSON file. If the path ends in .gz, write gzip-compressed NDJSON.",
     )
+    parser.add_argument(
+        "--summary-json",
+        help="Write an operator-friendly JSON summary for generated or persisted rows.",
+    )
     return parser
 
 
@@ -50,17 +55,20 @@ async def run_seed(argv: Sequence[str] | None = None, writer: StaticHoroscopeSee
             export_path = export_rows_to_ndjson(rows, Path(args.export_ndjson))
         else:
             export_path = None
-        _print_summary(
+        summary = build_seed_summary(
             year=args.year,
             signs=None if signs is None else tuple(sign.lower() for sign in signs),
-            row_count=len(rows),
-            persisted_count=0,
-            dry_run=args.dry_run,
+            rows=rows,
             expected_count=coverage.expected_total,
             coverage_complete=coverage.is_complete,
+            persisted_count=0,
             write_complete=True,
+            dry_run=args.dry_run,
             export_path=export_path,
         )
+        if args.summary_json:
+            write_summary_json(summary, Path(args.summary_json))
+        _print_summary(summary)
         return 0
 
     if not args.write_db:
@@ -74,17 +82,21 @@ async def run_seed(argv: Sequence[str] | None = None, writer: StaticHoroscopeSee
             writer = StaticHoroscopePostgresSeedWriter(session=session)
 
     result = await service.seed(writer=writer, year=args.year, signs=signs)
-    _print_summary(
+    summary = build_seed_summary(
         year=result.year,
         signs=result.signs,
+        rows=[],
         row_count=result.row_count,
-        persisted_count=result.persisted_count,
         dry_run=False,
         expected_count=result.row_count,
         coverage_complete=True,
+        persisted_count=result.persisted_count,
         write_complete=result.persisted_count == result.row_count,
         export_path=None,
     )
+    if args.summary_json:
+        write_summary_json(summary, Path(args.summary_json))
+    _print_summary(summary)
     return 0
 
 
@@ -92,31 +104,64 @@ def main() -> int:
     return asyncio.run(run_seed())
 
 
-def _print_summary(
+def build_seed_summary(
     year: int,
     signs: tuple[str, ...] | None,
-    row_count: int,
-    persisted_count: int,
-    dry_run: bool,
+    rows: Sequence[StaticHoroscope],
     expected_count: int,
     coverage_complete: bool,
+    persisted_count: int,
     write_complete: bool,
+    dry_run: bool,
     export_path: Path | None,
-) -> None:
-    sign_text = "all" if signs is None else ",".join(signs)
-    coverage_text = "complete" if coverage_complete else "incomplete"
-    write_text = "complete" if write_complete else "incomplete"
-    export_text = f" export={export_path}" if export_path is not None else ""
+    row_count: int | None = None,
+) -> dict[str, object]:
+    period_counts = Counter(row.period for row in rows)
+    sign_counts = Counter(row.sign for row in rows)
+    focus_counts = Counter(row.focus for row in rows)
+    signs_value = ["all"] if signs is None else list(signs)
+    export_size = export_path.stat().st_size if export_path is not None and export_path.exists() else None
+    return {
+        "year": year,
+        "signs": signs_value,
+        "row_count": len(rows) if row_count is None else row_count,
+        "expected_count": expected_count,
+        "coverage": "complete" if coverage_complete else "incomplete",
+        "persisted_count": persisted_count,
+        "write": "complete" if write_complete else "incomplete",
+        "dry_run": dry_run,
+        "export_path": str(export_path) if export_path is not None else None,
+        "export_size_bytes": export_size,
+        "period_counts": dict(sorted(period_counts.items())),
+        "sign_counts": dict(sorted(sign_counts.items())),
+        "focus_count": len(focus_counts),
+        "focus_counts": dict(sorted(focus_counts.items())),
+    }
+
+
+def write_summary_json(summary: dict[str, object], path: Path) -> Path:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return path
+
+
+def _print_summary(summary: dict[str, object]) -> None:
+    signs = summary["signs"]
+    if isinstance(signs, list):
+        sign_text = "all" if signs == ["all"] else ",".join(str(sign) for sign in signs)
+    else:
+        sign_text = str(signs)
+    export_text = f" export={summary['export_path']}" if summary["export_path"] is not None else ""
     print(
         "Static horoscope seed "
-        f"year={year} "
+        f"year={summary['year']} "
         f"signs={sign_text} "
-        f"rows={row_count} "
-        f"expected={expected_count} "
-        f"coverage={coverage_text} "
-        f"persisted={persisted_count} "
-        f"write={write_text} "
-        f"dry_run={str(dry_run).lower()}"
+        f"rows={summary['row_count']} "
+        f"expected={summary['expected_count']} "
+        f"coverage={summary['coverage']} "
+        f"persisted={summary['persisted_count']} "
+        f"write={summary['write']} "
+        f"dry_run={str(summary['dry_run']).lower()}"
         f"{export_text}"
     )
 

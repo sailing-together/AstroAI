@@ -95,6 +95,44 @@ def test_seed_command_exports_gzipped_ndjson(tmp_path):
     assert rows[-1]["period"] == "daily"
 
 
+def test_seed_command_writes_export_summary_json(tmp_path):
+    export_path = tmp_path / "static-horoscopes-2026-gemini.ndjson.gz"
+    summary_path = tmp_path / "static-horoscopes-2026-gemini.summary.json"
+
+    exit_code = asyncio.run(
+        run_seed(
+            [
+                "--year",
+                "2026",
+                "--sign",
+                "gemini",
+                "--export-ndjson",
+                str(export_path),
+                "--summary-json",
+                str(summary_path),
+            ]
+        )
+    )
+
+    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    assert exit_code == 0
+    assert summary["year"] == 2026
+    assert summary["signs"] == ["gemini"]
+    assert summary["row_count"] == 3879
+    assert summary["expected_count"] == 3879
+    assert summary["coverage"] == "complete"
+    assert summary["export_path"] == str(export_path)
+    assert summary["export_size_bytes"] > 0
+    assert summary["period_counts"] == {
+        "daily": 3285,
+        "monthly": 108,
+        "weekly": 477,
+        "yearly": 9,
+    }
+    assert summary["sign_counts"] == {"gemini": 3879}
+    assert summary["focus_count"] == 9
+
+
 def test_seed_command_reports_incomplete_write(capsys):
     writer = RecordingWriter(persisted_count=3878)
 

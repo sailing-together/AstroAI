@@ -41,10 +41,14 @@ For `--write-db`, `write=complete` means the writer reported the same persisted 
 Export the generated rows to an ignored local NDJSON file for review or later import:
 
 ```bash
-python -m backend.tasks.seed_static_horoscopes --year 2026 --export-ndjson downloads/static-horoscopes-2026.ndjson.gz
+python -m backend.tasks.seed_static_horoscopes \
+  --year 2026 \
+  --export-ndjson downloads/static-horoscopes-2026.ndjson.gz \
+  --summary-json downloads/static-horoscopes-2026.summary.json
 ```
 
-If the export path ends in `.gz`, the command writes gzip-compressed NDJSON.
+If the export path ends in `.gz`, the command writes gzip-compressed NDJSON. The summary file includes row count,
+expected count, coverage status, export size, period counts, sign counts, and focus counts.
 
 Generate one sign for a smaller local check:
 
