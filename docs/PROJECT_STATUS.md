@@ -10,6 +10,7 @@ This file records where the redevelopment stands today. Use it with the canonica
 - `API_SPEC.md` for backend/frontend contracts.
 - `SCHEMA.md` for Supabase/PostgreSQL schema.
 - `FRONTEND_SPEC.md` for web routes, UX, and design rules.
+- `STATIC_HOROSCOPE_OPERATIONS.md` for 2026 static data generation, export, validation, and database handoff.
 
 Deprecated files such as `ROADMAP_DEVELOPMENT_PLAN.md`, `MEETING_CONCLUSIONS.md`, `DECISIONS.md`, `DATABASE_SCHEMA.md`, `DESIGN.md`, `BACKEND_API.md`, and `FRONTEND_ARCHITECTURE.md` are not sources of truth.
 
