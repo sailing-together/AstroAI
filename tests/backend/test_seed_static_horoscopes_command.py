@@ -1,4 +1,6 @@
 import asyncio
+import gzip
+import json
 
 from backend.tasks.seed_static_horoscopes import build_parser, run_seed
 
@@ -57,6 +59,40 @@ def test_seed_command_persists_through_injected_writer(capsys):
     assert "persisted=3879" in output
     assert "write=complete" in output
     assert "dry_run=false" in output
+
+
+def test_seed_command_exports_ndjson(tmp_path, capsys):
+    export_path = tmp_path / "static-horoscopes-2026-gemini.ndjson"
+
+    exit_code = asyncio.run(
+        run_seed(["--year", "2026", "--sign", "gemini", "--export-ndjson", str(export_path)])
+    )
+
+    output = capsys.readouterr().out
+    lines = export_path.read_text(encoding="utf-8").splitlines()
+    first_row = json.loads(lines[0])
+    assert exit_code == 0
+    assert len(lines) == 3879
+    assert first_row["sign"] == "gemini"
+    assert first_row["target_year"] == 2026
+    assert first_row["period"] == "yearly"
+    assert "export=" in output
+    assert "persisted=0" in output
+    assert "dry_run=false" in output
+
+
+def test_seed_command_exports_gzipped_ndjson(tmp_path):
+    export_path = tmp_path / "static-horoscopes-2026-gemini.ndjson.gz"
+
+    exit_code = asyncio.run(
+        run_seed(["--year", "2026", "--sign", "gemini", "--export-ndjson", str(export_path)])
+    )
+
+    with gzip.open(export_path, "rt", encoding="utf-8") as handle:
+        rows = [json.loads(line) for line in handle]
+    assert exit_code == 0
+    assert len(rows) == 3879
+    assert rows[-1]["period"] == "daily"
 
 
 def test_seed_command_reports_incomplete_write(capsys):

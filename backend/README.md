@@ -38,6 +38,14 @@ python -m backend.tasks.seed_static_horoscopes --year 2026 --dry-run
 Dry-run output includes generated row count, expected row count, coverage status, and write status.
 For `--write-db`, `write=complete` means the writer reported the same persisted count as the generated row count.
 
+Export the generated rows to an ignored local NDJSON file for review or later import:
+
+```bash
+python -m backend.tasks.seed_static_horoscopes --year 2026 --export-ndjson downloads/static-horoscopes-2026.ndjson.gz
+```
+
+If the export path ends in `.gz`, the command writes gzip-compressed NDJSON.
+
 Generate one sign for a smaller local check:
 
 ```bash
