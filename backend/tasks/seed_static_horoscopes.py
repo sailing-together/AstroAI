@@ -41,6 +41,10 @@ def build_parser() -> argparse.ArgumentParser:
         "--validate-ndjson",
         help="Validate an existing NDJSON or .ndjson.gz export without generating or persisting rows.",
     )
+    parser.add_argument(
+        "--from-ndjson",
+        help="Load rows from an existing NDJSON or .ndjson.gz export before --write-db.",
+    )
     return parser
 
 
@@ -68,6 +72,48 @@ async def run_seed(argv: Sequence[str] | None = None, writer: StaticHoroscopeSee
             dry_run=False,
             export_path=None,
             validate_path=Path(args.validate_ndjson),
+            input_path=None,
+        )
+        if args.summary_json:
+            write_summary_json(summary, Path(args.summary_json))
+        _print_summary(summary)
+        return 0
+
+    if args.from_ndjson:
+        if not args.write_db:
+            raise RuntimeError("Use --write-db with --from-ndjson to persist a validated export.")
+        rows = load_static_horoscope_ndjson(Path(args.from_ndjson))
+        coverage = validate_static_horoscope_coverage(
+            rows,
+            signs=canonical_signs if canonical_signs is not None else tuple({row.sign for row in rows}),
+            year=args.year,
+        )
+        if not coverage.is_complete:
+            raise RuntimeError(
+                "Static horoscope NDJSON coverage is incomplete; refusing to write database rows "
+                f"from {args.from_ndjson}."
+            )
+        if writer is None:
+            from backend.database.session import AsyncSessionLocal
+            from backend.services.static_horoscope_seed_writer import StaticHoroscopePostgresSeedWriter
+
+            async with AsyncSessionLocal() as session:
+                writer = StaticHoroscopePostgresSeedWriter(session=session)
+                persisted_count = await writer.upsert_rows(rows)
+        else:
+            persisted_count = await writer.upsert_rows(rows)
+        summary = build_seed_summary(
+            year=args.year,
+            signs=canonical_signs,
+            rows=rows,
+            expected_count=coverage.expected_total,
+            coverage_complete=coverage.is_complete,
+            persisted_count=persisted_count,
+            write_complete=persisted_count == len(rows),
+            dry_run=False,
+            export_path=None,
+            validate_path=None,
+            input_path=Path(args.from_ndjson),
         )
         if args.summary_json:
             write_summary_json(summary, Path(args.summary_json))
@@ -96,6 +142,7 @@ async def run_seed(argv: Sequence[str] | None = None, writer: StaticHoroscopeSee
             dry_run=args.dry_run,
             export_path=export_path,
             validate_path=None,
+            input_path=None,
         )
         if args.summary_json:
             write_summary_json(summary, Path(args.summary_json))
@@ -125,6 +172,7 @@ async def run_seed(argv: Sequence[str] | None = None, writer: StaticHoroscopeSee
         write_complete=result.persisted_count == result.row_count,
         export_path=None,
         validate_path=None,
+        input_path=None,
     )
     if args.summary_json:
         write_summary_json(summary, Path(args.summary_json))
@@ -147,6 +195,7 @@ def build_seed_summary(
     dry_run: bool,
     export_path: Path | None,
     validate_path: Path | None,
+    input_path: Path | None,
     row_count: int | None = None,
 ) -> dict[str, object]:
     period_counts = Counter(row.period for row in rows)
@@ -166,6 +215,7 @@ def build_seed_summary(
         "export_path": str(export_path) if export_path is not None else None,
         "export_size_bytes": export_size,
         "validate_path": str(validate_path) if validate_path is not None else None,
+        "input_path": str(input_path) if input_path is not None else None,
         "period_counts": dict(sorted(period_counts.items())),
         "sign_counts": dict(sorted(sign_counts.items())),
         "focus_count": len(focus_counts),
@@ -187,6 +237,7 @@ def _print_summary(summary: dict[str, object]) -> None:
         sign_text = str(signs)
     export_text = f" export={summary['export_path']}" if summary["export_path"] is not None else ""
     validate_text = f" validate={summary['validate_path']}" if summary["validate_path"] is not None else ""
+    input_text = f" input={summary['input_path']}" if summary["input_path"] is not None else ""
     print(
         "Static horoscope seed "
         f"year={summary['year']} "
@@ -199,6 +250,7 @@ def _print_summary(summary: dict[str, object]) -> None:
         f"dry_run={str(summary['dry_run']).lower()}"
         f"{export_text}"
         f"{validate_text}"
+        f"{input_text}"
     )
 
 

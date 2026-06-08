@@ -12,6 +12,7 @@ def test_static_horoscope_operations_doc_records_seed_workflow():
     assert "--export-ndjson" in content
     assert "--summary-json" in content
     assert "--validate-ndjson" in content
+    assert "--from-ndjson" in content
     assert "--write-db" in content
     assert "downloads/static-horoscopes-2026.ndjson.gz" in content
     assert "46,548" in content

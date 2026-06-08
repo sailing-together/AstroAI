@@ -71,4 +71,15 @@ Write rows to the configured PostgreSQL database only when the backend environme
 python -m backend.tasks.seed_static_horoscopes --year 2026 --sign gemini --write-db
 ```
 
+Write rows from a previously exported and validated NDJSON file:
+
+```bash
+python -m backend.tasks.seed_static_horoscopes \
+  --year 2026 \
+  --from-ndjson downloads/static-horoscopes-2026.ndjson.gz \
+  --write-db
+```
+
+`--from-ndjson` validates coverage before writing. If coverage is incomplete, the command refuses to write rows.
+
 The command currently supports deterministic `codex-dev` seed rows. Use `--dry-run` first before any real database write.

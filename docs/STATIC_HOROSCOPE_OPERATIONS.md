@@ -94,7 +94,18 @@ psql "$DATABASE_URL" -f backend/database/migrations/20260605_create_static_horos
 
 - The dry-run and export validation both report `coverage=complete`.
 
-Then write rows through the configured backend environment:
+Then write rows through the configured backend environment. The safest handoff is to write from the exact export file that was validated:
+
+```bash
+python -m backend.tasks.seed_static_horoscopes \
+  --year 2026 \
+  --from-ndjson downloads/static-horoscopes-2026.ndjson.gz \
+  --write-db
+```
+
+`--from-ndjson` reloads the file and validates coverage before writing. If coverage is incomplete, the command refuses to call the database writer.
+
+You can also generate and write in one step:
 
 ```bash
 python -m backend.tasks.seed_static_horoscopes --year 2026 --write-db

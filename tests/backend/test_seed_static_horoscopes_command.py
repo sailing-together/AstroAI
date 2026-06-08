@@ -151,6 +151,79 @@ def test_seed_command_validates_existing_ndjson_export(tmp_path, capsys):
     assert "validate=" in output
 
 
+def test_seed_command_writes_database_from_valid_ndjson_export(tmp_path, capsys):
+    export_path = tmp_path / "static-horoscopes-2026-gemini.ndjson.gz"
+    rows = StaticHoroscopeSeedService().build_rows(year=2026, signs=("gemini",))
+    export_rows_to_ndjson(rows, export_path)
+    writer = RecordingWriter()
+
+    exit_code = asyncio.run(
+        run_seed(
+            [
+                "--year",
+                "2026",
+                "--sign",
+                "gemini",
+                "--from-ndjson",
+                str(export_path),
+                "--write-db",
+            ],
+            writer=writer,
+        )
+    )
+
+    output = capsys.readouterr().out
+    assert exit_code == 0
+    assert len(writer.rows) == 3879
+    assert "rows=3879" in output
+    assert "expected=3879" in output
+    assert "coverage=complete" in output
+    assert "persisted=3879" in output
+    assert "write=complete" in output
+    assert "input=" in output
+
+
+def test_seed_command_blocks_database_write_from_incomplete_ndjson(tmp_path):
+    export_path = tmp_path / "static-horoscopes-2026-gemini-truncated.ndjson.gz"
+    rows = StaticHoroscopeSeedService().build_rows(year=2026, signs=("gemini",))
+    export_rows_to_ndjson(rows[:-1], export_path)
+    writer = RecordingWriter()
+
+    try:
+        asyncio.run(
+            run_seed(
+                [
+                    "--year",
+                    "2026",
+                    "--sign",
+                    "gemini",
+                    "--from-ndjson",
+                    str(export_path),
+                    "--write-db",
+                ],
+                writer=writer,
+            )
+        )
+    except RuntimeError as exc:
+        assert "coverage is incomplete" in str(exc)
+    else:
+        raise AssertionError("Expected incomplete NDJSON coverage to block write-db.")
+    assert writer.rows == []
+
+
+def test_seed_command_requires_write_db_with_from_ndjson(tmp_path):
+    export_path = tmp_path / "static-horoscopes-2026-gemini.ndjson.gz"
+    rows = StaticHoroscopeSeedService().build_rows(year=2026, signs=("gemini",))
+    export_rows_to_ndjson(rows, export_path)
+
+    try:
+        asyncio.run(run_seed(["--year", "2026", "--sign", "gemini", "--from-ndjson", str(export_path)]))
+    except RuntimeError as exc:
+        assert "--write-db" in str(exc)
+    else:
+        raise AssertionError("Expected --from-ndjson to require --write-db.")
+
+
 def test_seed_command_reports_incomplete_write(capsys):
     writer = RecordingWriter(persisted_count=3878)
 
