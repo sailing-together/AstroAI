@@ -129,6 +129,8 @@ rows=46548 expected=46548 coverage=complete persisted=46548 write=complete dry_r
 
 If `write=incomplete`, stop and investigate before using the public horoscope page against that database.
 
+Database writes are batched to avoid oversized PostgreSQL statements when writing all 46,548 rows for 2026.
+
 ## 5. Public Read Rule
 
 Public anonymous horoscope requests must read persisted static content only. They must not call Gemini or any other live AI API during page views.

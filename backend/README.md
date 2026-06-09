@@ -92,3 +92,4 @@ python -m backend.tasks.seed_static_horoscopes \
 ```
 
 The command currently supports deterministic `codex-dev` seed rows. Use `--dry-run` first before any real database write.
+Database writes are batched to avoid oversized PostgreSQL statements when writing all 46,548 rows for 2026.
