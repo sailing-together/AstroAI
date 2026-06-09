@@ -105,6 +105,16 @@ python -m backend.tasks.seed_static_horoscopes \
 
 `--from-ndjson` reloads the file and validates coverage before writing. If coverage is incomplete, the command refuses to call the database writer.
 
+If `ENVIRONMENT=production`, add the explicit production confirmation flag:
+
+```bash
+python -m backend.tasks.seed_static_horoscopes \
+  --year 2026 \
+  --from-ndjson downloads/static-horoscopes-2026.ndjson.gz \
+  --write-db \
+  --allow-production-write
+```
+
 You can also generate and write in one step:
 
 ```bash

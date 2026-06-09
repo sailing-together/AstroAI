@@ -81,5 +81,14 @@ python -m backend.tasks.seed_static_horoscopes \
 ```
 
 `--from-ndjson` validates coverage before writing. If coverage is incomplete, the command refuses to write rows.
+When `ENVIRONMENT=production`, add `--allow-production-write` deliberately:
+
+```bash
+python -m backend.tasks.seed_static_horoscopes \
+  --year 2026 \
+  --from-ndjson downloads/static-horoscopes-2026.ndjson.gz \
+  --write-db \
+  --allow-production-write
+```
 
 The command currently supports deterministic `codex-dev` seed rows. Use `--dry-run` first before any real database write.

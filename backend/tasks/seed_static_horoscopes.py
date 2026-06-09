@@ -2,6 +2,7 @@ import argparse
 import asyncio
 import gzip
 import json
+import os
 from collections import Counter
 from collections.abc import Sequence
 from pathlib import Path
@@ -45,6 +46,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--from-ndjson",
         help="Load rows from an existing NDJSON or .ndjson.gz export before --write-db.",
     )
+    parser.add_argument(
+        "--allow-production-write",
+        action="store_true",
+        help="Required when ENVIRONMENT=production and --write-db is used.",
+    )
     return parser
 
 
@@ -53,6 +59,8 @@ async def run_seed(argv: Sequence[str] | None = None, writer: StaticHoroscopeSee
     service = StaticHoroscopeSeedService()
     signs = tuple(args.sign) if args.sign else None
     canonical_signs = tuple(sign.lower() for sign in signs) if signs is not None else None
+    if args.write_db:
+        _guard_production_write(allow_production_write=args.allow_production_write)
 
     if args.validate_ndjson:
         rows = load_static_horoscope_ndjson(Path(args.validate_ndjson))
@@ -73,6 +81,7 @@ async def run_seed(argv: Sequence[str] | None = None, writer: StaticHoroscopeSee
             export_path=None,
             validate_path=Path(args.validate_ndjson),
             input_path=None,
+            row_source="ndjson",
         )
         if args.summary_json:
             write_summary_json(summary, Path(args.summary_json))
@@ -114,6 +123,7 @@ async def run_seed(argv: Sequence[str] | None = None, writer: StaticHoroscopeSee
             export_path=None,
             validate_path=None,
             input_path=Path(args.from_ndjson),
+            row_source="ndjson",
         )
         if args.summary_json:
             write_summary_json(summary, Path(args.summary_json))
@@ -143,6 +153,7 @@ async def run_seed(argv: Sequence[str] | None = None, writer: StaticHoroscopeSee
             export_path=export_path,
             validate_path=None,
             input_path=None,
+            row_source="generated",
         )
         if args.summary_json:
             write_summary_json(summary, Path(args.summary_json))
@@ -173,6 +184,7 @@ async def run_seed(argv: Sequence[str] | None = None, writer: StaticHoroscopeSee
         export_path=None,
         validate_path=None,
         input_path=None,
+        row_source="generated",
     )
     if args.summary_json:
         write_summary_json(summary, Path(args.summary_json))
@@ -196,6 +208,7 @@ def build_seed_summary(
     export_path: Path | None,
     validate_path: Path | None,
     input_path: Path | None,
+    row_source: str,
     row_count: int | None = None,
 ) -> dict[str, object]:
     period_counts = Counter(row.period for row in rows)
@@ -216,6 +229,7 @@ def build_seed_summary(
         "export_size_bytes": export_size,
         "validate_path": str(validate_path) if validate_path is not None else None,
         "input_path": str(input_path) if input_path is not None else None,
+        "row_source": row_source,
         "period_counts": dict(sorted(period_counts.items())),
         "sign_counts": dict(sorted(sign_counts.items())),
         "focus_count": len(focus_counts),
@@ -245,6 +259,7 @@ def _print_summary(summary: dict[str, object]) -> None:
         f"rows={summary['row_count']} "
         f"expected={summary['expected_count']} "
         f"coverage={summary['coverage']} "
+        f"row_source={summary['row_source']} "
         f"persisted={summary['persisted_count']} "
         f"write={summary['write']} "
         f"dry_run={str(summary['dry_run']).lower()}"
@@ -252,6 +267,14 @@ def _print_summary(summary: dict[str, object]) -> None:
         f"{validate_text}"
         f"{input_text}"
     )
+
+
+def _guard_production_write(allow_production_write: bool) -> None:
+    if os.getenv("ENVIRONMENT", "").lower() != "production":
+        return
+    if allow_production_write:
+        return
+    raise RuntimeError("ENVIRONMENT=production requires --allow-production-write before --write-db.")
 
 
 def export_rows_to_ndjson(rows: Sequence[StaticHoroscope], path: Path) -> Path:

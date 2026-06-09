@@ -181,6 +181,7 @@ def test_seed_command_writes_database_from_valid_ndjson_export(tmp_path, capsys)
     assert "persisted=3879" in output
     assert "write=complete" in output
     assert "input=" in output
+    assert "row_source=ndjson" in output
 
 
 def test_seed_command_blocks_database_write_from_incomplete_ndjson(tmp_path):
@@ -222,6 +223,36 @@ def test_seed_command_requires_write_db_with_from_ndjson(tmp_path):
         assert "--write-db" in str(exc)
     else:
         raise AssertionError("Expected --from-ndjson to require --write-db.")
+
+
+def test_seed_command_blocks_production_write_without_confirmation(monkeypatch):
+    monkeypatch.setenv("ENVIRONMENT", "production")
+    writer = RecordingWriter()
+
+    try:
+        asyncio.run(run_seed(["--year", "2026", "--sign", "gemini", "--write-db"], writer=writer))
+    except RuntimeError as exc:
+        assert "--allow-production-write" in str(exc)
+    else:
+        raise AssertionError("Expected production write to require explicit confirmation.")
+    assert writer.rows == []
+
+
+def test_seed_command_allows_confirmed_production_write(monkeypatch, capsys):
+    monkeypatch.setenv("ENVIRONMENT", "production")
+    writer = RecordingWriter()
+
+    exit_code = asyncio.run(
+        run_seed(
+            ["--year", "2026", "--sign", "gemini", "--write-db", "--allow-production-write"],
+            writer=writer,
+        )
+    )
+
+    output = capsys.readouterr().out
+    assert exit_code == 0
+    assert len(writer.rows) == 3879
+    assert "row_source=generated" in output
 
 
 def test_seed_command_reports_incomplete_write(capsys):
