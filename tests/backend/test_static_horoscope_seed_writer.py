@@ -63,6 +63,19 @@ def test_seed_writer_rejects_invalid_batch_size():
         raise AssertionError("Expected invalid batch size to raise.")
 
 
+def test_seed_writer_preflight_executes_static_horoscope_table_check():
+    session = RecordingAsyncSession()
+    writer = StaticHoroscopePostgresSeedWriter(session=session)
+
+    asyncio.run(writer.preflight())
+
+    assert len(session.executed_statements) == 1
+    compiled = str(session.executed_statements[0].compile(dialect=postgresql.dialect()))
+    assert "static_horoscopes" in compiled
+    assert "LIMIT" in compiled
+    assert session.commit_count == 0
+
+
 class RecordingAsyncSession:
     def __init__(self) -> None:
         self.executed_statements = []

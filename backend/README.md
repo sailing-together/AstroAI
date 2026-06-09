@@ -81,6 +81,13 @@ python -m backend.tasks.seed_static_horoscopes \
 ```
 
 `--from-ndjson` validates coverage before writing. If coverage is incomplete, the command refuses to write rows.
+Check database connectivity and the `static_horoscopes` table before writing:
+
+```bash
+python -m backend.tasks.seed_static_horoscopes --year 2026 --preflight-db
+```
+
+`--write-db` also runs this preflight check before upserting rows.
 When `ENVIRONMENT=production`, add `--allow-production-write` deliberately:
 
 ```bash

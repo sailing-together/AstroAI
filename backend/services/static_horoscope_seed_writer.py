@@ -1,6 +1,7 @@
 from collections.abc import Sequence
 from typing import Protocol
 
+from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 
 from backend.database.models_static_horoscope import StaticHoroscope
@@ -52,6 +53,9 @@ class StaticHoroscopePostgresSeedWriter:
             raise ValueError("batch_size must be at least 1.")
         self._session = session
         self._batch_size = batch_size
+
+    async def preflight(self) -> None:
+        await self._session.execute(select(StaticHoroscope.id).limit(1))
 
     async def upsert_rows(self, rows: Sequence[StaticHoroscope]) -> int:
         if not rows:

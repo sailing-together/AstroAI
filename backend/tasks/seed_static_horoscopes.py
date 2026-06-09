@@ -51,6 +51,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Required when ENVIRONMENT=production and --write-db is used.",
     )
+    parser.add_argument(
+        "--preflight-db",
+        action="store_true",
+        help="Check database connectivity and static_horoscopes table availability without writing rows.",
+    )
     return parser
 
 
@@ -61,6 +66,32 @@ async def run_seed(argv: Sequence[str] | None = None, writer: StaticHoroscopeSee
     canonical_signs = tuple(sign.lower() for sign in signs) if signs is not None else None
     if args.write_db:
         _guard_production_write(allow_production_write=args.allow_production_write)
+
+    if args.preflight_db:
+        async def preflight_operation(resolved_writer: StaticHoroscopeSeedWriter):
+            await _run_writer_preflight(resolved_writer)
+
+        await _with_seed_writer(writer, preflight_operation)
+        summary = build_seed_summary(
+            year=args.year,
+            signs=canonical_signs,
+            rows=[],
+            row_count=0,
+            expected_count=0,
+            coverage_complete=True,
+            persisted_count=0,
+            write_complete=True,
+            dry_run=False,
+            export_path=None,
+            validate_path=None,
+            input_path=None,
+            row_source="database",
+            preflight_complete=True,
+        )
+        if args.summary_json:
+            write_summary_json(summary, Path(args.summary_json))
+        _print_summary(summary)
+        return 0
 
     if args.validate_ndjson:
         rows = load_static_horoscope_ndjson(Path(args.validate_ndjson))
@@ -102,15 +133,11 @@ async def run_seed(argv: Sequence[str] | None = None, writer: StaticHoroscopeSee
                 "Static horoscope NDJSON coverage is incomplete; refusing to write database rows "
                 f"from {args.from_ndjson}."
             )
-        if writer is None:
-            from backend.database.session import AsyncSessionLocal
-            from backend.services.static_horoscope_seed_writer import StaticHoroscopePostgresSeedWriter
+        async def ndjson_write_operation(resolved_writer: StaticHoroscopeSeedWriter):
+            await _run_writer_preflight(resolved_writer)
+            return await resolved_writer.upsert_rows(rows)
 
-            async with AsyncSessionLocal() as session:
-                writer = StaticHoroscopePostgresSeedWriter(session=session)
-                persisted_count = await writer.upsert_rows(rows)
-        else:
-            persisted_count = await writer.upsert_rows(rows)
+        persisted_count = await _with_seed_writer(writer, ndjson_write_operation)
         summary = build_seed_summary(
             year=args.year,
             signs=canonical_signs,
@@ -124,6 +151,7 @@ async def run_seed(argv: Sequence[str] | None = None, writer: StaticHoroscopeSee
             validate_path=None,
             input_path=Path(args.from_ndjson),
             row_source="ndjson",
+            preflight_complete=True,
         )
         if args.summary_json:
             write_summary_json(summary, Path(args.summary_json))
@@ -163,14 +191,11 @@ async def run_seed(argv: Sequence[str] | None = None, writer: StaticHoroscopeSee
     if not args.write_db:
         raise RuntimeError("Use --dry-run to validate rows or --write-db to persist them.")
 
-    if writer is None:
-        from backend.database.session import AsyncSessionLocal
-        from backend.services.static_horoscope_seed_writer import StaticHoroscopePostgresSeedWriter
+    async def generated_write_operation(resolved_writer: StaticHoroscopeSeedWriter):
+        await _run_writer_preflight(resolved_writer)
+        return await service.seed(writer=resolved_writer, year=args.year, signs=signs)
 
-        async with AsyncSessionLocal() as session:
-            writer = StaticHoroscopePostgresSeedWriter(session=session)
-
-    result = await service.seed(writer=writer, year=args.year, signs=signs)
+    result = await _with_seed_writer(writer, generated_write_operation)
     summary = build_seed_summary(
         year=result.year,
         signs=result.signs,
@@ -185,6 +210,7 @@ async def run_seed(argv: Sequence[str] | None = None, writer: StaticHoroscopeSee
         validate_path=None,
         input_path=None,
         row_source="generated",
+        preflight_complete=True,
     )
     if args.summary_json:
         write_summary_json(summary, Path(args.summary_json))
@@ -209,6 +235,7 @@ def build_seed_summary(
     validate_path: Path | None,
     input_path: Path | None,
     row_source: str,
+    preflight_complete: bool = False,
     row_count: int | None = None,
 ) -> dict[str, object]:
     period_counts = Counter(row.period for row in rows)
@@ -230,6 +257,7 @@ def build_seed_summary(
         "validate_path": str(validate_path) if validate_path is not None else None,
         "input_path": str(input_path) if input_path is not None else None,
         "row_source": row_source,
+        "preflight": "complete" if preflight_complete else "skipped",
         "period_counts": dict(sorted(period_counts.items())),
         "sign_counts": dict(sorted(sign_counts.items())),
         "focus_count": len(focus_counts),
@@ -252,6 +280,7 @@ def _print_summary(summary: dict[str, object]) -> None:
     export_text = f" export={summary['export_path']}" if summary["export_path"] is not None else ""
     validate_text = f" validate={summary['validate_path']}" if summary["validate_path"] is not None else ""
     input_text = f" input={summary['input_path']}" if summary["input_path"] is not None else ""
+    preflight_text = f" preflight={summary['preflight']}" if summary["preflight"] == "complete" else ""
     print(
         "Static horoscope seed "
         f"year={summary['year']} "
@@ -263,6 +292,7 @@ def _print_summary(summary: dict[str, object]) -> None:
         f"persisted={summary['persisted_count']} "
         f"write={summary['write']} "
         f"dry_run={str(summary['dry_run']).lower()}"
+        f"{preflight_text}"
         f"{export_text}"
         f"{validate_text}"
         f"{input_text}"
@@ -275,6 +305,23 @@ def _guard_production_write(allow_production_write: bool) -> None:
     if allow_production_write:
         return
     raise RuntimeError("ENVIRONMENT=production requires --allow-production-write before --write-db.")
+
+
+async def _with_seed_writer(writer: StaticHoroscopeSeedWriter | None, operation):
+    if writer is not None:
+        return await operation(writer)
+    from backend.database.session import AsyncSessionLocal
+    from backend.services.static_horoscope_seed_writer import StaticHoroscopePostgresSeedWriter
+
+    async with AsyncSessionLocal() as session:
+        return await operation(StaticHoroscopePostgresSeedWriter(session=session))
+
+
+async def _run_writer_preflight(writer: StaticHoroscopeSeedWriter) -> None:
+    preflight = getattr(writer, "preflight", None)
+    if preflight is None:
+        return
+    await preflight()
 
 
 def export_rows_to_ndjson(rows: Sequence[StaticHoroscope], path: Path) -> Path:

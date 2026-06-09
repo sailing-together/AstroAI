@@ -94,6 +94,14 @@ psql "$DATABASE_URL" -f backend/database/migrations/20260605_create_static_horos
 
 - The dry-run and export validation both report `coverage=complete`.
 
+Run a database preflight check before writing:
+
+```bash
+python -m backend.tasks.seed_static_horoscopes --year 2026 --preflight-db
+```
+
+This verifies database connectivity and that the `static_horoscopes` table can be queried. `--write-db` runs the same preflight check before upserting rows.
+
 Then write rows through the configured backend environment. The safest handoff is to write from the exact export file that was validated:
 
 ```bash

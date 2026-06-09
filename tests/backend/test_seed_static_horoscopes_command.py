@@ -255,6 +255,30 @@ def test_seed_command_allows_confirmed_production_write(monkeypatch, capsys):
     assert "row_source=generated" in output
 
 
+def test_seed_command_runs_database_preflight_without_writing(capsys):
+    writer = RecordingWriter()
+
+    exit_code = asyncio.run(run_seed(["--year", "2026", "--preflight-db"], writer=writer))
+
+    output = capsys.readouterr().out
+    assert exit_code == 0
+    assert writer.preflight_count == 1
+    assert writer.rows == []
+    assert "preflight=complete" in output
+
+
+def test_seed_command_runs_preflight_before_write_db(capsys):
+    writer = RecordingWriter()
+
+    exit_code = asyncio.run(run_seed(["--year", "2026", "--sign", "gemini", "--write-db"], writer=writer))
+
+    output = capsys.readouterr().out
+    assert exit_code == 0
+    assert writer.preflight_count == 1
+    assert len(writer.rows) == 3879
+    assert "preflight=complete" in output
+
+
 def test_seed_command_reports_incomplete_write(capsys):
     writer = RecordingWriter(persisted_count=3878)
 
@@ -284,6 +308,10 @@ class RecordingWriter:
     def __init__(self, persisted_count: int | None = None) -> None:
         self.rows = []
         self.persisted_count = persisted_count
+        self.preflight_count = 0
+
+    async def preflight(self):
+        self.preflight_count += 1
 
     async def upsert_rows(self, rows):
         self.rows = list(rows)
