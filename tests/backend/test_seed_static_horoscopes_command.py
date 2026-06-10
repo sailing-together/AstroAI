@@ -151,6 +151,47 @@ def test_seed_command_validates_existing_ndjson_export(tmp_path, capsys):
     assert "validate=" in output
 
 
+def test_seed_command_smoke_reads_existing_ndjson_export(tmp_path, capsys):
+    export_path = tmp_path / "static-horoscopes-2026-gemini.ndjson.gz"
+    summary_path = tmp_path / "static-horoscopes-2026-gemini.smoke-summary.json"
+    rows = StaticHoroscopeSeedService().build_rows(year=2026, signs=("gemini",))
+    export_rows_to_ndjson(rows, export_path)
+
+    exit_code = asyncio.run(
+        run_seed(
+            [
+                "--year",
+                "2026",
+                "--sign",
+                "gemini",
+                "--smoke-read-ndjson",
+                str(export_path),
+                "--smoke-date",
+                "2026-06-02",
+                "--summary-json",
+                str(summary_path),
+            ]
+        )
+    )
+
+    output = capsys.readouterr().out
+    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    assert exit_code == 0
+    assert "smoke_read=complete" in output
+    assert summary["smoke_read"] == "complete"
+    assert summary["smoke_date"] == "2026-06-02"
+    assert summary["smoke_counts"] == {
+        "bundle_daily": 3285,
+        "bundle_monthly": 108,
+        "bundle_weekly": 477,
+        "bundle_yearly": 9,
+        "daily_dimensions": 9,
+        "monthly_dimensions": 9,
+        "weekly_dimensions": 9,
+        "yearly_dimensions": 9,
+    }
+
+
 def test_seed_command_returns_nonzero_for_incomplete_ndjson_validation(tmp_path, capsys):
     export_path = tmp_path / "static-horoscopes-2026-gemini-truncated.ndjson.gz"
     summary_path = tmp_path / "static-horoscopes-2026-gemini.validate-summary.json"

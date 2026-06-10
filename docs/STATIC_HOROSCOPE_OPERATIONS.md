@@ -83,7 +83,38 @@ If coverage is incomplete, do not import or write the file to production.
 
 The command returns a non-zero exit code when validation coverage is incomplete, so CI or shell scripts can stop immediately without parsing logs.
 
-## 4. Database Write
+## 4. Smoke Read Existing Export
+
+Before touching a real database, smoke-test the public read path against the export file:
+
+```bash
+python -m backend.tasks.seed_static_horoscopes \
+  --year 2026 \
+  --sign gemini \
+  --smoke-read-ndjson downloads/static-horoscopes-2026.ndjson.gz \
+  --smoke-date 2026-06-02 \
+  --summary-json downloads/static-horoscopes-2026.gemini-smoke-summary.json
+```
+
+Expected output includes:
+
+```text
+rows=46548 expected=3879 coverage=complete smoke_read=complete input=downloads/static-horoscopes-2026.ndjson.gz
+```
+
+The smoke check uses the same repository read shape as the public horoscope API:
+
+- yearly bundle: 9 rows for the selected sign
+- monthly bundle: 108 rows for the selected sign
+- weekly bundle: 477 rows for the selected sign
+- daily bundle: 3,285 rows for the selected sign
+- selected yearly/monthly/weekly/daily response: 9 focus dimensions each
+
+If `smoke_read=incomplete`, do not import or write the file to production.
+
+The command returns a non-zero exit code when the smoke read is incomplete.
+
+## 5. Database Write
 
 Only write to Supabase/PostgreSQL after:
 
@@ -143,7 +174,7 @@ Database writes are batched to avoid oversized PostgreSQL statements when writin
 
 The command returns a non-zero exit code when `write=incomplete`.
 
-## 5. Public Read Rule
+## 6. Public Read Rule
 
 Public anonymous horoscope requests must read persisted static content only. They must not call Gemini or any other live AI API during page views.
 

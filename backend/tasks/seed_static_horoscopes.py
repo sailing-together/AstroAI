@@ -5,11 +5,16 @@ import json
 import os
 from collections import Counter
 from collections.abc import Sequence
+from datetime import date
 from pathlib import Path
 
 from backend.database.models_static_horoscope import StaticHoroscope
-from backend.services.static_horoscope_coverage import validate_static_horoscope_coverage
+from backend.services.static_horoscope_coverage import (
+    expected_static_horoscope_counts,
+    validate_static_horoscope_coverage,
+)
 from backend.services.static_horoscope_ndjson import load_static_horoscope_ndjson
+from backend.services.static_horoscope_repository import StaticHoroscopeRepository
 from backend.services.static_horoscope_seed_service import StaticHoroscopeSeedService, StaticHoroscopeSeedWriter
 
 
@@ -55,6 +60,15 @@ def build_parser() -> argparse.ArgumentParser:
         "--preflight-db",
         action="store_true",
         help="Check database connectivity and static_horoscopes table availability without writing rows.",
+    )
+    parser.add_argument(
+        "--smoke-read-ndjson",
+        help="Load an existing NDJSON or .ndjson.gz export and verify bundle/date reads without database access.",
+    )
+    parser.add_argument(
+        "--smoke-date",
+        default="2026-06-02",
+        help="Selected date for --smoke-read-ndjson daily/weekly/monthly/yearly checks.",
     )
     return parser
 
@@ -113,6 +127,34 @@ async def run_seed(argv: Sequence[str] | None = None, writer: StaticHoroscopeSee
             validate_path=Path(args.validate_ndjson),
             input_path=None,
             row_source="ndjson",
+        )
+        if args.summary_json:
+            write_summary_json(summary, Path(args.summary_json))
+        _print_summary(summary)
+        return _exit_code_for_summary(summary)
+
+    if args.smoke_read_ndjson:
+        rows = load_static_horoscope_ndjson(Path(args.smoke_read_ndjson))
+        smoke_sign = _single_smoke_sign(canonical_signs, rows)
+        smoke_date = date.fromisoformat(args.smoke_date)
+        coverage = validate_static_horoscope_coverage(rows, signs=(smoke_sign,), year=args.year)
+        smoke_counts = _smoke_read_counts(rows=rows, sign=smoke_sign, year=args.year, selected_date=smoke_date)
+        summary = build_seed_summary(
+            year=args.year,
+            signs=(smoke_sign,),
+            rows=rows,
+            expected_count=coverage.expected_total,
+            coverage_complete=coverage.is_complete,
+            persisted_count=0,
+            write_complete=True,
+            dry_run=False,
+            export_path=None,
+            validate_path=None,
+            input_path=Path(args.smoke_read_ndjson),
+            row_source="ndjson",
+            smoke_read_complete=coverage.is_complete and _smoke_counts_complete(args.year, smoke_counts),
+            smoke_date=smoke_date,
+            smoke_counts=smoke_counts,
         )
         if args.summary_json:
             write_summary_json(summary, Path(args.summary_json))
@@ -237,6 +279,9 @@ def build_seed_summary(
     row_source: str,
     preflight_complete: bool = False,
     row_count: int | None = None,
+    smoke_read_complete: bool | None = None,
+    smoke_date: date | None = None,
+    smoke_counts: dict[str, int] | None = None,
 ) -> dict[str, object]:
     period_counts = Counter(row.period for row in rows)
     sign_counts = Counter(row.sign for row in rows)
@@ -258,6 +303,9 @@ def build_seed_summary(
         "input_path": str(input_path) if input_path is not None else None,
         "row_source": row_source,
         "preflight": "complete" if preflight_complete else "skipped",
+        "smoke_read": _status_text(smoke_read_complete),
+        "smoke_date": smoke_date.isoformat() if smoke_date is not None else None,
+        "smoke_counts": {} if smoke_counts is None else dict(sorted(smoke_counts.items())),
         "period_counts": dict(sorted(period_counts.items())),
         "sign_counts": dict(sorted(sign_counts.items())),
         "focus_count": len(focus_counts),
@@ -281,6 +329,7 @@ def _print_summary(summary: dict[str, object]) -> None:
     validate_text = f" validate={summary['validate_path']}" if summary["validate_path"] is not None else ""
     input_text = f" input={summary['input_path']}" if summary["input_path"] is not None else ""
     preflight_text = f" preflight={summary['preflight']}" if summary["preflight"] == "complete" else ""
+    smoke_text = f" smoke_read={summary['smoke_read']}" if summary["smoke_read"] != "skipped" else ""
     print(
         "Static horoscope seed "
         f"year={summary['year']} "
@@ -293,6 +342,7 @@ def _print_summary(summary: dict[str, object]) -> None:
         f"write={summary['write']} "
         f"dry_run={str(summary['dry_run']).lower()}"
         f"{preflight_text}"
+        f"{smoke_text}"
         f"{export_text}"
         f"{validate_text}"
         f"{input_text}"
@@ -304,7 +354,63 @@ def _exit_code_for_summary(summary: dict[str, object]) -> int:
         return 1
     if summary["write"] != "complete":
         return 1
+    if summary["smoke_read"] == "incomplete":
+        return 1
     return 0
+
+
+def _status_text(value: bool | None) -> str:
+    if value is None:
+        return "skipped"
+    return "complete" if value else "incomplete"
+
+
+def _single_smoke_sign(canonical_signs: tuple[str, ...] | None, rows: Sequence[StaticHoroscope]) -> str:
+    if canonical_signs is not None:
+        if len(canonical_signs) != 1:
+            raise RuntimeError("--smoke-read-ndjson requires exactly one --sign when signs are provided.")
+        return canonical_signs[0]
+
+    row_signs = tuple(sorted({row.sign for row in rows}))
+    if len(row_signs) != 1:
+        raise RuntimeError("--smoke-read-ndjson requires --sign when the export contains multiple signs.")
+    return row_signs[0]
+
+
+def _smoke_read_counts(
+    rows: Sequence[StaticHoroscope],
+    sign: str,
+    year: int,
+    selected_date: date,
+) -> dict[str, int]:
+    repository = StaticHoroscopeRepository(persisted_rows=rows)
+    return {
+        "bundle_daily": len(repository.build_year_entries(sign, year, "daily")),
+        "bundle_monthly": len(repository.build_year_entries(sign, year, "monthly")),
+        "bundle_weekly": len(repository.build_year_entries(sign, year, "weekly")),
+        "bundle_yearly": len(repository.build_year_entries(sign, year, "yearly")),
+        "daily_dimensions": len(repository.build_period(sign, "daily", selected_date).dimensions),
+        "monthly_dimensions": len(repository.build_period(sign, "monthly", selected_date.replace(day=1)).dimensions),
+        "weekly_dimensions": len(
+            repository.build_period_for_selected_date(sign, "weekly", selected_date, target_year=year).dimensions
+        ),
+        "yearly_dimensions": len(repository.build_period(sign, "yearly", date(year, 1, 1)).dimensions),
+    }
+
+
+def _smoke_counts_complete(year: int, smoke_counts: dict[str, int]) -> bool:
+    expected_counts = expected_static_horoscope_counts(year)
+    expected = {
+        "bundle_daily": expected_counts["daily"],
+        "bundle_monthly": expected_counts["monthly"],
+        "bundle_weekly": expected_counts["weekly"],
+        "bundle_yearly": expected_counts["yearly"],
+        "daily_dimensions": 9,
+        "monthly_dimensions": 9,
+        "weekly_dimensions": 9,
+        "yearly_dimensions": 9,
+    }
+    return smoke_counts == expected
 
 
 def _guard_production_write(allow_production_write: bool) -> None:
