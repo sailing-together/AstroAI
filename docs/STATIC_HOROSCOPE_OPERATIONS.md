@@ -81,6 +81,8 @@ rows=46548 expected=46548 coverage=complete validate=downloads/static-horoscopes
 
 If coverage is incomplete, do not import or write the file to production.
 
+The command returns a non-zero exit code when validation coverage is incomplete, so CI or shell scripts can stop immediately without parsing logs.
+
 ## 4. Database Write
 
 Only write to Supabase/PostgreSQL after:
@@ -138,6 +140,8 @@ rows=46548 expected=46548 coverage=complete persisted=46548 write=complete dry_r
 If `write=incomplete`, stop and investigate before using the public horoscope page against that database.
 
 Database writes are batched to avoid oversized PostgreSQL statements when writing all 46,548 rows for 2026.
+
+The command returns a non-zero exit code when `write=incomplete`.
 
 ## 5. Public Read Rule
 

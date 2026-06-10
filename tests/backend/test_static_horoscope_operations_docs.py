@@ -18,4 +18,5 @@ def test_static_horoscope_operations_doc_records_seed_workflow():
     assert "--allow-production-write" in content
     assert "downloads/static-horoscopes-2026.ndjson.gz" in content
     assert "46,548" in content
+    assert "non-zero exit code" in content
     assert "Supabase/PostgreSQL" in content

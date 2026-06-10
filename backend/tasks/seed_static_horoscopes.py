@@ -91,7 +91,7 @@ async def run_seed(argv: Sequence[str] | None = None, writer: StaticHoroscopeSee
         if args.summary_json:
             write_summary_json(summary, Path(args.summary_json))
         _print_summary(summary)
-        return 0
+        return _exit_code_for_summary(summary)
 
     if args.validate_ndjson:
         rows = load_static_horoscope_ndjson(Path(args.validate_ndjson))
@@ -117,7 +117,7 @@ async def run_seed(argv: Sequence[str] | None = None, writer: StaticHoroscopeSee
         if args.summary_json:
             write_summary_json(summary, Path(args.summary_json))
         _print_summary(summary)
-        return 0
+        return _exit_code_for_summary(summary)
 
     if args.from_ndjson:
         if not args.write_db:
@@ -156,7 +156,7 @@ async def run_seed(argv: Sequence[str] | None = None, writer: StaticHoroscopeSee
         if args.summary_json:
             write_summary_json(summary, Path(args.summary_json))
         _print_summary(summary)
-        return 0
+        return _exit_code_for_summary(summary)
 
     if args.dry_run or args.export_ndjson:
         rows = service.build_rows(year=args.year, signs=signs)
@@ -215,7 +215,7 @@ async def run_seed(argv: Sequence[str] | None = None, writer: StaticHoroscopeSee
     if args.summary_json:
         write_summary_json(summary, Path(args.summary_json))
     _print_summary(summary)
-    return 0
+    return _exit_code_for_summary(summary)
 
 
 def main() -> int:
@@ -297,6 +297,14 @@ def _print_summary(summary: dict[str, object]) -> None:
         f"{validate_text}"
         f"{input_text}"
     )
+
+
+def _exit_code_for_summary(summary: dict[str, object]) -> int:
+    if summary["coverage"] != "complete":
+        return 1
+    if summary["write"] != "complete":
+        return 1
+    return 0
 
 
 def _guard_production_write(allow_production_write: bool) -> None:
