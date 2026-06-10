@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import {
   ACTIVE_HOROSCOPE_YEAR,
+  defaultViewDateForToday,
   findDailyEntry,
   findMonthlyEntry,
   findWeeklyEntry,
@@ -97,6 +98,12 @@ test("view dates stay inside the active static horoscope year", () => {
   assert.equal(normalizeViewDateForActiveYear("2026-06-03"), "2026-06-03");
   assert.equal(normalizeViewDateForActiveYear("2027-01-01"), "2026-12-31");
   assert.equal(normalizeViewDateForActiveYear("not-a-date"), "2026-01-01");
+});
+
+test("default view date uses today when today is inside the active year", () => {
+  assert.equal(defaultViewDateForToday(new Date("2026-06-10T03:00:00Z")), "2026-06-10");
+  assert.equal(defaultViewDateForToday(new Date("2025-06-10T03:00:00Z")), "2026-06-10");
+  assert.equal(defaultViewDateForToday(new Date("2027-07-15T00:00:00Z")), "2026-07-15");
 });
 
 test("selected readings do not fall back to stale dates", () => {

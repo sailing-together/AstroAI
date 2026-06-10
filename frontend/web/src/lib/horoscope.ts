@@ -15,6 +15,10 @@ export function normalizeViewDateForActiveYear(dateText: string) {
   return dateText;
 }
 
+export function defaultViewDateForToday(today = new Date()) {
+  return normalizeViewDateForActiveYear(`${ACTIVE_HOROSCOPE_YEAR}-${today.toISOString().slice(5, 10)}`);
+}
+
 export function findDailyEntry(entries: HoroscopeEntry[], date: string, focus: string) {
   return entries.find((entry) => entry.period === "daily" && entry.date === date && entry.focus === focus);
 }

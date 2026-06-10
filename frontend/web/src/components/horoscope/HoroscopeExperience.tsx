@@ -7,6 +7,7 @@ import {
   ACTIVE_HOROSCOPE_YEAR,
   ACTIVE_HOROSCOPE_YEAR_END,
   ACTIVE_HOROSCOPE_YEAR_START,
+  defaultViewDateForToday,
   formatDisplayDate,
   formatMonthLabel,
   formatWeekRange,
@@ -36,12 +37,10 @@ const signs = [
   "pisces"
 ];
 
-const defaultDate = ACTIVE_HOROSCOPE_YEAR_START;
-
 export function HoroscopeExperience() {
   const [sign, setSign] = useState("gemini");
   const [birthDate, setBirthDate] = useState("1994-06-14");
-  const [viewDate, setViewDate] = useState(defaultDate);
+  const [viewDate, setViewDate] = useState(() => defaultViewDateForToday());
   const [focus, setFocus] = useState<HoroscopeFocus>("general");
   const [bundle, setBundle] = useState<HoroscopeBundle | null>(null);
   const [message, setMessage] = useState("Free daily guidance");
