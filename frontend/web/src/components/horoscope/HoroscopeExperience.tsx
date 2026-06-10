@@ -7,13 +7,14 @@ import {
   ACTIVE_HOROSCOPE_YEAR,
   ACTIVE_HOROSCOPE_YEAR_END,
   ACTIVE_HOROSCOPE_YEAR_START,
-  findDailyEntry,
-  findMonthlyEntry,
-  findWeeklyEntry,
   formatDisplayDate,
   formatMonthLabel,
   formatWeekRange,
   normalizeViewDateForActiveYear,
+  selectDailyEntry,
+  selectMonthlyEntry,
+  selectWeeklyEntry,
+  selectYearlyEntry,
   titleCaseSign
 } from "../../lib/horoscope";
 import type { HoroscopeBundle, HoroscopeFocus } from "../../lib/types";
@@ -87,18 +88,18 @@ export function HoroscopeExperience() {
 
   const dailyEntry = useMemo(() => {
     if (!bundle) return undefined;
-    return findDailyEntry(bundle.daily, viewDate, focus) ?? bundle.daily.find((entry) => entry.focus === focus);
+    return selectDailyEntry(bundle.daily, viewDate, focus);
   }, [bundle, focus, viewDate]);
 
   const weeklyEntry = useMemo(() => {
     if (!bundle) return undefined;
-    return findWeeklyEntry(bundle.weekly, viewDate, focus) ?? bundle.weekly.find((entry) => entry.focus === focus);
+    return selectWeeklyEntry(bundle.weekly, viewDate, focus);
   }, [bundle, focus, viewDate]);
 
-  const yearlyEntry = useMemo(() => bundle?.yearly.find((entry) => entry.focus === focus), [bundle, focus]);
+  const yearlyEntry = useMemo(() => (bundle ? selectYearlyEntry(bundle.yearly, focus) : undefined), [bundle, focus]);
   const monthlyEntry = useMemo(() => {
     if (!bundle) return undefined;
-    return findMonthlyEntry(bundle.monthly, viewDate, focus) ?? bundle.monthly.find((entry) => entry.focus === focus);
+    return selectMonthlyEntry(bundle.monthly, viewDate, focus);
   }, [bundle, focus, viewDate]);
 
   async function useBirthDate() {
@@ -192,6 +193,7 @@ export function HoroscopeExperience() {
               entry={dailyEntry}
               eyebrow={`Daily reading - ${viewDateLabel}`}
               isUnavailable={isReadingUnavailable}
+              meta={`${signLabel} · ${viewDateLabel} · ${focus.replace("_", " ")}`}
               variant="primary"
             />
           </div>
@@ -269,10 +271,21 @@ export function HoroscopeExperience() {
             entry={weeklyEntry}
             eyebrow={weeklyEntry ? `Week of ${formatWeekRange(weeklyEntry)}` : "This week"}
             isUnavailable={isReadingUnavailable}
+            meta={weeklyEntry ? `${signLabel} · ${formatWeekRange(weeklyEntry)}` : `${signLabel} · ${viewDateLabel}`}
           />
-          <ReadingPanel entry={monthlyEntry} eyebrow={`${monthLabel} outlook`} isUnavailable={isReadingUnavailable} />
+          <ReadingPanel
+            entry={monthlyEntry}
+            eyebrow={`${monthLabel} outlook`}
+            isUnavailable={isReadingUnavailable}
+            meta={`${signLabel} · ${monthLabel}`}
+          />
         </div>
-        <ReadingPanel entry={yearlyEntry} eyebrow={`${year} overview`} isUnavailable={isReadingUnavailable} />
+        <ReadingPanel
+          entry={yearlyEntry}
+          eyebrow={`${year} overview`}
+          isUnavailable={isReadingUnavailable}
+          meta={`${signLabel} · Full-year ${focus.replace("_", " ")}`}
+        />
       </section>
     </main>
   );

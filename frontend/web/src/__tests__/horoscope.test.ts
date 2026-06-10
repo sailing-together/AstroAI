@@ -10,6 +10,9 @@ import {
   formatMonthLabel,
   formatWeekRange,
   normalizeViewDateForActiveYear,
+  selectDailyEntry,
+  selectMonthlyEntry,
+  selectWeeklyEntry,
   titleCaseSign
 } from "../lib/horoscope.ts";
 import type { HoroscopeEntry } from "../lib/types.ts";
@@ -94,4 +97,10 @@ test("view dates stay inside the active static horoscope year", () => {
   assert.equal(normalizeViewDateForActiveYear("2026-06-03"), "2026-06-03");
   assert.equal(normalizeViewDateForActiveYear("2027-01-01"), "2026-12-31");
   assert.equal(normalizeViewDateForActiveYear("not-a-date"), "2026-01-01");
+});
+
+test("selected readings do not fall back to stale dates", () => {
+  assert.equal(selectDailyEntry(entries, "2026-06-04", "general"), undefined);
+  assert.equal(selectWeeklyEntry(entries, "2026-06-09", "general"), undefined);
+  assert.equal(selectMonthlyEntry(entries, "2026-07-01", "general"), undefined);
 });

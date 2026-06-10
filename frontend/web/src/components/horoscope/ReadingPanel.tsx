@@ -4,15 +4,16 @@ type ReadingPanelProps = {
   eyebrow: string;
   entry?: HoroscopeEntry;
   isUnavailable?: boolean;
+  meta?: string;
   variant?: "primary" | "secondary";
 };
 
-export function ReadingPanel({ eyebrow, entry, isUnavailable = false, variant = "secondary" }: ReadingPanelProps) {
+export function ReadingPanel({ eyebrow, entry, isUnavailable = false, meta, variant = "secondary" }: ReadingPanelProps) {
   const isPrimary = variant === "primary";
   const fallbackTitle = isUnavailable ? "Reading unavailable" : "Reading is preparing";
   const fallbackSummary = isUnavailable
     ? "Choose another sign or date while this guidance is being prepared."
-    : "Choose a sign and date to begin.";
+    : "This exact reading is not loaded yet.";
 
   return (
     <article
@@ -23,6 +24,7 @@ export function ReadingPanel({ eyebrow, entry, isUnavailable = false, variant = 
       }
     >
       <p className="text-xs font-black uppercase tracking-wide text-astro-purple">{eyebrow}</p>
+      {meta ? <p className="mt-2 text-sm font-bold text-slate-500">{meta}</p> : null}
       <h2 className={isPrimary ? "mt-3 text-3xl font-black leading-tight text-astro-ink" : "mt-2 text-2xl font-black text-astro-ink"}>
         {entry?.title ?? fallbackTitle}
       </h2>

@@ -31,8 +31,9 @@ def test_public_web_horoscope_is_date_driven():
     )
 
     assert 'type="date"' in component
-    assert "findDailyEntry" in component
-    assert "findWeeklyEntry" in component
+    assert "selectDailyEntry" in component
+    assert "selectWeeklyEntry" in component
+    assert "normalizeViewDateForActiveYear" in component
     assert "This week" in component
 
 

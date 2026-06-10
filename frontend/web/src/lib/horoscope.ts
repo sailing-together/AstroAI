@@ -34,6 +34,22 @@ export function findMonthlyEntry(entries: HoroscopeEntry[], date: string, focus:
   );
 }
 
+export function selectDailyEntry(entries: HoroscopeEntry[], date: string, focus: string) {
+  return findDailyEntry(entries, date, focus);
+}
+
+export function selectWeeklyEntry(entries: HoroscopeEntry[], date: string, focus: string) {
+  return findWeeklyEntry(entries, date, focus);
+}
+
+export function selectMonthlyEntry(entries: HoroscopeEntry[], date: string, focus: string) {
+  return findMonthlyEntry(entries, date, focus);
+}
+
+export function selectYearlyEntry(entries: HoroscopeEntry[], focus: string) {
+  return entries.find((entry) => entry.period === "yearly" && entry.focus === focus);
+}
+
 export function formatDisplayDate(dateText: string) {
   return new Intl.DateTimeFormat("en", {
     day: "numeric",
