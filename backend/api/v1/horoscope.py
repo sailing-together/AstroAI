@@ -13,6 +13,7 @@ from backend.schemas.horoscope import (
     HoroscopePeriodResponse,
 )
 from backend.services.static_horoscope_db_store import StaticHoroscopeDbStore
+from backend.services.static_horoscope_coverage import validate_static_horoscope_coverage
 from backend.services.static_horoscope_repository import StaticHoroscopeRepository
 from backend.services.zodiac import VALID_SIGNS
 
@@ -156,6 +157,10 @@ async def _repository_for_year(
         if _is_production():
             raise _static_horoscope_not_ready(sign, target_year)
         return repository
+    if _is_production():
+        coverage = validate_static_horoscope_coverage(rows, signs=(sign,), year=target_year)
+        if not coverage.is_complete:
+            raise _static_horoscope_not_ready(sign, target_year)
     return StaticHoroscopeRepository(persisted_rows=rows)
 
 
