@@ -65,6 +65,20 @@ Generate one sign for a smaller local check:
 python -m backend.tasks.seed_static_horoscopes --year 2026 --sign gemini --dry-run
 ```
 
+Smoke-test public read behavior from an existing export without touching the database:
+
+```bash
+python -m backend.tasks.seed_static_horoscopes \
+  --year 2026 \
+  --sign gemini \
+  --smoke-read-ndjson downloads/static-horoscopes-2026.ndjson.gz \
+  --smoke-date 2026-06-02 \
+  --summary-json downloads/static-horoscopes-2026.gemini-smoke-summary.json
+```
+
+This verifies that the selected sign/date can produce the yearly, monthly, weekly, and daily response shapes
+used by the public horoscope page. Expected output includes `smoke_read=complete`.
+
 Write rows to the configured PostgreSQL database only when the backend environment variables are set:
 
 ```bash
