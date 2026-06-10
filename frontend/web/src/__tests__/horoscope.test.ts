@@ -14,7 +14,8 @@ import {
   selectDailyEntry,
   selectMonthlyEntry,
   selectWeeklyEntry,
-  titleCaseSign
+  titleCaseSign,
+  zodiacSignForDate
 } from "../lib/horoscope.ts";
 import type { HoroscopeEntry } from "../lib/types.ts";
 
@@ -104,6 +105,13 @@ test("default view date uses today when today is inside the active year", () => 
   assert.equal(defaultViewDateForToday(new Date("2026-06-10T03:00:00Z")), "2026-06-10");
   assert.equal(defaultViewDateForToday(new Date("2025-06-10T03:00:00Z")), "2026-06-10");
   assert.equal(defaultViewDateForToday(new Date("2027-07-15T00:00:00Z")), "2026-07-15");
+});
+
+test("zodiacSignForDate returns the sign season for the selected date", () => {
+  assert.equal(zodiacSignForDate("2026-06-10"), "gemini");
+  assert.equal(zodiacSignForDate("2026-07-15"), "cancer");
+  assert.equal(zodiacSignForDate("2026-12-25"), "capricorn");
+  assert.equal(zodiacSignForDate("2026-03-21"), "aries");
 });
 
 test("selected readings do not fall back to stale dates", () => {

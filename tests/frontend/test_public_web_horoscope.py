@@ -35,6 +35,7 @@ def test_public_web_horoscope_is_date_driven():
     assert "selectWeeklyEntry" in component
     assert "normalizeViewDateForActiveYear" in component
     assert "onBlur={(event) => handleViewDateChange(event.target.value)}" in component
+    assert "onInput={(event) => handleViewDateChange(event.currentTarget.value)}" in component
     assert "This week" in component
 
 

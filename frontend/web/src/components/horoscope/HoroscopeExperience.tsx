@@ -16,7 +16,8 @@ import {
   selectMonthlyEntry,
   selectWeeklyEntry,
   selectYearlyEntry,
-  titleCaseSign
+  titleCaseSign,
+  zodiacSignForDate
 } from "../../lib/horoscope";
 import type { HoroscopeBundle, HoroscopeFocus } from "../../lib/types";
 import { FocusTabs } from "./FocusTabs";
@@ -38,9 +39,9 @@ const signs = [
 ];
 
 export function HoroscopeExperience() {
-  const [sign, setSign] = useState("gemini");
-  const [birthDate, setBirthDate] = useState("1994-06-14");
   const [viewDate, setViewDate] = useState(() => defaultViewDateForToday());
+  const [sign, setSign] = useState(() => zodiacSignForDate(defaultViewDateForToday()));
+  const [birthDate, setBirthDate] = useState("1994-06-14");
   const [focus, setFocus] = useState<HoroscopeFocus>("general");
   const [bundle, setBundle] = useState<HoroscopeBundle | null>(null);
   const [message, setMessage] = useState("Free daily guidance");
@@ -116,7 +117,9 @@ export function HoroscopeExperience() {
   }
 
   function handleViewDateChange(dateText: string) {
-    setViewDate(normalizeViewDateForActiveYear(dateText));
+    const normalizedDate = normalizeViewDateForActiveYear(dateText);
+    setViewDate(normalizedDate);
+    setSign(zodiacSignForDate(normalizedDate));
   }
 
   return (
@@ -236,6 +239,7 @@ export function HoroscopeExperience() {
                   min={ACTIVE_HOROSCOPE_YEAR_START}
                   onBlur={(event) => handleViewDateChange(event.target.value)}
                   onChange={(event) => handleViewDateChange(event.target.value)}
+                  onInput={(event) => handleViewDateChange(event.currentTarget.value)}
                   type="date"
                   value={viewDate}
                 />

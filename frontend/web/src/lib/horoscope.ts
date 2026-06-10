@@ -19,6 +19,22 @@ export function defaultViewDateForToday(today = new Date()) {
   return normalizeViewDateForActiveYear(`${ACTIVE_HOROSCOPE_YEAR}-${today.toISOString().slice(5, 10)}`);
 }
 
+export function zodiacSignForDate(dateText: string) {
+  const monthDay = normalizeViewDateForActiveYear(dateText).slice(5, 10);
+  if (monthDay >= "03-21" && monthDay <= "04-19") return "aries";
+  if (monthDay >= "04-20" && monthDay <= "05-20") return "taurus";
+  if (monthDay >= "05-21" && monthDay <= "06-20") return "gemini";
+  if (monthDay >= "06-21" && monthDay <= "07-22") return "cancer";
+  if (monthDay >= "07-23" && monthDay <= "08-22") return "leo";
+  if (monthDay >= "08-23" && monthDay <= "09-22") return "virgo";
+  if (monthDay >= "09-23" && monthDay <= "10-22") return "libra";
+  if (monthDay >= "10-23" && monthDay <= "11-21") return "scorpio";
+  if (monthDay >= "11-22" && monthDay <= "12-21") return "sagittarius";
+  if (monthDay >= "01-20" && monthDay <= "02-18") return "aquarius";
+  if (monthDay >= "02-19" && monthDay <= "03-20") return "pisces";
+  return "capricorn";
+}
+
 export function findDailyEntry(entries: HoroscopeEntry[], date: string, focus: string) {
   return entries.find((entry) => entry.period === "daily" && entry.date === date && entry.focus === focus);
 }
