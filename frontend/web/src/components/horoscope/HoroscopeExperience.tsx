@@ -235,6 +235,7 @@ export function HoroscopeExperience() {
                   className="rounded-lg border border-blue-100 bg-white px-3 py-3"
                   max={ACTIVE_HOROSCOPE_YEAR_END}
                   min={ACTIVE_HOROSCOPE_YEAR_START}
+                  onBlur={(event) => handleViewDateChange(event.target.value)}
                   onChange={(event) => handleViewDateChange(event.target.value)}
                   type="date"
                   value={viewDate}
