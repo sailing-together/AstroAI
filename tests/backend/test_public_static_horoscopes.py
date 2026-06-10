@@ -96,9 +96,40 @@ def test_horoscope_bundle_returns_not_ready_when_production_rows_are_missing(mon
     }
 
 
+def test_horoscope_bundle_returns_not_ready_when_production_rows_are_partial(monkeypatch):
+    monkeypatch.setenv("ENVIRONMENT", "production")
+    rows = build_static_horoscope_rows(signs=["gemini"], year=2026)
+    client, fake_store, fake_session = client_with_static_horoscope_store(monkeypatch, rows[:-1])
+
+    response = client.get("/api/v1/horoscope/bundle/gemini", params={"year": 2026})
+
+    assert response.status_code == 503
+    assert fake_store.calls == [(fake_session, "gemini", 2026)]
+    assert response.json()["detail"]["code"] == "static_horoscope_not_ready"
+
+
 def test_daily_horoscope_returns_not_ready_when_production_rows_are_missing(monkeypatch):
     monkeypatch.setenv("ENVIRONMENT", "production")
     client, fake_store, fake_session = client_with_static_horoscope_store(monkeypatch, [])
+
+    response = client.get(
+        "/api/v1/horoscope/daily/gemini",
+        params={"date": "2026-06-02", "focus": "general"},
+    )
+
+    assert response.status_code == 503
+    assert fake_store.calls == [(fake_session, "gemini", 2026)]
+    assert response.json()["detail"]["code"] == "static_horoscope_not_ready"
+
+
+def test_daily_horoscope_returns_not_ready_when_production_rows_are_partial(monkeypatch):
+    monkeypatch.setenv("ENVIRONMENT", "production")
+    rows = [
+        row
+        for row in build_static_horoscope_rows(signs=["gemini"], year=2026)
+        if not (row.period == "daily" and row.focus == "general" and row.content_date.isoformat() == "2026-06-02")
+    ]
+    client, fake_store, fake_session = client_with_static_horoscope_store(monkeypatch, rows)
 
     response = client.get(
         "/api/v1/horoscope/daily/gemini",

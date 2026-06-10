@@ -182,6 +182,7 @@ Bundle response:
 ```
 
 The bundle and period endpoints must read stored PostgreSQL/Redis content only in production. They must not call Gemini.
+Production must treat missing or incomplete active static rows for a requested sign/year as not ready; it must not fill gaps with generated fallback content.
 In local development, deterministic fixture fallback is allowed only when the configured database is unavailable or has no active rows.
 
 Production missing-data response:

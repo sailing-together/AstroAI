@@ -177,6 +177,7 @@ The command returns a non-zero exit code when `write=incomplete`.
 ## 6. Public Read Rule
 
 Public anonymous horoscope requests must read persisted static content only. They must not call Gemini or any other live AI API during page views.
+In production, missing or incomplete active rows for a requested sign/year must return `static_horoscope_not_ready` with HTTP 503 rather than filling gaps with generated fallback content.
 
 Allowed AI/API usage:
 
