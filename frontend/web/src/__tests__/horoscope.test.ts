@@ -2,12 +2,14 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  ACTIVE_HOROSCOPE_YEAR,
   findDailyEntry,
   findMonthlyEntry,
   findWeeklyEntry,
   formatDisplayDate,
   formatMonthLabel,
   formatWeekRange,
+  normalizeViewDateForActiveYear,
   titleCaseSign
 } from "../lib/horoscope.ts";
 import type { HoroscopeEntry } from "../lib/types.ts";
@@ -84,4 +86,12 @@ test("date labels are stable in UTC", () => {
   assert.equal(formatDisplayDate("2026-06-03"), "Jun 3, 2026");
   assert.equal(formatMonthLabel("2026-06-03"), "June 2026");
   assert.equal(formatWeekRange(entries[1]), "Jun 1, 2026 - Jun 7, 2026");
+});
+
+test("view dates stay inside the active static horoscope year", () => {
+  assert.equal(ACTIVE_HOROSCOPE_YEAR, 2026);
+  assert.equal(normalizeViewDateForActiveYear("2025-12-31"), "2026-01-01");
+  assert.equal(normalizeViewDateForActiveYear("2026-06-03"), "2026-06-03");
+  assert.equal(normalizeViewDateForActiveYear("2027-01-01"), "2026-12-31");
+  assert.equal(normalizeViewDateForActiveYear("not-a-date"), "2026-01-01");
 });

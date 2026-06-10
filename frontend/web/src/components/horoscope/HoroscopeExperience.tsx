@@ -4,12 +4,16 @@ import { useEffect, useMemo, useState } from "react";
 
 import { StaticHoroscopeNotReadyError, getHoroscopeBundle, getSunSignFromBirthDate } from "../../lib/api";
 import {
+  ACTIVE_HOROSCOPE_YEAR,
+  ACTIVE_HOROSCOPE_YEAR_END,
+  ACTIVE_HOROSCOPE_YEAR_START,
   findDailyEntry,
   findMonthlyEntry,
   findWeeklyEntry,
   formatDisplayDate,
   formatMonthLabel,
   formatWeekRange,
+  normalizeViewDateForActiveYear,
   titleCaseSign
 } from "../../lib/horoscope";
 import type { HoroscopeBundle, HoroscopeFocus } from "../../lib/types";
@@ -31,7 +35,7 @@ const signs = [
   "pisces"
 ];
 
-const defaultDate = "2026-01-01";
+const defaultDate = ACTIVE_HOROSCOPE_YEAR_START;
 
 export function HoroscopeExperience() {
   const [sign, setSign] = useState("gemini");
@@ -43,7 +47,7 @@ export function HoroscopeExperience() {
   const [connectionError, setConnectionError] = useState(false);
   const [notReadyError, setNotReadyError] = useState(false);
 
-  const year = Number(viewDate.slice(0, 4));
+  const year = ACTIVE_HOROSCOPE_YEAR;
   const signLabel = titleCaseSign(sign);
   const viewDateLabel = formatDisplayDate(viewDate);
   const monthLabel = formatMonthLabel(viewDate);
@@ -109,6 +113,10 @@ export function HoroscopeExperience() {
       setConnectionError(true);
       setMessage("We could not read that birth date yet");
     }
+  }
+
+  function handleViewDateChange(dateText: string) {
+    setViewDate(normalizeViewDateForActiveYear(dateText));
   }
 
   return (
@@ -223,9 +231,9 @@ export function HoroscopeExperience() {
                 View date
                 <input
                   className="rounded-lg border border-blue-100 bg-white px-3 py-3"
-                  max={`${year}-12-31`}
-                  min={`${year}-01-01`}
-                  onChange={(event) => setViewDate(event.target.value)}
+                  max={ACTIVE_HOROSCOPE_YEAR_END}
+                  min={ACTIVE_HOROSCOPE_YEAR_START}
+                  onChange={(event) => handleViewDateChange(event.target.value)}
                   type="date"
                   value={viewDate}
                 />

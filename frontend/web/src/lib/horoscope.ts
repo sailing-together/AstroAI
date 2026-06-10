@@ -1,7 +1,18 @@
 import type { HoroscopeEntry } from "./types.ts";
 
+export const ACTIVE_HOROSCOPE_YEAR = 2026;
+export const ACTIVE_HOROSCOPE_YEAR_START = `${ACTIVE_HOROSCOPE_YEAR}-01-01`;
+export const ACTIVE_HOROSCOPE_YEAR_END = `${ACTIVE_HOROSCOPE_YEAR}-12-31`;
+
 export function titleCaseSign(sign: string) {
   return sign.charAt(0).toUpperCase() + sign.slice(1);
+}
+
+export function normalizeViewDateForActiveYear(dateText: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateText)) return ACTIVE_HOROSCOPE_YEAR_START;
+  if (dateText < ACTIVE_HOROSCOPE_YEAR_START) return ACTIVE_HOROSCOPE_YEAR_START;
+  if (dateText > ACTIVE_HOROSCOPE_YEAR_END) return ACTIVE_HOROSCOPE_YEAR_END;
+  return dateText;
 }
 
 export function findDailyEntry(entries: HoroscopeEntry[], date: string, focus: string) {
