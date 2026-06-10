@@ -1,9 +1,12 @@
 from collections.abc import Sequence
 from typing import Protocol
 
+from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 
 from backend.database.models_static_horoscope import StaticHoroscope
+
+DEFAULT_STATIC_HOROSCOPE_SEED_BATCH_SIZE = 1000
 
 
 UPSERT_IDENTITY_COLUMNS = (
@@ -41,15 +44,31 @@ class AsyncSeedSession(Protocol):
 
 
 class StaticHoroscopePostgresSeedWriter:
-    def __init__(self, session: AsyncSeedSession) -> None:
+    def __init__(
+        self,
+        session: AsyncSeedSession,
+        batch_size: int = DEFAULT_STATIC_HOROSCOPE_SEED_BATCH_SIZE,
+    ) -> None:
+        if batch_size < 1:
+            raise ValueError("batch_size must be at least 1.")
         self._session = session
+        self._batch_size = batch_size
+
+    async def preflight(self) -> None:
+        await self._session.execute(select(StaticHoroscope.id).limit(1))
 
     async def upsert_rows(self, rows: Sequence[StaticHoroscope]) -> int:
         if not rows:
             return 0
-        await self._session.execute(build_upsert_statement(rows))
+        for batch in _batched(rows, self._batch_size):
+            await self._session.execute(build_upsert_statement(batch))
         await self._session.commit()
         return len(rows)
+
+
+def _batched(rows: Sequence[StaticHoroscope], batch_size: int):
+    for start in range(0, len(rows), batch_size):
+        yield rows[start : start + batch_size]
 
 
 def build_upsert_statement(rows: Sequence[StaticHoroscope]):

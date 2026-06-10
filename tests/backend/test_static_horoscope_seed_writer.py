@@ -31,6 +31,18 @@ def test_seed_writer_executes_upsert_and_commits():
     assert session.commit_count == 1
 
 
+def test_seed_writer_batches_large_upserts_and_commits_once():
+    rows = build_static_horoscope_rows(signs=["gemini"], year=2026)[:5]
+    session = RecordingAsyncSession()
+    writer = StaticHoroscopePostgresSeedWriter(session=session, batch_size=2)
+
+    persisted_count = asyncio.run(writer.upsert_rows(rows))
+
+    assert persisted_count == 5
+    assert len(session.executed_statements) == 3
+    assert session.commit_count == 1
+
+
 def test_seed_writer_skips_empty_rows_without_commit():
     session = RecordingAsyncSession()
     writer = StaticHoroscopePostgresSeedWriter(session=session)
@@ -39,6 +51,28 @@ def test_seed_writer_skips_empty_rows_without_commit():
 
     assert persisted_count == 0
     assert session.executed_statements == []
+    assert session.commit_count == 0
+
+
+def test_seed_writer_rejects_invalid_batch_size():
+    try:
+        StaticHoroscopePostgresSeedWriter(session=RecordingAsyncSession(), batch_size=0)
+    except ValueError as exc:
+        assert "batch_size" in str(exc)
+    else:
+        raise AssertionError("Expected invalid batch size to raise.")
+
+
+def test_seed_writer_preflight_executes_static_horoscope_table_check():
+    session = RecordingAsyncSession()
+    writer = StaticHoroscopePostgresSeedWriter(session=session)
+
+    asyncio.run(writer.preflight())
+
+    assert len(session.executed_statements) == 1
+    compiled = str(session.executed_statements[0].compile(dialect=postgresql.dialect()))
+    assert "static_horoscopes" in compiled
+    assert "LIMIT" in compiled
     assert session.commit_count == 0
 
 

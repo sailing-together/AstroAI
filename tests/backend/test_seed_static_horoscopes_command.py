@@ -1,6 +1,9 @@
 import asyncio
+import gzip
+import json
 
-from backend.tasks.seed_static_horoscopes import build_parser, run_seed
+from backend.services.static_horoscope_seed_service import StaticHoroscopeSeedService
+from backend.tasks.seed_static_horoscopes import build_parser, export_rows_to_ndjson, run_seed
 
 
 def test_seed_command_parser_defaults_to_all_signs_dry_run():
@@ -59,13 +62,260 @@ def test_seed_command_persists_through_injected_writer(capsys):
     assert "dry_run=false" in output
 
 
+def test_seed_command_exports_ndjson(tmp_path, capsys):
+    export_path = tmp_path / "static-horoscopes-2026-gemini.ndjson"
+
+    exit_code = asyncio.run(
+        run_seed(["--year", "2026", "--sign", "gemini", "--export-ndjson", str(export_path)])
+    )
+
+    output = capsys.readouterr().out
+    lines = export_path.read_text(encoding="utf-8").splitlines()
+    first_row = json.loads(lines[0])
+    assert exit_code == 0
+    assert len(lines) == 3879
+    assert first_row["sign"] == "gemini"
+    assert first_row["target_year"] == 2026
+    assert first_row["period"] == "yearly"
+    assert "export=" in output
+    assert "persisted=0" in output
+    assert "dry_run=false" in output
+
+
+def test_seed_command_exports_gzipped_ndjson(tmp_path):
+    export_path = tmp_path / "static-horoscopes-2026-gemini.ndjson.gz"
+
+    exit_code = asyncio.run(
+        run_seed(["--year", "2026", "--sign", "gemini", "--export-ndjson", str(export_path)])
+    )
+
+    with gzip.open(export_path, "rt", encoding="utf-8") as handle:
+        rows = [json.loads(line) for line in handle]
+    assert exit_code == 0
+    assert len(rows) == 3879
+    assert rows[-1]["period"] == "daily"
+
+
+def test_seed_command_writes_export_summary_json(tmp_path):
+    export_path = tmp_path / "static-horoscopes-2026-gemini.ndjson.gz"
+    summary_path = tmp_path / "static-horoscopes-2026-gemini.summary.json"
+
+    exit_code = asyncio.run(
+        run_seed(
+            [
+                "--year",
+                "2026",
+                "--sign",
+                "gemini",
+                "--export-ndjson",
+                str(export_path),
+                "--summary-json",
+                str(summary_path),
+            ]
+        )
+    )
+
+    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    assert exit_code == 0
+    assert summary["year"] == 2026
+    assert summary["signs"] == ["gemini"]
+    assert summary["row_count"] == 3879
+    assert summary["expected_count"] == 3879
+    assert summary["coverage"] == "complete"
+    assert summary["export_path"] == str(export_path)
+    assert summary["export_size_bytes"] > 0
+    assert summary["period_counts"] == {
+        "daily": 3285,
+        "monthly": 108,
+        "weekly": 477,
+        "yearly": 9,
+    }
+    assert summary["sign_counts"] == {"gemini": 3879}
+    assert summary["focus_count"] == 9
+
+
+def test_seed_command_validates_existing_ndjson_export(tmp_path, capsys):
+    export_path = tmp_path / "static-horoscopes-2026-gemini.ndjson.gz"
+    rows = StaticHoroscopeSeedService().build_rows(year=2026, signs=("gemini",))
+    export_rows_to_ndjson(rows, export_path)
+
+    exit_code = asyncio.run(
+        run_seed(["--year", "2026", "--sign", "gemini", "--validate-ndjson", str(export_path)])
+    )
+
+    output = capsys.readouterr().out
+    assert exit_code == 0
+    assert "rows=3879" in output
+    assert "expected=3879" in output
+    assert "coverage=complete" in output
+    assert "validate=" in output
+
+
+def test_seed_command_returns_nonzero_for_incomplete_ndjson_validation(tmp_path, capsys):
+    export_path = tmp_path / "static-horoscopes-2026-gemini-truncated.ndjson.gz"
+    summary_path = tmp_path / "static-horoscopes-2026-gemini.validate-summary.json"
+    rows = StaticHoroscopeSeedService().build_rows(year=2026, signs=("gemini",))
+    export_rows_to_ndjson(rows[:-1], export_path)
+
+    exit_code = asyncio.run(
+        run_seed(
+            [
+                "--year",
+                "2026",
+                "--sign",
+                "gemini",
+                "--validate-ndjson",
+                str(export_path),
+                "--summary-json",
+                str(summary_path),
+            ]
+        )
+    )
+
+    output = capsys.readouterr().out
+    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    assert exit_code == 1
+    assert "coverage=incomplete" in output
+    assert summary["coverage"] == "incomplete"
+    assert summary["row_count"] == 3878
+    assert summary["expected_count"] == 3879
+
+
+def test_seed_command_writes_database_from_valid_ndjson_export(tmp_path, capsys):
+    export_path = tmp_path / "static-horoscopes-2026-gemini.ndjson.gz"
+    rows = StaticHoroscopeSeedService().build_rows(year=2026, signs=("gemini",))
+    export_rows_to_ndjson(rows, export_path)
+    writer = RecordingWriter()
+
+    exit_code = asyncio.run(
+        run_seed(
+            [
+                "--year",
+                "2026",
+                "--sign",
+                "gemini",
+                "--from-ndjson",
+                str(export_path),
+                "--write-db",
+            ],
+            writer=writer,
+        )
+    )
+
+    output = capsys.readouterr().out
+    assert exit_code == 0
+    assert len(writer.rows) == 3879
+    assert "rows=3879" in output
+    assert "expected=3879" in output
+    assert "coverage=complete" in output
+    assert "persisted=3879" in output
+    assert "write=complete" in output
+    assert "input=" in output
+    assert "row_source=ndjson" in output
+
+
+def test_seed_command_blocks_database_write_from_incomplete_ndjson(tmp_path):
+    export_path = tmp_path / "static-horoscopes-2026-gemini-truncated.ndjson.gz"
+    rows = StaticHoroscopeSeedService().build_rows(year=2026, signs=("gemini",))
+    export_rows_to_ndjson(rows[:-1], export_path)
+    writer = RecordingWriter()
+
+    try:
+        asyncio.run(
+            run_seed(
+                [
+                    "--year",
+                    "2026",
+                    "--sign",
+                    "gemini",
+                    "--from-ndjson",
+                    str(export_path),
+                    "--write-db",
+                ],
+                writer=writer,
+            )
+        )
+    except RuntimeError as exc:
+        assert "coverage is incomplete" in str(exc)
+    else:
+        raise AssertionError("Expected incomplete NDJSON coverage to block write-db.")
+    assert writer.rows == []
+
+
+def test_seed_command_requires_write_db_with_from_ndjson(tmp_path):
+    export_path = tmp_path / "static-horoscopes-2026-gemini.ndjson.gz"
+    rows = StaticHoroscopeSeedService().build_rows(year=2026, signs=("gemini",))
+    export_rows_to_ndjson(rows, export_path)
+
+    try:
+        asyncio.run(run_seed(["--year", "2026", "--sign", "gemini", "--from-ndjson", str(export_path)]))
+    except RuntimeError as exc:
+        assert "--write-db" in str(exc)
+    else:
+        raise AssertionError("Expected --from-ndjson to require --write-db.")
+
+
+def test_seed_command_blocks_production_write_without_confirmation(monkeypatch):
+    monkeypatch.setenv("ENVIRONMENT", "production")
+    writer = RecordingWriter()
+
+    try:
+        asyncio.run(run_seed(["--year", "2026", "--sign", "gemini", "--write-db"], writer=writer))
+    except RuntimeError as exc:
+        assert "--allow-production-write" in str(exc)
+    else:
+        raise AssertionError("Expected production write to require explicit confirmation.")
+    assert writer.rows == []
+
+
+def test_seed_command_allows_confirmed_production_write(monkeypatch, capsys):
+    monkeypatch.setenv("ENVIRONMENT", "production")
+    writer = RecordingWriter()
+
+    exit_code = asyncio.run(
+        run_seed(
+            ["--year", "2026", "--sign", "gemini", "--write-db", "--allow-production-write"],
+            writer=writer,
+        )
+    )
+
+    output = capsys.readouterr().out
+    assert exit_code == 0
+    assert len(writer.rows) == 3879
+    assert "row_source=generated" in output
+
+
+def test_seed_command_runs_database_preflight_without_writing(capsys):
+    writer = RecordingWriter()
+
+    exit_code = asyncio.run(run_seed(["--year", "2026", "--preflight-db"], writer=writer))
+
+    output = capsys.readouterr().out
+    assert exit_code == 0
+    assert writer.preflight_count == 1
+    assert writer.rows == []
+    assert "preflight=complete" in output
+
+
+def test_seed_command_runs_preflight_before_write_db(capsys):
+    writer = RecordingWriter()
+
+    exit_code = asyncio.run(run_seed(["--year", "2026", "--sign", "gemini", "--write-db"], writer=writer))
+
+    output = capsys.readouterr().out
+    assert exit_code == 0
+    assert writer.preflight_count == 1
+    assert len(writer.rows) == 3879
+    assert "preflight=complete" in output
+
+
 def test_seed_command_reports_incomplete_write(capsys):
     writer = RecordingWriter(persisted_count=3878)
 
     exit_code = asyncio.run(run_seed(["--year", "2026", "--sign", "gemini", "--write-db"], writer=writer))
 
     output = capsys.readouterr().out
-    assert exit_code == 0
+    assert exit_code == 1
     assert "rows=3879" in output
     assert "expected=3879" in output
     assert "coverage=complete" in output
@@ -88,6 +338,10 @@ class RecordingWriter:
     def __init__(self, persisted_count: int | None = None) -> None:
         self.rows = []
         self.persisted_count = persisted_count
+        self.preflight_count = 0
+
+    async def preflight(self):
+        self.preflight_count += 1
 
     async def upsert_rows(self, rows):
         self.rows = list(rows)
