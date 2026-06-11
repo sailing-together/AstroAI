@@ -11,6 +11,8 @@ export type HoroscopeFocus =
 
 export type HoroscopePeriod = "daily" | "weekly" | "monthly" | "yearly";
 
+export type HoroscopeReadingMode = "date_season" | "personal_sign";
+
 export type HoroscopeEntry = {
   sign: string;
   target_year?: number | null;

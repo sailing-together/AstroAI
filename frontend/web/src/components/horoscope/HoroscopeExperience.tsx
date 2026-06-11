@@ -12,6 +12,7 @@ import {
   formatMonthLabel,
   formatWeekRange,
   normalizeViewDateForActiveYear,
+  resolveReadingSign,
   selectDailyEntry,
   selectMonthlyEntry,
   selectWeeklyEntry,
@@ -19,7 +20,7 @@ import {
   titleCaseSign,
   zodiacSignForDate
 } from "../../lib/horoscope";
-import type { HoroscopeBundle, HoroscopeFocus } from "../../lib/types";
+import type { HoroscopeBundle, HoroscopeFocus, HoroscopeReadingMode } from "../../lib/types";
 import { FocusTabs } from "./FocusTabs";
 import { ReadingPanel } from "./ReadingPanel";
 
@@ -41,6 +42,7 @@ const signs = [
 export function HoroscopeExperience() {
   const [viewDate, setViewDate] = useState(() => defaultViewDateForToday());
   const [sign, setSign] = useState(() => zodiacSignForDate(defaultViewDateForToday()));
+  const [readingMode, setReadingMode] = useState<HoroscopeReadingMode>("date_season");
   const [birthDate, setBirthDate] = useState("1994-06-14");
   const [focus, setFocus] = useState<HoroscopeFocus>("general");
   const [bundle, setBundle] = useState<HoroscopeBundle | null>(null);
@@ -49,10 +51,16 @@ export function HoroscopeExperience() {
   const [notReadyError, setNotReadyError] = useState(false);
 
   const year = ACTIVE_HOROSCOPE_YEAR;
-  const signLabel = titleCaseSign(sign);
+  const readingSign = resolveReadingSign(readingMode, sign, viewDate);
+  const signLabel = titleCaseSign(readingSign);
+  const dateSeasonSignLabel = titleCaseSign(zodiacSignForDate(viewDate));
   const viewDateLabel = formatDisplayDate(viewDate);
   const monthLabel = formatMonthLabel(viewDate);
   const isReadingUnavailable = connectionError || notReadyError;
+  const modeLabel =
+    readingMode === "date_season"
+      ? `Using the ${dateSeasonSignLabel} season for this date`
+      : `Using your selected ${titleCaseSign(sign)} sign`;
 
   useEffect(() => {
     let isMounted = true;
@@ -60,14 +68,14 @@ export function HoroscopeExperience() {
     return () => {
       isMounted = false;
     };
-  }, [sign, year]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [readingSign, year]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function retryLoadBundle(options?: { isMounted?: boolean }) {
     const isMounted = options?.isMounted ?? true;
     setMessage("Preparing your reading");
     setConnectionError(false);
     setNotReadyError(false);
-    getHoroscopeBundle(sign, year)
+    getHoroscopeBundle(readingSign, year)
       .then((payload) => {
         if (!isMounted) return;
         setBundle(payload);
@@ -108,6 +116,7 @@ export function HoroscopeExperience() {
     try {
       const nextSign = await getSunSignFromBirthDate(birthDate);
       setSign(nextSign);
+      setReadingMode("personal_sign");
       setMessage(`${titleCaseSign(nextSign)} selected`);
     } catch {
       setNotReadyError(false);
@@ -119,7 +128,21 @@ export function HoroscopeExperience() {
   function handleViewDateChange(dateText: string) {
     const normalizedDate = normalizeViewDateForActiveYear(dateText);
     setViewDate(normalizedDate);
-    setSign(zodiacSignForDate(normalizedDate));
+    if (readingMode === "date_season") {
+      setSign(zodiacSignForDate(normalizedDate));
+    }
+  }
+
+  function selectManualSign(nextSign: string) {
+    setSign(nextSign);
+    setReadingMode("personal_sign");
+  }
+
+  function useDateSeasonSign() {
+    const nextSign = zodiacSignForDate(viewDate);
+    setSign(nextSign);
+    setReadingMode("date_season");
+    setMessage(`${titleCaseSign(nextSign)} selected for ${viewDateLabel}`);
   }
 
   return (
@@ -162,9 +185,9 @@ export function HoroscopeExperience() {
                 {signLabel} guidance for {viewDateLabel}
               </h1>
               <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-600">
-                Choose a sign or enter a birthday, then read the selected day with its matching week, month,
-                and year outlook.
+                Browse the sign season for the selected date, or switch to your own Sun sign with a birth date.
               </p>
+              <p className="mt-3 text-sm font-bold text-slate-500">{modeLabel}</p>
               <p className="mt-4 inline-flex rounded-full bg-blue-50 px-4 py-2 text-sm font-black text-astro-blue">
                 {message}
               </p>
@@ -210,8 +233,8 @@ export function HoroscopeExperience() {
                 Sign
                 <select
                   className="rounded-lg border border-blue-100 bg-white px-3 py-3"
-                  onChange={(event) => setSign(event.target.value)}
-                  value={sign}
+                  onChange={(event) => selectManualSign(event.target.value)}
+                  value={readingSign}
                 >
                   {signs.map((item) => (
                     <option key={item} value={item}>
@@ -220,6 +243,14 @@ export function HoroscopeExperience() {
                   ))}
                 </select>
               </label>
+
+              <button
+                className="rounded-lg border border-blue-100 bg-white px-4 py-3 font-black text-astro-blue"
+                onClick={useDateSeasonSign}
+                type="button"
+              >
+                Use date sign
+              </button>
 
               <label className="grid gap-2 text-sm font-bold text-slate-700">
                 Birth date

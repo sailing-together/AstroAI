@@ -1,4 +1,4 @@
-import type { HoroscopeEntry } from "./types.ts";
+import type { HoroscopeEntry, HoroscopeReadingMode } from "./types.ts";
 
 export const ACTIVE_HOROSCOPE_YEAR = 2026;
 export const ACTIVE_HOROSCOPE_YEAR_START = `${ACTIVE_HOROSCOPE_YEAR}-01-01`;
@@ -33,6 +33,10 @@ export function zodiacSignForDate(dateText: string) {
   if (monthDay >= "01-20" && monthDay <= "02-18") return "aquarius";
   if (monthDay >= "02-19" && monthDay <= "03-20") return "pisces";
   return "capricorn";
+}
+
+export function resolveReadingSign(mode: HoroscopeReadingMode, selectedSign: string, viewDate: string) {
+  return mode === "date_season" ? zodiacSignForDate(viewDate) : selectedSign;
 }
 
 export function findDailyEntry(entries: HoroscopeEntry[], date: string, focus: string) {

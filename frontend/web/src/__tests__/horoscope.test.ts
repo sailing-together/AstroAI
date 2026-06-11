@@ -11,6 +11,7 @@ import {
   formatMonthLabel,
   formatWeekRange,
   normalizeViewDateForActiveYear,
+  resolveReadingSign,
   selectDailyEntry,
   selectMonthlyEntry,
   selectWeeklyEntry,
@@ -112,6 +113,11 @@ test("zodiacSignForDate returns the sign season for the selected date", () => {
   assert.equal(zodiacSignForDate("2026-07-15"), "cancer");
   assert.equal(zodiacSignForDate("2026-12-25"), "capricorn");
   assert.equal(zodiacSignForDate("2026-03-21"), "aries");
+});
+
+test("resolveReadingSign follows date season mode or personal sign mode", () => {
+  assert.equal(resolveReadingSign("date_season", "gemini", "2026-07-15"), "cancer");
+  assert.equal(resolveReadingSign("personal_sign", "gemini", "2026-07-15"), "gemini");
 });
 
 test("selected readings do not fall back to stale dates", () => {
