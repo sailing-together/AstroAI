@@ -11,7 +11,10 @@ import {
   formatMonthLabel,
   formatWeekRange,
   normalizeViewDateForActiveYear,
+  resolveDateSeasonSelection,
   resolveReadingSign,
+  resolveTodaySelection,
+  resolveViewDateSelection,
   selectDailyEntry,
   selectMonthlyEntry,
   selectWeeklyEntry,
@@ -130,6 +133,35 @@ test("zodiacSignForDate returns the sign season for the selected date", () => {
 test("resolveReadingSign follows date season mode or personal sign mode", () => {
   assert.equal(resolveReadingSign("date_season", "gemini", "2026-07-15"), "cancer");
   assert.equal(resolveReadingSign("personal_sign", "gemini", "2026-07-15"), "gemini");
+});
+
+test("resolveViewDateSelection keeps date-season readings tied to the selected date", () => {
+  assert.deepEqual(resolveViewDateSelection("gemini", "date_season", "2026-07-15"), {
+    readingMode: "date_season",
+    sign: "cancer",
+    viewDate: "2026-07-15"
+  });
+});
+
+test("resolveViewDateSelection preserves personal-sign readings when only the date changes", () => {
+  assert.deepEqual(resolveViewDateSelection("gemini", "personal_sign", "2026-07-15"), {
+    readingMode: "personal_sign",
+    sign: "gemini",
+    viewDate: "2026-07-15"
+  });
+});
+
+test("date-season and today selections reset the reading to date-season mode", () => {
+  assert.deepEqual(resolveDateSeasonSelection("2026-07-15"), {
+    readingMode: "date_season",
+    sign: "cancer",
+    viewDate: "2026-07-15"
+  });
+  assert.deepEqual(resolveTodaySelection(new Date("2026-06-11T02:00:00Z")), {
+    readingMode: "date_season",
+    sign: "gemini",
+    viewDate: "2026-06-11"
+  });
 });
 
 test("selected readings do not fall back to stale dates", () => {

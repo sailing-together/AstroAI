@@ -1,5 +1,11 @@
 import type { HoroscopeEntry, HoroscopeReadingMode } from "./types.ts";
 
+type HoroscopeReadingSelection = {
+  readingMode: HoroscopeReadingMode;
+  sign: string;
+  viewDate: string;
+};
+
 export const ACTIVE_HOROSCOPE_YEAR = 2026;
 export const ACTIVE_HOROSCOPE_YEAR_START = `${ACTIVE_HOROSCOPE_YEAR}-01-01`;
 export const ACTIVE_HOROSCOPE_YEAR_END = `${ACTIVE_HOROSCOPE_YEAR}-12-31`;
@@ -45,6 +51,37 @@ export function zodiacSignForDate(dateText: string) {
 
 export function resolveReadingSign(mode: HoroscopeReadingMode, selectedSign: string, viewDate: string) {
   return mode === "date_season" ? zodiacSignForDate(viewDate) : selectedSign;
+}
+
+export function resolveViewDateSelection(
+  currentSign: string,
+  readingMode: HoroscopeReadingMode,
+  dateText: string,
+): HoroscopeReadingSelection {
+  const viewDate = normalizeViewDateForActiveYear(dateText);
+  return {
+    readingMode,
+    sign: readingMode === "date_season" ? zodiacSignForDate(viewDate) : currentSign,
+    viewDate
+  };
+}
+
+export function resolveDateSeasonSelection(dateText: string): HoroscopeReadingSelection {
+  const viewDate = normalizeViewDateForActiveYear(dateText);
+  return {
+    readingMode: "date_season",
+    sign: zodiacSignForDate(viewDate),
+    viewDate
+  };
+}
+
+export function resolveTodaySelection(today = new Date()): HoroscopeReadingSelection {
+  const reading = todayReadingState(today);
+  return {
+    readingMode: "date_season",
+    sign: reading.sign,
+    viewDate: reading.date
+  };
 }
 
 export function findDailyEntry(entries: HoroscopeEntry[], date: string, focus: string) {

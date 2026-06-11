@@ -10,8 +10,10 @@ import {
   formatDisplayDate,
   formatMonthLabel,
   formatWeekRange,
-  normalizeViewDateForActiveYear,
+  resolveDateSeasonSelection,
   resolveReadingSign,
+  resolveTodaySelection,
+  resolveViewDateSelection,
   selectDailyEntry,
   selectMonthlyEntry,
   selectWeeklyEntry,
@@ -126,11 +128,9 @@ export function HoroscopeExperience() {
   }
 
   function handleViewDateChange(dateText: string) {
-    const normalizedDate = normalizeViewDateForActiveYear(dateText);
-    setViewDate(normalizedDate);
-    if (readingMode === "date_season") {
-      setSign(zodiacSignForDate(normalizedDate));
-    }
+    const selection = resolveViewDateSelection(sign, readingMode, dateText);
+    setViewDate(selection.viewDate);
+    setSign(selection.sign);
   }
 
   function selectManualSign(nextSign: string) {
@@ -139,18 +139,18 @@ export function HoroscopeExperience() {
   }
 
   function useDateSeasonSign() {
-    const nextSign = zodiacSignForDate(viewDate);
-    setSign(nextSign);
-    setReadingMode("date_season");
-    setMessage(`${titleCaseSign(nextSign)} selected for ${viewDateLabel}`);
+    const selection = resolveDateSeasonSelection(viewDate);
+    setSign(selection.sign);
+    setReadingMode(selection.readingMode);
+    setMessage(`${titleCaseSign(selection.sign)} selected for ${viewDateLabel}`);
   }
 
   function useTodayReading() {
-    const today = todayReadingState();
-    setViewDate(today.date);
-    setSign(today.sign);
-    setReadingMode("date_season");
-    setMessage(`${titleCaseSign(today.sign)} selected for today`);
+    const selection = resolveTodaySelection();
+    setViewDate(selection.viewDate);
+    setSign(selection.sign);
+    setReadingMode(selection.readingMode);
+    setMessage(`${titleCaseSign(selection.sign)} selected for today`);
   }
 
   return (
