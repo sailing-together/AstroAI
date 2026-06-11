@@ -79,6 +79,10 @@ dmypy.json
 !**/.env.example
 frontend/preview/runtime-config.js
 
+# Local AstroAI dev server logs
+.astroai-*.log
+.astroai-*.pid
+
 # Local git worktrees
 .worktrees/
 
