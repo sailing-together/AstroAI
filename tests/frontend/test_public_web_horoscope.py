@@ -35,6 +35,8 @@ def test_public_web_horoscope_is_date_driven():
     assert "selectWeeklyEntry" in component
     assert "normalizeViewDateForActiveYear" in component
     assert "resolveReadingSign" in component
+    assert "todayReadingState" in component
+    assert "Today" in component
     assert "Use date sign" in component
     assert "Using the" in component
     assert "Using your selected" in component

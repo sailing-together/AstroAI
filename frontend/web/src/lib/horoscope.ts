@@ -19,6 +19,14 @@ export function defaultViewDateForToday(today = new Date()) {
   return normalizeViewDateForActiveYear(`${ACTIVE_HOROSCOPE_YEAR}-${today.toISOString().slice(5, 10)}`);
 }
 
+export function todayReadingState(today = new Date()) {
+  const date = defaultViewDateForToday(today);
+  return {
+    date,
+    sign: zodiacSignForDate(date)
+  };
+}
+
 export function zodiacSignForDate(dateText: string) {
   const monthDay = normalizeViewDateForActiveYear(dateText).slice(5, 10);
   if (monthDay >= "03-21" && monthDay <= "04-19") return "aries";

@@ -7,7 +7,6 @@ import {
   ACTIVE_HOROSCOPE_YEAR,
   ACTIVE_HOROSCOPE_YEAR_END,
   ACTIVE_HOROSCOPE_YEAR_START,
-  defaultViewDateForToday,
   formatDisplayDate,
   formatMonthLabel,
   formatWeekRange,
@@ -17,6 +16,7 @@ import {
   selectMonthlyEntry,
   selectWeeklyEntry,
   selectYearlyEntry,
+  todayReadingState,
   titleCaseSign,
   zodiacSignForDate
 } from "../../lib/horoscope";
@@ -40,8 +40,8 @@ const signs = [
 ];
 
 export function HoroscopeExperience() {
-  const [viewDate, setViewDate] = useState(() => defaultViewDateForToday());
-  const [sign, setSign] = useState(() => zodiacSignForDate(defaultViewDateForToday()));
+  const [viewDate, setViewDate] = useState(() => todayReadingState().date);
+  const [sign, setSign] = useState(() => todayReadingState().sign);
   const [readingMode, setReadingMode] = useState<HoroscopeReadingMode>("date_season");
   const [birthDate, setBirthDate] = useState("1994-06-14");
   const [focus, setFocus] = useState<HoroscopeFocus>("general");
@@ -145,6 +145,14 @@ export function HoroscopeExperience() {
     setMessage(`${titleCaseSign(nextSign)} selected for ${viewDateLabel}`);
   }
 
+  function useTodayReading() {
+    const today = todayReadingState();
+    setViewDate(today.date);
+    setSign(today.sign);
+    setReadingMode("date_season");
+    setMessage(`${titleCaseSign(today.sign)} selected for today`);
+  }
+
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#f7fbff_48%,#fff7fb_100%)]">
       <header className="border-b border-blue-100 bg-white/95">
@@ -244,13 +252,22 @@ export function HoroscopeExperience() {
                 </select>
               </label>
 
-              <button
-                className="rounded-lg border border-blue-100 bg-white px-4 py-3 font-black text-astro-blue"
-                onClick={useDateSeasonSign}
-                type="button"
-              >
-                Use date sign
-              </button>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  className="rounded-lg border border-blue-100 bg-white px-4 py-3 font-black text-astro-blue"
+                  onClick={useTodayReading}
+                  type="button"
+                >
+                  Today
+                </button>
+                <button
+                  className="rounded-lg border border-blue-100 bg-white px-4 py-3 font-black text-astro-blue"
+                  onClick={useDateSeasonSign}
+                  type="button"
+                >
+                  Use date sign
+                </button>
+              </div>
 
               <label className="grid gap-2 text-sm font-bold text-slate-700">
                 Birth date

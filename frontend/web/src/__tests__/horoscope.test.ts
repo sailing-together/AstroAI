@@ -15,6 +15,7 @@ import {
   selectDailyEntry,
   selectMonthlyEntry,
   selectWeeklyEntry,
+  todayReadingState,
   titleCaseSign,
   zodiacSignForDate
 } from "../lib/horoscope.ts";
@@ -106,6 +107,17 @@ test("default view date uses today when today is inside the active year", () => 
   assert.equal(defaultViewDateForToday(new Date("2026-06-10T03:00:00Z")), "2026-06-10");
   assert.equal(defaultViewDateForToday(new Date("2025-06-10T03:00:00Z")), "2026-06-10");
   assert.equal(defaultViewDateForToday(new Date("2027-07-15T00:00:00Z")), "2026-07-15");
+});
+
+test("todayReadingState returns active-year date and matching sign", () => {
+  assert.deepEqual(todayReadingState(new Date("2026-06-11T02:00:00Z")), {
+    date: "2026-06-11",
+    sign: "gemini"
+  });
+  assert.deepEqual(todayReadingState(new Date("2027-07-15T00:00:00Z")), {
+    date: "2026-07-15",
+    sign: "cancer"
+  });
 });
 
 test("zodiacSignForDate returns the sign season for the selected date", () => {
