@@ -6,6 +6,11 @@ type HoroscopeReadingSelection = {
   viewDate: string;
 };
 
+type ReadingFallbackInput = {
+  isLoading: boolean;
+  isUnavailable: boolean;
+};
+
 export const ACTIVE_HOROSCOPE_YEAR = 2026;
 export const ACTIVE_HOROSCOPE_YEAR_START = `${ACTIVE_HOROSCOPE_YEAR}-01-01`;
 export const ACTIVE_HOROSCOPE_YEAR_END = `${ACTIVE_HOROSCOPE_YEAR}-12-31`;
@@ -51,6 +56,25 @@ export function zodiacSignForDate(dateText: string) {
 
 export function resolveReadingSign(mode: HoroscopeReadingMode, selectedSign: string, viewDate: string) {
   return mode === "date_season" ? zodiacSignForDate(viewDate) : selectedSign;
+}
+
+export function resolveReadingFallback({ isLoading, isUnavailable }: ReadingFallbackInput) {
+  if (isUnavailable) {
+    return {
+      summary: "Choose another sign or date while this guidance is being prepared.",
+      title: "Reading unavailable"
+    };
+  }
+  if (isLoading) {
+    return {
+      summary: "Your static guidance is loading from the selected yearly bundle.",
+      title: "Reading is loading"
+    };
+  }
+  return {
+    summary: "Try another focus, sign, or date while this section is prepared.",
+    title: "No reading for this selection"
+  };
 }
 
 export function resolveViewDateSelection(

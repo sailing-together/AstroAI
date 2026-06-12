@@ -59,6 +59,7 @@ export function HoroscopeExperience() {
   const viewDateLabel = formatDisplayDate(viewDate);
   const monthLabel = formatMonthLabel(viewDate);
   const isReadingUnavailable = connectionError || notReadyError;
+  const isReadingLoading = !bundle && !isReadingUnavailable;
   const modeLabel =
     readingMode === "date_season"
       ? `Using the ${dateSeasonSignLabel} season for this date`
@@ -225,6 +226,7 @@ export function HoroscopeExperience() {
             <ReadingPanel
               entry={dailyEntry}
               eyebrow={`Daily reading - ${viewDateLabel}`}
+              isLoading={isReadingLoading}
               isUnavailable={isReadingUnavailable}
               meta={`${signLabel} · ${viewDateLabel} · ${focus.replace("_", " ")}`}
               variant="primary"
@@ -322,12 +324,14 @@ export function HoroscopeExperience() {
           <ReadingPanel
             entry={weeklyEntry}
             eyebrow={weeklyEntry ? `Week of ${formatWeekRange(weeklyEntry)}` : "This week"}
+            isLoading={isReadingLoading}
             isUnavailable={isReadingUnavailable}
             meta={weeklyEntry ? `${signLabel} · ${formatWeekRange(weeklyEntry)}` : `${signLabel} · ${viewDateLabel}`}
           />
           <ReadingPanel
             entry={monthlyEntry}
             eyebrow={`${monthLabel} outlook`}
+            isLoading={isReadingLoading}
             isUnavailable={isReadingUnavailable}
             meta={`${signLabel} · ${monthLabel}`}
           />
@@ -335,6 +339,7 @@ export function HoroscopeExperience() {
         <ReadingPanel
           entry={yearlyEntry}
           eyebrow={`${year} overview`}
+          isLoading={isReadingLoading}
           isUnavailable={isReadingUnavailable}
           meta={`${signLabel} · Full-year ${focus.replace("_", " ")}`}
         />

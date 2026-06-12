@@ -49,11 +49,16 @@ def test_public_web_horoscope_explains_backend_connection_failures():
     component = (WEB_DIR / "src" / "components" / "horoscope" / "HoroscopeExperience.tsx").read_text(
         encoding="utf-8"
     )
+    panel = (WEB_DIR / "src" / "components" / "horoscope" / "ReadingPanel.tsx").read_text(encoding="utf-8")
 
     assert "Guidance is temporarily unavailable" in component
     assert "guidance is being prepared" in component
     assert "StaticHoroscopeNotReadyError" in component
     assert "retryLoadBundle" in component
+    assert "isReadingLoading" in component
+    assert "isLoading={isReadingLoading}" in component
+    assert "resolveReadingFallback" in panel
+    assert "No reading for this selection" not in component
 
 
 def test_readme_explains_full_local_web_startup():

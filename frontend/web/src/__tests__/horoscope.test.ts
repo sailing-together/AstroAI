@@ -11,6 +11,7 @@ import {
   formatMonthLabel,
   formatWeekRange,
   normalizeViewDateForActiveYear,
+  resolveReadingFallback,
   resolveDateSeasonSelection,
   resolveReadingSign,
   resolveTodaySelection,
@@ -133,6 +134,21 @@ test("zodiacSignForDate returns the sign season for the selected date", () => {
 test("resolveReadingSign follows date season mode or personal sign mode", () => {
   assert.equal(resolveReadingSign("date_season", "gemini", "2026-07-15"), "cancer");
   assert.equal(resolveReadingSign("personal_sign", "gemini", "2026-07-15"), "gemini");
+});
+
+test("resolveReadingFallback distinguishes loading, missing, and unavailable states", () => {
+  assert.deepEqual(resolveReadingFallback({ isLoading: true, isUnavailable: false }), {
+    summary: "Your static guidance is loading from the selected yearly bundle.",
+    title: "Reading is loading"
+  });
+  assert.deepEqual(resolveReadingFallback({ isLoading: false, isUnavailable: false }), {
+    summary: "Try another focus, sign, or date while this section is prepared.",
+    title: "No reading for this selection"
+  });
+  assert.deepEqual(resolveReadingFallback({ isLoading: false, isUnavailable: true }), {
+    summary: "Choose another sign or date while this guidance is being prepared.",
+    title: "Reading unavailable"
+  });
 });
 
 test("resolveViewDateSelection keeps date-season readings tied to the selected date", () => {

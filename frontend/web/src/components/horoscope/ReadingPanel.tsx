@@ -1,19 +1,25 @@
+import { resolveReadingFallback } from "../../lib/horoscope";
 import type { HoroscopeEntry } from "../../lib/types";
 
 type ReadingPanelProps = {
   eyebrow: string;
   entry?: HoroscopeEntry;
+  isLoading?: boolean;
   isUnavailable?: boolean;
   meta?: string;
   variant?: "primary" | "secondary";
 };
 
-export function ReadingPanel({ eyebrow, entry, isUnavailable = false, meta, variant = "secondary" }: ReadingPanelProps) {
+export function ReadingPanel({
+  eyebrow,
+  entry,
+  isLoading = false,
+  isUnavailable = false,
+  meta,
+  variant = "secondary"
+}: ReadingPanelProps) {
   const isPrimary = variant === "primary";
-  const fallbackTitle = isUnavailable ? "Reading unavailable" : "Reading is preparing";
-  const fallbackSummary = isUnavailable
-    ? "Choose another sign or date while this guidance is being prepared."
-    : "This exact reading is not loaded yet.";
+  const fallback = resolveReadingFallback({ isLoading, isUnavailable });
 
   return (
     <article
@@ -26,10 +32,10 @@ export function ReadingPanel({ eyebrow, entry, isUnavailable = false, meta, vari
       <p className="text-xs font-black uppercase tracking-wide text-astro-purple">{eyebrow}</p>
       {meta ? <p className="mt-2 text-sm font-bold text-slate-500">{meta}</p> : null}
       <h2 className={isPrimary ? "mt-3 text-3xl font-black leading-tight text-astro-ink" : "mt-2 text-2xl font-black text-astro-ink"}>
-        {entry?.title ?? fallbackTitle}
+        {entry?.title ?? fallback.title}
       </h2>
       <p className={isPrimary ? "mt-5 text-xl leading-9 text-astro-purple" : "mt-4 text-lg leading-8 text-astro-purple"}>
-        {entry?.summary ?? fallbackSummary}
+        {entry?.summary ?? fallback.summary}
       </p>
       <p className="mt-4 leading-8 text-slate-600">{entry?.body ?? ""}</p>
       {entry?.lucky_color || entry?.lucky_numbers?.length ? (
