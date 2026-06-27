@@ -36,7 +36,7 @@ Differentiators:
 - Natal chart as identity layer.
 - AI Astrologer as the daily interaction.
 - Memory layer as the retention moat.
-- Static SEO pages as the acquisition engine.
+- Static SEO pages as the low-cost acquisition engine.
 - Shareable readings as the viral loop.
 
 The long-term product moat is not horoscope copy volume. AI can generate generic astrology content easily. AstroAI's defensibility should come from durable user context, trust, and the ongoing relationship between the user and an AI Astrologer that becomes more useful as it learns the user's chart, recurring questions, emotional patterns, and life context.
@@ -57,6 +57,7 @@ Rules:
 - Public horoscope reads use pre-generated PostgreSQL/Redis content.
 - Birth-date-to-Sun-sign calculation does not call Gemini.
 - The frontend should load a sign's current-year horoscope bundle with one backend API request.
+- Anonymous traffic is acquisition traffic, not a live-AI surface. If 10,000 users visit public pages, expected AI provider cost should remain 0 AUD.
 
 ### 2. Registered Foundation Layer
 
@@ -127,6 +128,8 @@ Out of scope for MVP:
 ## AI Policy
 
 MVP uses Gemini only.
+
+MVP variable AI/cloud spend is capped at 100 AUD unless the founders explicitly raise the limit. The public layer should keep working from static or deterministic data even when AI generation is disabled. See `FINOPS.md` for kill switches, usage-meter requirements, bootstrap seed policy, and abuse controls.
 
 | Use case | Model |
 |---|---|

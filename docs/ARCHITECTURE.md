@@ -50,6 +50,7 @@ The web MVP is the primary redevelopment target. The existing Flutter mobile app
 5. Use one canonical API contract between frontend and backend.
 6. Use `free` and `premium` as the only tier names.
 7. Treat the registered product as conversation-first: modules provide context, while the AI Astrologer is the primary interaction.
+8. Treat AI spend as a production safety boundary: public acquisition traffic must remain near-zero marginal cost, and total MVP variable AI/cloud spend must stay below 100 AUD unless founders explicitly raise the cap.
 
 ## Access and AI Boundaries
 
@@ -62,6 +63,8 @@ The web MVP is the primary redevelopment target. The existing Flutter mobile app
 | AI natal chart interpretation | Yes | Yes | Separate from chart calculation |
 | Personalized predictions | Yes | Yes | Uses chart, transits, and user context |
 | AI Astrologer chat | Yes | Yes | Rate-limited |
+
+Live Gemini calls must also pass the FinOps gates in `FINOPS.md`: AI enabled, authenticated user, quota available, rate limit passed, usage meter writable, and spend below the configured cap.
 
 ## Conversation-First Context Pipeline
 
@@ -189,6 +192,12 @@ GEMINI_LIGHT_MODEL=gemini-2.5-flash-lite
 GEMINI_TIMEOUT_SECONDS=30
 GEMINI_MAX_RETRIES=3
 
+AI_CALLS_ENABLED=false
+PUBLIC_AI_CALLS_ENABLED=false
+STATIC_GENERATION_AI_ENABLED=false
+AI_SPEND_LIMIT_AUD=100
+AI_KILL_SWITCH_ON_LIMIT=true
+
 AI_CHAT_FREE_DAILY_LIMIT=3
 AI_CHAT_PREMIUM_DAILY_LIMIT=50
 
@@ -221,6 +230,27 @@ Never expose Gemini, Stripe secret, Supabase service role, Google Places server 
 | Static page views | Unlimited | Unlimited |
 
 Premium is not unlimited for AI calls in MVP.
+
+## AI Usage Meter and Spend Guardrails
+
+The backend must record every Gemini call with enough detail to attribute cost by user, tier, feature, model, status, and date. This includes live AI calls and operator-triggered static generation jobs.
+
+Minimum usage-meter fields:
+
+- `user_id`
+- `feature`
+- `tier`
+- `model`
+- `input_tokens`
+- `output_tokens`
+- `estimated_cost_aud`
+- `estimated_cost_usd`
+- `request_status`
+- `created_at`
+
+If estimated total MVP AI/cloud spend reaches `AI_SPEND_LIMIT_AUD`, the backend should disable live AI and batch AI generation while keeping deterministic chart calculation and static content reads online.
+
+Anonymous/public routes must not call Gemini even if `AI_CALLS_ENABLED=true`. `PUBLIC_AI_CALLS_ENABLED` exists as a hard guardrail and should remain `false` for MVP.
 
 ## Security Requirements
 

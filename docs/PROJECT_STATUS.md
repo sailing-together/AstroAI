@@ -10,15 +10,18 @@ This file records where the redevelopment stands today. Use it with the canonica
 - `API_SPEC.md` for backend/frontend contracts.
 - `SCHEMA.md` for Supabase/PostgreSQL schema.
 - `FRONTEND_SPEC.md` for web routes, UX, and design rules.
+- `FINOPS.md` for AI spend limits, usage-meter requirements, kill switches, bootstrap seed promotion, and abuse controls.
 - `STATIC_HOROSCOPE_OPERATIONS.md` for 2026 static data generation, export, validation, and database handoff.
 - `docs/superpowers/specs/2026-06-27-conversation-first-ai-companion-home.md` for registered AI companion-home direction.
+- `docs/superpowers/specs/2026-06-27-finops-ai-spend-guardrails-design.md` for the P3.2 backend cost-safety slice.
 
 Deprecated files such as `ROADMAP_DEVELOPMENT_PLAN.md`, `MEETING_CONCLUSIONS.md`, `DECISIONS.md`, `DATABASE_SCHEMA.md`, `DESIGN.md`, `BACKEND_API.md`, and `FRONTEND_ARCHITECTURE.md` are not sources of truth.
 
 ## Current Branch Policy
 
 - Main development target: `v2`.
-- Codex work should use isolated branches with the `codex/` prefix.
+- Work should use isolated phase-prefixed branches without the `codex/` prefix, for example `p3-2-finops-ai-spend-guardrails`.
+- PR titles should use the matching phase prefix, for example `P3.2: Document FinOps and AI spend guardrails`.
 - Work should be pushed as PRs into `v2` for review.
 - The reviewer merges PRs into `v2`; new work starts from latest `origin/v2`.
 
@@ -42,6 +45,8 @@ At the beginning of each work session, report:
 - Tier names are frozen: `free` and `premium`; avoid `pro`.
 - Public static horoscope rules are recorded: anonymous reads must not call Gemini.
 - Registered product direction is conversation-first: AI Astrologer is primary, while chart, horoscope, compatibility, mood, and memory modules provide context.
+- MVP FinOps policy is recorded: total variable AI/cloud spend is capped at 100 AUD, public acquisition traffic must not trigger live AI, and Gemini calls require auth, quota, rate limits, usage logging, and spend-limit checks.
+- P3.2 FinOps implementation design is captured in `docs/superpowers/specs/2026-06-27-finops-ai-spend-guardrails-design.md`.
 - Deprecated planning files point back to canonical docs.
 
 ### Phase 1: Backend Foundation
@@ -142,11 +147,12 @@ Next plan:
 ## Next Recommended Work
 
 1. Validate the seed command against a real configured PostgreSQL/Supabase environment.
-2. Add Redis caching after PostgreSQL read correctness is stable.
-3. Continue the production public horoscope UI from `docs/superpowers/specs/2026-06-05-public-web-ux-design.md`.
-4. Design the registered AI companion home as a conversation-first surface, not a feature/module directory.
-5. Add sign profile and sign-pair compatibility static content after horoscope data is stable.
-6. Return to registered-user foundation: Supabase auth screens, birth data onboarding, natal chart persistence, and chart reveal.
+2. Add FinOps enforcement in backend code: AI kill switches, usage meter, spend cap checks, and public-route AI blocking.
+3. Add Redis caching after PostgreSQL read correctness is stable.
+4. Continue the production public horoscope UI from `docs/superpowers/specs/2026-06-05-public-web-ux-design.md`.
+5. Design the registered AI companion home as a conversation-first surface, not a feature/module directory.
+6. Add sign profile and sign-pair compatibility static content after horoscope data is stable.
+7. Return to registered-user foundation: Supabase auth screens, birth data onboarding, natal chart persistence, and chart reveal.
 
 ## Known Technical Debt
 
