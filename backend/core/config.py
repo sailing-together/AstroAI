@@ -23,6 +23,12 @@ class Settings(BaseSettings):
     gemini_timeout_seconds: int = 30
     gemini_max_retries: int = 3
 
+    ai_calls_enabled: bool = False
+    public_ai_calls_enabled: bool = False
+    static_generation_ai_enabled: bool = False
+    ai_spend_limit_aud: float = 100
+    ai_kill_switch_on_limit: bool = True
+
     ai_chat_free_daily_limit: int = 3
     ai_chat_premium_daily_limit: int = 50
 
