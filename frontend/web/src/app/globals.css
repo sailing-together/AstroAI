@@ -18,16 +18,14 @@
 
 html {
   min-height: 100%;
-  background: #fff8fb;
+  background: #fbfdff;
 }
 
 body {
   min-height: 100%;
   margin: 0;
   color: var(--astro-ink);
-  background:
-    radial-gradient(circle at 15% 10%, rgba(165, 229, 249, 0.38), transparent 32%),
-    linear-gradient(180deg, #fff, var(--astro-blush));
+  background: linear-gradient(180deg, #fbfdff 0%, #ffffff 44%, #fff7fb 100%);
   font-family: Inter, Raleway, system-ui, sans-serif;
 }
 
@@ -40,4 +38,17 @@ button,
 input,
 select {
   font: inherit;
+}
+
+input,
+select {
+  color: var(--astro-ink);
+}
+
+input:focus,
+select:focus,
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid rgba(64, 151, 255, 0.32);
+  outline-offset: 2px;
 }

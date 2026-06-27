@@ -21,14 +21,18 @@ type FocusTabsProps = {
 
 export function FocusTabs({ selectedFocus, onChange }: FocusTabsProps) {
   return (
-    <div className="grid gap-2 sm:grid-cols-3" role="tablist" aria-label="Horoscope focus">
+    <div
+      className="flex gap-2 overflow-x-auto rounded-lg border border-blue-100 bg-white p-2 shadow-sm"
+      role="tablist"
+      aria-label="Horoscope focus"
+    >
       {focusOrder.map((focus) => (
         <button
           aria-selected={focus === selectedFocus}
           className={
             focus === selectedFocus
-              ? "rounded-lg bg-astro-blue px-4 py-3 text-left text-sm font-bold text-white shadow-md shadow-blue-100"
-              : "rounded-lg border border-blue-100 bg-white px-4 py-3 text-left text-sm font-bold text-slate-700"
+              ? "min-w-fit rounded-md bg-astro-ink px-4 py-2.5 text-sm font-bold text-white shadow-md shadow-blue-100"
+              : "min-w-fit rounded-md px-4 py-2.5 text-sm font-bold text-slate-600 hover:bg-blue-50 hover:text-astro-ink"
           }
           key={focus}
           onClick={() => onChange(focus)}
