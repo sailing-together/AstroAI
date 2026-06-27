@@ -1,13 +1,17 @@
 # AstroAI Product Source of Truth
 
 > Status: Canonical product direction for the AstroAI redevelopment.
-> Last updated: 2026-06-05
+> Last updated: 2026-06-27
 
 For daily development status, completed PR slices, current work, and the next recommended implementation step, use `PROJECT_STATUS.md`.
+
+For the registered companion-home design direction, use `docs/superpowers/specs/2026-06-27-conversation-first-ai-companion-home.md`.
 
 ## Product Thesis
 
 AstroAI is a chart-grounded astrology companion. The product should feel personal because it remembers the user's natal chart, relevant life context, moods, and relationship questions, not because it generates generic horoscope copy on demand.
+
+AstroAI should be conversation-first, not module-first. Users should not have to browse horoscope, chart, compatibility, mood, and learning modules to assemble meaning for themselves. The product should let users ask directly, then retrieve the right natal chart, public horoscope, transit, relationship, mood, memory, and static-content context to answer.
 
 The MVP proves one loop:
 
@@ -34,6 +38,8 @@ Differentiators:
 - Memory layer as the retention moat.
 - Static SEO pages as the acquisition engine.
 - Shareable readings as the viral loop.
+
+The long-term product moat is not horoscope copy volume. AI can generate generic astrology content easily. AstroAI's defensibility should come from durable user context, trust, and the ongoing relationship between the user and an AI Astrologer that becomes more useful as it learns the user's chart, recurring questions, emotional patterns, and life context.
 
 See `COMPETITIVE_RESEARCH.md` for the working competitor map. Current positioning should emphasize AstroAI as a practical, chart-grounded AI companion with a generous static free layer and transparent separation between static content, deterministic chart calculation, and paid/on-demand AI personalization.
 
@@ -76,6 +82,9 @@ Rules:
 - These features must be rate-limited.
 - Free registered users may receive limited AI usage.
 - Premium users may receive higher AI limits.
+- The AI Astrologer should be the primary registered interaction, not a secondary button attached to isolated content modules.
+- The backend should own context assembly. The frontend should not require the user to manually decide which astrology module contains the answer.
+- The product should never monetize by amplifying fear, urgency, or supernatural threat. Paid value should come from deeper personalization, richer reports, higher AI limits, saved history, voice experiences, and guided growth tools.
 
 ## MVP Scope
 
@@ -156,6 +165,8 @@ MVP AI Astrologer limits:
 | `premium` | 50 messages/day |
 
 Premium is intentionally not unlimited in MVP.
+
+Monetization should be trust-first. The free public layer and limited free registered AI usage should provide enough value to prove sincerity before asking users to pay. Avoid early, frequent paywalls that make the companion relationship feel transactional before trust is established.
 
 ## Roadmap
 

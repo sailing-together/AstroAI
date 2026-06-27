@@ -1,9 +1,11 @@
 # AstroAI Frontend Specification Source of Truth
 
 > Status: Canonical frontend specification for redevelopment.
-> Last updated: 2026-06-05
+> Last updated: 2026-06-27
 
 For the public web page-level UX consolidation, use `docs/superpowers/specs/2026-06-05-public-web-ux-design.md`.
+
+For the registered conversation-first companion home, use `docs/superpowers/specs/2026-06-27-conversation-first-ai-companion-home.md`.
 
 ## Frontend Target
 
@@ -20,6 +22,8 @@ The first screen after authentication should move the user into the product, not
 - Clear AI Astrologer entry point.
 - Scannable daily guidance.
 - Public SEO pages for acquisition.
+
+The registered product should be conversation-first. Users should not have to browse a grid of astrology modules to decide where their question belongs. The primary logged-in surface should invite users to ask AstroAI directly, while chart, horoscope, compatibility, mood, memory, and learning surfaces support the answer as context.
 
 The public first screen should work before authentication: users can choose a sign or enter a birth date, then load the selected sign's current-year horoscope bundle in one API request.
 
@@ -166,14 +170,14 @@ If birth time is unknown:
 
 ## Dashboard
 
-Dashboard should include:
+Dashboard should feel like an AI companion home, not a module directory. It should include:
 
+- A prominent AI Astrologer question box.
+- A small set of suggested prompts based on the user's chart, current date, and recent context.
 - Today's personalized or sign-based guidance.
 - Natal chart summary.
-- AI Astrologer entry point.
 - Remaining AI message quota.
-- Suggested prompts.
-- Links to horoscope, compatibility, mood, and tarot areas.
+- Secondary links to horoscope, compatibility, mood, and tarot areas.
 
 Quota display uses backend response data:
 
@@ -196,6 +200,8 @@ The chat UI must:
 - Preserve conversation history.
 - Handle rate-limit errors clearly.
 - Avoid implying the AI remembers unavailable context.
+- Make clear when an answer uses saved chart, profile, mood, or memory context.
+- Let users ask natural questions without choosing a mode first.
 
 The backend owns prompt construction. The frontend sends only the user message and optional conversation id.
 

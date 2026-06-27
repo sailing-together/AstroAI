@@ -1,7 +1,7 @@
 # AstroAI Project Status
 
 > Status: Daily development guidance.
-> Last updated: 2026-06-05
+> Last updated: 2026-06-27
 
 This file records where the redevelopment stands today. Use it with the canonical source-of-truth docs:
 
@@ -11,6 +11,7 @@ This file records where the redevelopment stands today. Use it with the canonica
 - `SCHEMA.md` for Supabase/PostgreSQL schema.
 - `FRONTEND_SPEC.md` for web routes, UX, and design rules.
 - `STATIC_HOROSCOPE_OPERATIONS.md` for 2026 static data generation, export, validation, and database handoff.
+- `docs/superpowers/specs/2026-06-27-conversation-first-ai-companion-home.md` for registered AI companion-home direction.
 
 Deprecated files such as `ROADMAP_DEVELOPMENT_PLAN.md`, `MEETING_CONCLUSIONS.md`, `DECISIONS.md`, `DATABASE_SCHEMA.md`, `DESIGN.md`, `BACKEND_API.md`, and `FRONTEND_ARCHITECTURE.md` are not sources of truth.
 
@@ -40,6 +41,7 @@ At the beginning of each work session, report:
 - MVP provider policy is frozen: Gemini only; no Claude/Sonnet in MVP backend code.
 - Tier names are frozen: `free` and `premium`; avoid `pro`.
 - Public static horoscope rules are recorded: anonymous reads must not call Gemini.
+- Registered product direction is conversation-first: AI Astrologer is primary, while chart, horoscope, compatibility, mood, and memory modules provide context.
 - Deprecated planning files point back to canonical docs.
 
 ### Phase 1: Backend Foundation
@@ -82,6 +84,7 @@ At the beginning of each work session, report:
 - Public web dependency security is being upgraded from Next.js 14 to Next.js 16 with a PostCSS override to clear npm audit findings.
 - `frontend/preview` remains a developer/API tester only.
 - Public web UX consolidation spec exists at `docs/superpowers/specs/2026-06-05-public-web-ux-design.md`.
+- Public horoscope product surface has a first production-design pass on `/horoscope`, with a clearer bridge from free static guidance to chart-grounded personalization.
 
 ## In Progress
 
@@ -94,10 +97,13 @@ Current state:
 - Development-only wording such as backend connection details, API base labels, and static bundle language is being removed from the user-facing page.
 - The page prioritizes the daily reading in the first viewport, with sign, birth date, and view date controls as supporting tools.
 - The public web API client can distinguish production static-data-not-ready responses from connection failures.
+- Product direction is now conversation-first: public horoscope remains the acquisition and utility layer, while the registered experience should make AI Astrologer the primary interaction and use modules as context sources.
+- Conversation-first companion-home design is captured in `docs/superpowers/specs/2026-06-27-conversation-first-ai-companion-home.md`.
 
 Next plan:
 
 - Continue applying `docs/superpowers/specs/2026-06-05-public-web-ux-design.md`.
+- Design the registered AI companion home around direct questions, suggested prompts, natal chart context, and quota visibility instead of a module grid.
 - Add visual QA once browser tooling is available for the current worktree page.
 - Follow with richer visual polish, zodiac education, and conversion paths after the static data/API flow is stable.
 
@@ -138,8 +144,9 @@ Next plan:
 1. Validate the seed command against a real configured PostgreSQL/Supabase environment.
 2. Add Redis caching after PostgreSQL read correctness is stable.
 3. Continue the production public horoscope UI from `docs/superpowers/specs/2026-06-05-public-web-ux-design.md`.
-4. Add sign profile and sign-pair compatibility static content after horoscope data is stable.
-5. Return to registered-user foundation: Supabase auth screens, birth data onboarding, natal chart persistence, and chart reveal.
+4. Design the registered AI companion home as a conversation-first surface, not a feature/module directory.
+5. Add sign profile and sign-pair compatibility static content after horoscope data is stable.
+6. Return to registered-user foundation: Supabase auth screens, birth data onboarding, natal chart persistence, and chart reveal.
 
 ## Known Technical Debt
 

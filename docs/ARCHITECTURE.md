@@ -1,7 +1,7 @@
 # AstroAI Architecture Source of Truth
 
 > Status: Canonical technical architecture for redevelopment.
-> Last updated: 2026-06-02
+> Last updated: 2026-06-27
 
 ## System Shape
 
@@ -49,6 +49,7 @@ The web MVP is the primary redevelopment target. The existing Flutter mobile app
 4. Keep Gemini access behind the backend.
 5. Use one canonical API contract between frontend and backend.
 6. Use `free` and `premium` as the only tier names.
+7. Treat the registered product as conversation-first: modules provide context, while the AI Astrologer is the primary interaction.
 
 ## Access and AI Boundaries
 
@@ -61,6 +62,22 @@ The web MVP is the primary redevelopment target. The existing Flutter mobile app
 | AI natal chart interpretation | Yes | Yes | Separate from chart calculation |
 | Personalized predictions | Yes | Yes | Uses chart, transits, and user context |
 | AI Astrologer chat | Yes | Yes | Rate-limited |
+
+## Conversation-First Context Pipeline
+
+The registered AI Astrologer should not rely on frontend-built prompts or force users to choose an astrology module before asking a question. The backend should assemble the relevant context and compose the Gemini prompt server-side.
+
+Request-time pipeline:
+
+1. Verify Supabase JWT and load the application user.
+2. Enforce AI quota before live Gemini calls.
+3. Load saved natal chart and profile context.
+4. Load current static horoscope or timing context when relevant.
+5. Load recent conversation history and approved memory summaries when available.
+6. Compose a server-side prompt with clear boundaries for unavailable context.
+7. Persist the exchange and safe context signals for future continuity.
+
+The first implementation can use simple deterministic context assembly. Memory extraction, retrieval ranking, and multi-agent synthesis can be added after the registered chart and AI Astrologer loop is stable.
 
 ## AI Routing
 
