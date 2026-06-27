@@ -30,6 +30,11 @@ def test_settings_defaults_to_gemini_25_models(monkeypatch):
     assert settings.gemini_light_model == "gemini-2.5-flash-lite"
     assert settings.ai_chat_free_daily_limit == 3
     assert settings.ai_chat_premium_daily_limit == 50
+    assert settings.ai_calls_enabled is False
+    assert settings.public_ai_calls_enabled is False
+    assert settings.static_generation_ai_enabled is False
+    assert settings.ai_spend_limit_aud == 100
+    assert settings.ai_kill_switch_on_limit is True
 
 
 def test_frontend_cors_origins_are_parsed_from_csv(monkeypatch):

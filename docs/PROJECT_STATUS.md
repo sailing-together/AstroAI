@@ -47,6 +47,7 @@ At the beginning of each work session, report:
 - Registered product direction is conversation-first: AI Astrologer is primary, while chart, horoscope, compatibility, mood, and memory modules provide context.
 - MVP FinOps policy is recorded: total variable AI/cloud spend is capped at 100 AUD, public acquisition traffic must not trigger live AI, and Gemini calls require auth, quota, rate limits, usage logging, and spend-limit checks.
 - P3.2 FinOps implementation design is captured in `docs/superpowers/specs/2026-06-27-finops-ai-spend-guardrails-design.md`.
+- P3.3 backend FinOps guardrails have started: settings defaults, reusable AI call guard, Gemini client preflight blocking, and tests for disabled AI/public AI/static generation switches.
 - Deprecated planning files point back to canonical docs.
 
 ### Phase 1: Backend Foundation
@@ -147,7 +148,7 @@ Next plan:
 ## Next Recommended Work
 
 1. Validate the seed command against a real configured PostgreSQL/Supabase environment.
-2. Add FinOps enforcement in backend code: AI kill switches, usage meter, spend cap checks, and public-route AI blocking.
+2. Continue FinOps enforcement in backend code: persist usage-meter records, wire real spend totals, and verify public-route AI blocking across legacy Gemini modules.
 3. Add Redis caching after PostgreSQL read correctness is stable.
 4. Continue the production public horoscope UI from `docs/superpowers/specs/2026-06-05-public-web-ux-design.md`.
 5. Design the registered AI companion home as a conversation-first surface, not a feature/module directory.
